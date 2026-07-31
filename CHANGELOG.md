@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.0 — 2026-07-31
+
+- Se agrega el proceso automatico que trae la informacion de tiempos de
+  entrega desde el sistema Oracle hacia la base del tablero, todas las
+  madrugadas.
+- Se agregan los scripts de preparacion de la base de datos y la consulta
+  que genera los indicadores.
+- El proceso trabaja siempre con informacion cerrada hasta el dia anterior,
+  para que las cifras no cambien durante el dia.
+
 ## v0.4.0 — 2026-07-31
 
 - Se amplia el tablero de cuatro a seis indicadores principales, agregando

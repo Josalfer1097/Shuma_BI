@@ -1,0 +1,6 @@
+# minuto hora dia mes dia-semana  comando
+# Corre todos los dias a las 5:00 AM hora CDMX -- para ese momento
+# la operacion de logistica de "ayer" ya suele estar cerrada.
+0 5 * * * cd /app && /usr/local/bin/python /app/etl.py >> /var/log/etl.log 2>&1
+
+# Linea en blanco al final requerida por cron

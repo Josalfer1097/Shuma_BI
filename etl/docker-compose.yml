@@ -1,0 +1,11 @@
+services:
+  etl-tiempos-entrega:
+    build: .
+    container_name: etl-tiempos-entrega
+    restart: unless-stopped
+    volumes:
+      # Monta tu .env real (no el .example) como archivo dentro del
+      # contenedor -- asi etl.py lo puede leer aunque cron no herede
+      # variables de entorno del proceso padre.
+      - ./.env:/app/.env:ro
+      - ./logs:/var/log
