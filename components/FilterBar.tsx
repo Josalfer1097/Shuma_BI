@@ -60,6 +60,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
       params.set('zona', val)
     }
     router.push(`/?${params.toString()}`, { scroll: false })
+    setMobileMenuOpen(false)
   }
 
   const handleAnioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -83,6 +84,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
     }
 
     router.push(`/?${params.toString()}`, { scroll: false })
+    setMobileMenuOpen(false)
   }
 
   const handleMesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -94,10 +96,12 @@ export function FilterBar({ rawData }: FilterBarProps) {
       params.set('mes', val)
     }
     router.push(`/?${params.toString()}`, { scroll: false })
+    setMobileMenuOpen(false)
   }
 
   const clearFilters = () => {
     router.push('/', { scroll: false })
+    setMobileMenuOpen(false)
   }
 
   const hasFilters = zoneParam || anioParam || mesParam
@@ -163,19 +167,21 @@ export function FilterBar({ rawData }: FilterBarProps) {
   return (
     <div className="sticky top-0 z-40 bg-bg-base/90 backdrop-blur-md py-4 border-b border-border mb-8" ref={menuRef}>
       {/* Mobile view */}
-      <div className="flex sm:hidden items-center gap-2 overflow-x-auto pb-1 relative">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="flex-shrink-0 flex items-center gap-2 bg-bg-surface border border-border rounded-full px-4 min-h-[44px] text-sm text-text-primary font-medium"
-        >
-          <Filter className="w-4 h-4" />
-          Filtros
-        </button>
-        {activeFiltersChips.map(chip => (
-          <span key={chip} className="flex-shrink-0 bg-accent/10 text-accent border border-accent/20 rounded-full px-3 py-1.5 text-sm whitespace-nowrap">
-            {chip}
-          </span>
-        ))}
+      <div className="sm:hidden relative w-full">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 w-full custom-scrollbar">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex-shrink-0 flex items-center gap-2 bg-bg-surface border border-border rounded-full px-4 min-h-[44px] text-sm text-text-primary font-medium"
+          >
+            <Filter className="w-4 h-4" />
+            Filtros
+          </button>
+          {activeFiltersChips.map(chip => (
+            <span key={chip} className="flex-shrink-0 bg-accent/10 text-accent border border-accent/20 rounded-full px-3 py-1.5 text-sm whitespace-nowrap">
+              {chip}
+            </span>
+          ))}
+        </div>
 
         {mobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated border border-border rounded-lg shadow-xl p-4 flex flex-col gap-4 z-50">
