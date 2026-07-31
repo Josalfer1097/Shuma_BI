@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.2.0 — 2026-07-31
+
+- Se cambia el filtro de rango de meses por dos selectores separados de año y
+  de mes, para poder consultar periodos concretos.
+- El selector de mes solo muestra los meses que tienen informacion en el año
+  elegido.
+- Se agrega una etiqueta que indica que periodo se esta viendo en pantalla.
+- Cuando se consulta un solo mes, la grafica de tendencia se reemplaza por un
+  resumen de ese periodo.
+
 ## v0.1.0 — 2026-07-31
 
 Primera version del tablero de tiempos de entrega.

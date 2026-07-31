@@ -48,11 +48,47 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null
 }
 
+const MONTHS_ES: Record<string, string> = {
+  '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+  '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+  '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+}
+
 export function TrendChart({ data }: TrendChartProps) {
   if (data.length === 0) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-5 h-80 flex items-center justify-center">
         <span className="text-text-muted text-sm">Sin datos para la selección actual</span>
+      </div>
+    )
+  }
+
+  if (data.length === 1) {
+    const d = data[0]
+    const [anio, mes] = d.anio_mes.split('-')
+    const label = `${MONTHS_ES[mes] || mes} ${anio}`
+    
+    return (
+      <div className="bg-bg-surface border border-border rounded-lg p-5 mb-8">
+        <h3 className="text-text-primary font-medium mb-6">Resumen del periodo</h3>
+        <div className="h-80 w-full flex flex-col justify-center items-center text-center">
+          <h4 className="text-xl text-text-primary font-medium mb-8">{label}</h4>
+          
+          <div className="grid grid-cols-3 gap-8 w-full max-w-lg">
+            <div className="flex flex-col gap-2">
+              <span className="text-text-muted text-sm">Tiempo típico</span>
+              <span className="text-3xl text-accent font-semibold">{formatDecimal(d.mediana_dias)}d</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-text-muted text-sm">Promedio</span>
+              <span className="text-3xl text-text-secondary font-semibold">{formatDecimal(d.promedio_dias)}d</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-text-muted text-sm">Volumen</span>
+              <span className="text-3xl text-text-primary font-semibold">{formatNumber(d.total)}</span>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

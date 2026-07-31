@@ -10,14 +10,28 @@ interface FilterBarProps {
   rawData: ReporteRow[];
 }
 
+const MONTHS_ES: Record<string, string> = {
+  '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+  '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+  '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+}
+
 export function FilterBar({ rawData }: FilterBarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const zoneParams = searchParams.get('zona')
-  const monthsParams = searchParams.get('rango')
+  const zoneParam = searchParams.get('zona')
+  const anioParam = searchParams.get('anio')
+  const mesParam = searchParams.get('mes')
 
   const uniqueZones = Array.from(new Set(rawData.map(r => r.zona))).sort()
+  const uniqueYears = Array.from(new Set(rawData.map(r => r.anio_mes.split('-')[0]))).sort().reverse()
+  
+  const validMonthsForYear = Array.from(new Set(
+    rawData
+      .filter(r => !anioParam || r.anio_mes.startsWith(`${anioParam}-`))
+      .map(r => r.anio_mes.split('-')[1])
+  )).sort()
 
   const handleZoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value
@@ -30,13 +44,36 @@ export function FilterBar({ rawData }: FilterBarProps) {
     router.push(`/?${params.toString()}`, { scroll: false })
   }
 
-  const handleMonthsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleAnioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value
     const params = new URLSearchParams(searchParams.toString())
-    if (val === 'Todo') {
-      params.delete('rango')
+    if (val === 'Todos') {
+      params.delete('anio')
     } else {
-      params.set('rango', val)
+      params.set('anio', val)
+    }
+
+    if (val !== 'Todos' && mesParam) {
+      const monthsInNewYear = new Set(
+        rawData
+          .filter(r => r.anio_mes.startsWith(`${val}-`))
+          .map(r => r.anio_mes.split('-')[1])
+      )
+      if (!monthsInNewYear.has(mesParam)) {
+        params.delete('mes')
+      }
+    }
+
+    router.push(`/?${params.toString()}`, { scroll: false })
+  }
+
+  const handleMesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value
+    const params = new URLSearchParams(searchParams.toString())
+    if (val === 'Todos') {
+      params.delete('mes')
+    } else {
+      params.set('mes', val)
     }
     router.push(`/?${params.toString()}`, { scroll: false })
   }
@@ -45,7 +82,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
     router.push('/', { scroll: false })
   }
 
-  const hasFilters = zoneParams || monthsParams
+  const hasFilters = zoneParam || anioParam || mesParam
 
   return (
     <div className="sticky top-0 z-40 bg-bg-base/90 backdrop-blur-md py-4 border-b border-border mb-8 flex flex-col sm:flex-row items-center gap-4">
@@ -53,7 +90,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
         <span className="text-text-muted text-sm whitespace-nowrap">Zona:</span>
         <Select
           className="w-full sm:w-48"
-          value={zoneParams || 'Todas'}
+          value={zoneParam || 'Todas'}
           onChange={handleZoneChange}
           options={[
             { label: 'Todas', value: 'Todas' },
@@ -62,16 +99,26 @@ export function FilterBar({ rawData }: FilterBarProps) {
         />
       </div>
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-sm whitespace-nowrap">Meses:</span>
+        <span className="text-text-muted text-sm whitespace-nowrap">Año:</span>
         <Select
-          className="w-full sm:w-48"
-          value={monthsParams || 'Todo'}
-          onChange={handleMonthsChange}
+          className="w-full sm:w-32"
+          value={anioParam || 'Todos'}
+          onChange={handleAnioChange}
           options={[
-            { label: 'Todo', value: 'Todo' },
-            { label: 'Últimos 3 meses', value: '3' },
-            { label: 'Últimos 6 meses', value: '6' },
-            { label: 'Últimos 12 meses', value: '12' },
+            { label: 'Todos', value: 'Todos' },
+            ...uniqueYears.map(y => ({ label: y, value: y }))
+          ]}
+        />
+      </div>
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        <span className="text-text-muted text-sm whitespace-nowrap">Mes:</span>
+        <Select
+          className="w-full sm:w-40"
+          value={mesParam || 'Todos'}
+          onChange={handleMesChange}
+          options={[
+            { label: 'Todos', value: 'Todos' },
+            ...validMonthsForYear.map(m => ({ label: MONTHS_ES[m] || m, value: m }))
           ]}
         />
       </div>

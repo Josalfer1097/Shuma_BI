@@ -14,34 +14,36 @@ interface DashboardProps {
   initialData: ReporteRow[];
 }
 
+const MONTHS_ES: Record<string, string> = {
+  '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+  '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+  '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+}
+
 export function Dashboard({ initialData }: DashboardProps) {
   const searchParams = useSearchParams()
   const zoneParam = searchParams.get('zona')
-  const monthsParam = searchParams.get('rango')
+  const anioParam = searchParams.get('anio')
+  const mesParam = searchParams.get('mes')
 
   const validZones = new Set(initialData.map(r => r.zona))
+  const validYears = new Set(initialData.map(r => r.anio_mes.split('-')[0]))
+  const validMonths = new Set(initialData.map(r => r.anio_mes.split('-')[1]))
   
-  // If invalid zone is passed, fallback to 'Todas' by ignoring it
+  // If invalid params are passed, fallback to 'Todos' by ignoring it
   const activeZone = zoneParam && validZones.has(zoneParam) ? zoneParam : null
+  const activeAnio = anioParam && validYears.has(anioParam) ? anioParam : null
+  const activeMes = mesParam && validMonths.has(mesParam) ? mesParam : null
 
   const filteredData = useMemo(() => {
-    let data = initialData
-
-    if (activeZone) {
-      data = data.filter(r => r.zona === activeZone)
-    }
-
-    if (monthsParam && monthsParam !== 'Todo') {
-      const monthsCount = parseInt(monthsParam, 10)
-      if (!isNaN(monthsCount)) {
-        const uniqueMonths = Array.from(new Set(initialData.map(r => r.anio_mes))).sort().reverse()
-        const selectedMonths = new Set(uniqueMonths.slice(0, monthsCount))
-        data = data.filter(r => selectedMonths.has(r.anio_mes))
-      }
-    }
-
-    return data
-  }, [initialData, activeZone, monthsParam])
+    return initialData.filter(row => {
+      const [anio, mes] = row.anio_mes.split('-')
+      const pasaZona = !activeZone || row.zona === activeZone
+      const pasaAnio = !activeAnio || anio === activeAnio
+      const pasaMes  = !activeMes  || mes  === activeMes
+      return pasaZona && pasaAnio && pasaMes
+    })
+  }, [initialData, activeZone, activeAnio, activeMes])
 
   const metrics = useMemo(() => aggregate(filteredData), [filteredData])
 
@@ -69,19 +71,13 @@ export function Dashboard({ initialData }: DashboardProps) {
 
   // Aggregate zone ranking data (group by zona)
   const zoneData = useMemo(() => {
-    // If a zone is selected, we still want to show all zones in the ranking, but highlight it.
-    // Wait, the prompt says "Cuando hay una zona seleccionada, sigue mostrando las 14 barras".
-    // Therefore, the zone ranking should ALWAYS use the initial data filtered ONLY by months, not by zone.
-    
-    let baseData = initialData
-    if (monthsParam && monthsParam !== 'Todo') {
-      const monthsCount = parseInt(monthsParam, 10)
-      if (!isNaN(monthsCount)) {
-        const uniqueMonths = Array.from(new Set(initialData.map(r => r.anio_mes))).sort().reverse()
-        const selectedMonths = new Set(uniqueMonths.slice(0, monthsCount))
-        baseData = baseData.filter(r => selectedMonths.has(r.anio_mes))
-      }
-    }
+    // Zone ranking ALWAYS uses the initial data filtered ONLY by months/years, not by zone.
+    const baseData = initialData.filter(row => {
+      const [anio, mes] = row.anio_mes.split('-')
+      const pasaAnio = !activeAnio || anio === activeAnio
+      const pasaMes  = !activeMes  || mes  === activeMes
+      return pasaAnio && pasaMes
+    })
 
     const byZone = new Map<string, ReporteRow[]>()
     for (const row of baseData) {
@@ -101,14 +97,26 @@ export function Dashboard({ initialData }: DashboardProps) {
         }
       })
       .sort((a, b) => b.mediana_dias - a.mediana_dias)
-  }, [initialData, monthsParam])
+  }, [initialData, activeAnio, activeMes])
 
   const selectedZonesCount = new Set(filteredData.map(r => r.zona)).size
   const selectedMonthsCount = new Set(filteredData.map(r => r.anio_mes)).size
 
+  let periodoLabel = 'Todos los periodos'
+  if (activeAnio && activeMes) {
+    periodoLabel = `${MONTHS_ES[activeMes]} ${activeAnio}`
+  } else if (activeAnio) {
+    periodoLabel = activeAnio
+  } else if (activeMes) {
+    periodoLabel = `${MONTHS_ES[activeMes]} (todos los años)`
+  }
+
   return (
     <div>
       <FilterBar rawData={initialData} />
+      <div className="mb-4">
+        <span className="text-sm text-text-muted">{periodoLabel}</span>
+      </div>
       <KpiRow metrics={metrics} selectedZonesCount={selectedZonesCount} selectedMonthsCount={selectedMonthsCount} />
       
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
