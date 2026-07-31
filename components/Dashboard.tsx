@@ -9,6 +9,7 @@ import { KpiRow } from './KpiRow'
 import { TrendChart } from './TrendChart'
 import { ZoneRanking } from './ZoneRanking'
 import { DetailTable } from './DetailTable'
+import { Glossary } from './Glossary'
 
 interface DashboardProps {
   initialData: ReporteRow[];
@@ -99,9 +100,6 @@ export function Dashboard({ initialData }: DashboardProps) {
       .sort((a, b) => b.mediana_dias - a.mediana_dias)
   }, [initialData, activeAnio, activeMes])
 
-  const selectedZonesCount = new Set(filteredData.map(r => r.zona)).size
-  const selectedMonthsCount = new Set(filteredData.map(r => r.anio_mes)).size
-
   let periodoLabel = 'Todos los periodos'
   if (activeAnio && activeMes) {
     periodoLabel = `${MONTHS_ES[activeMes]} ${activeAnio}`
@@ -117,7 +115,7 @@ export function Dashboard({ initialData }: DashboardProps) {
       <div className="mb-4">
         <span className="text-sm text-text-muted">{periodoLabel}</span>
       </div>
-      <KpiRow metrics={metrics} selectedZonesCount={selectedZonesCount} selectedMonthsCount={selectedMonthsCount} />
+      <KpiRow metrics={metrics} />
       
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <TrendChart data={trendData} />
@@ -125,6 +123,8 @@ export function Dashboard({ initialData }: DashboardProps) {
       </div>
 
       <DetailTable data={filteredData} />
+      
+      <Glossary />
     </div>
   )
 }

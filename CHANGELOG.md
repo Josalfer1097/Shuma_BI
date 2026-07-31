@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.0 — 2026-07-31
+
+- Se amplia el tablero de cuatro a seis indicadores principales, agregando
+  las cotizaciones ligadas a factura y las facturas fuera del orden esperado.
+- La explicacion de cada indicador ahora se lee siempre debajo del numero, sin
+  necesidad de pasar el puntero ni tocar la pantalla. Asi se entiende el
+  tablero al verlo proyectado o en una captura.
+- El indicador de facturas fuera de rango cambia de color segun que tan alto
+  sea, para identificar de inmediato si hay un problema de proceso.
+- Se agrega una seccion de glosario al final, que explica en lenguaje sencillo
+  cada uno de los datos del tablero.
+
 ## v0.3.0 — 2026-07-31
 
 - Se adapta el tablero para consultarse desde telefono.

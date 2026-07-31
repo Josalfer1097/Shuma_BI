@@ -104,14 +104,53 @@ export function FilterBar({ rawData }: FilterBarProps) {
     setMobileMenuOpen(false)
   }
 
+  const removeZone = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('zona')
+    router.push(`/?${params.toString()}`, { scroll: false })
+  }
+
+  const removePeriod = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('anio')
+    params.delete('mes')
+    router.push(`/?${params.toString()}`, { scroll: false })
+  }
+
   const hasFilters = zoneParam || anioParam || mesParam
 
-  const activeFiltersChips = []
-  if (zoneParam) activeFiltersChips.push(zoneParam)
+  const activeFiltersChipsMobile = []
+  let activeCount = 0
+  if (zoneParam) {
+    activeFiltersChipsMobile.push(
+      <button key="zona" onClick={removeZone} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-sm whitespace-nowrap font-medium">
+        {zoneParam}
+        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
+      </button>
+    )
+    activeCount++
+  }
   if (anioParam || mesParam) {
-    if (anioParam && mesParam) activeFiltersChips.push(`${MONTHS_ES[mesParam]} ${anioParam}`)
-    else if (anioParam) activeFiltersChips.push(anioParam)
-    else if (mesParam) activeFiltersChips.push(MONTHS_ES[mesParam])
+    let label = ''
+    if (anioParam && mesParam) label = `${MONTHS_ES[mesParam]} ${anioParam}`
+    else if (anioParam) label = anioParam
+    else if (mesParam) label = MONTHS_ES[mesParam]
+
+    activeFiltersChipsMobile.push(
+      <button key="periodo" onClick={removePeriod} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-sm whitespace-nowrap font-medium">
+        {label}
+        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
+      </button>
+    )
+    activeCount++
+  }
+  if (activeCount >= 2) {
+    activeFiltersChipsMobile.push(
+      <button key="clear-all" onClick={clearFilters} className="flex-shrink-0 flex items-center gap-1.5 bg-danger/10 text-danger hover:bg-danger/20 transition-colors border border-danger/30 rounded-full pl-3 pr-2 min-h-[44px] text-sm whitespace-nowrap font-medium">
+        Limpiar todo
+        <X className="w-4 h-4" />
+      </button>
+    )
   }
 
   const selectsContent = (
@@ -176,11 +215,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
             <Filter className="w-4 h-4" />
             Filtros
           </button>
-          {activeFiltersChips.map(chip => (
-            <span key={chip} className="flex-shrink-0 bg-accent/10 text-accent border border-accent/20 rounded-full px-3 py-1.5 text-sm whitespace-nowrap">
-              {chip}
-            </span>
-          ))}
+          {activeFiltersChipsMobile}
         </div>
 
         {mobileMenuOpen && (

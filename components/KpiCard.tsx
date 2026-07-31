@@ -1,32 +1,35 @@
 'use client'
 
 import React from 'react'
-import { Tooltip } from './ui/Tooltip'
 import { cn } from './ui/Tooltip'
 
 interface KpiCardProps {
   title: string;
   value: React.ReactNode;
   secondary?: React.ReactNode;
-  tooltip: string;
-  alert?: boolean;
+  description: string;
+  valueColor?: string;
 }
 
-export function KpiCard({ title, value, secondary, tooltip, alert }: KpiCardProps) {
+export function KpiCard({ title, value, secondary, description, valueColor }: KpiCardProps) {
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 flex flex-col justify-between hover:bg-bg-elevated transition-colors duration-150 group">
-      <div className="flex items-center justify-between mb-2 gap-2">
-        <span className="text-xs sm:text-sm text-text-secondary font-medium leading-tight">{title}</span>
-        <Tooltip text={tooltip} />
+    <div className="bg-bg-surface border border-border rounded-lg flex flex-col overflow-hidden h-full">
+      <div className="bg-accent-deep py-2 px-3 text-center">
+        <span className="text-xs sm:text-sm text-text-primary font-medium leading-tight">{title}</span>
       </div>
-      <div className={cn("text-2xl sm:text-3xl font-exo font-semibold tracking-tight", alert ? "text-warning" : "text-text-primary")}>
-        {value}
-      </div>
-      {secondary && (
-        <div className="text-[11px] sm:text-xs text-text-muted mt-1 tabular-nums leading-tight">
-          {secondary}
+      <div className="p-4 sm:p-5 flex flex-col flex-1 items-center justify-center text-center">
+        <div className={cn("text-2xl sm:text-3xl font-exo font-semibold tracking-tight", valueColor || "text-text-primary")}>
+          {value}
         </div>
-      )}
+        {secondary && (
+          <div className="text-xs sm:text-sm font-medium mt-1 mb-2 leading-tight">
+            {secondary}
+          </div>
+        )}
+        <div className="mt-auto pt-3 text-[11px] sm:text-xs italic text-text-muted leading-tight">
+          {description}
+        </div>
+      </div>
     </div>
   )
 }
