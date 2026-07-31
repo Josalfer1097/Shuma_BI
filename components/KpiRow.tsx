@@ -28,7 +28,7 @@ export function KpiRow({ metrics, selectedZonesCount, selectedMonthsCount }: Kpi
   const isOutOfRangeHigh = outOfRangePercent > 0.5; // High if over 50% as requested for the table, maybe 10% here? We'll use 50% threshold for alert.
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
       <KpiCard
         title="Entregas totales"
         value={formatNumber(metrics.total)}

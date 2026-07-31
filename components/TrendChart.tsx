@@ -57,7 +57,7 @@ const MONTHS_ES: Record<string, string> = {
 export function TrendChart({ data }: TrendChartProps) {
   if (data.length === 0) {
     return (
-      <div className="bg-bg-surface border border-border rounded-lg p-5 h-80 flex items-center justify-center">
+      <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 h-60 sm:h-80 flex items-center justify-center">
         <span className="text-text-muted text-sm">Sin datos para la selección actual</span>
       </div>
     )
@@ -69,23 +69,23 @@ export function TrendChart({ data }: TrendChartProps) {
     const label = `${MONTHS_ES[mes] || mes} ${anio}`
     
     return (
-      <div className="bg-bg-surface border border-border rounded-lg p-5 mb-8">
-        <h3 className="text-text-primary font-medium mb-6">Resumen del periodo</h3>
-        <div className="h-80 w-full flex flex-col justify-center items-center text-center">
-          <h4 className="text-xl text-text-primary font-medium mb-8">{label}</h4>
+      <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 mb-8">
+        <h3 className="text-text-primary font-medium mb-4 sm:mb-6">Resumen del periodo</h3>
+        <div className="h-60 sm:h-80 w-full flex flex-col justify-center items-center text-center">
+          <h4 className="text-lg sm:text-xl text-text-primary font-medium mb-6 sm:mb-8">{label}</h4>
           
-          <div className="grid grid-cols-3 gap-8 w-full max-w-lg">
-            <div className="flex flex-col gap-2">
-              <span className="text-text-muted text-sm">Tiempo típico</span>
-              <span className="text-3xl text-accent font-semibold">{formatDecimal(d.mediana_dias)}d</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 w-full max-w-lg">
+            <div className="flex flex-col gap-1 sm:gap-2">
+              <span className="text-text-muted text-xs sm:text-sm">Tiempo típico</span>
+              <span className="text-2xl sm:text-3xl text-accent font-semibold">{formatDecimal(d.mediana_dias)}d</span>
             </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-text-muted text-sm">Promedio</span>
-              <span className="text-3xl text-text-secondary font-semibold">{formatDecimal(d.promedio_dias)}d</span>
+            <div className="flex flex-col gap-1 sm:gap-2">
+              <span className="text-text-muted text-xs sm:text-sm">Promedio</span>
+              <span className="text-2xl sm:text-3xl text-text-secondary font-semibold">{formatDecimal(d.promedio_dias)}d</span>
             </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-text-muted text-sm">Volumen</span>
-              <span className="text-3xl text-text-primary font-semibold">{formatNumber(d.total)}</span>
+            <div className="flex flex-col gap-1 sm:gap-2">
+              <span className="text-text-muted text-xs sm:text-sm">Volumen</span>
+              <span className="text-2xl sm:text-3xl text-text-primary font-semibold">{formatNumber(d.total)}</span>
             </div>
           </div>
         </div>
@@ -93,29 +93,42 @@ export function TrendChart({ data }: TrendChartProps) {
     )
   }
 
+  const formatXAxis = (tickItem: string) => {
+    const [anio, mes] = tickItem.split('-')
+    const shortMonth = MONTHS_ES[mes]?.substring(0, 3) || mes
+    const shortYear = anio.substring(2)
+    return `${shortMonth} ${shortYear}`
+  }
+
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-5 mb-8">
-      <h3 className="text-text-primary font-medium mb-6">Tendencia mensual</h3>
-      <div className="h-80 w-full">
+    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 mb-8">
+      <h3 className="text-text-primary font-medium mb-4 sm:mb-6">Tendencia mensual</h3>
+      <div className="h-60 sm:h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+          <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis 
               dataKey="anio_mes" 
               stroke="var(--text-muted)" 
-              fontSize={12} 
+              fontSize={11} 
               tickLine={false}
               axisLine={false}
               dy={10}
+              tickFormatter={formatXAxis}
+              minTickGap={30}
             />
             <YAxis 
               stroke="var(--text-muted)" 
-              fontSize={12} 
+              fontSize={11} 
               tickLine={false}
               axisLine={false}
               dx={-10}
             />
-            <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
+            <RechartsTooltip 
+              content={<CustomTooltip />} 
+              cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} 
+              trigger="click"
+            />
             <Line 
               type="monotone" 
               dataKey="mediana_dias" 

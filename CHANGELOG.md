@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.3.0 — 2026-07-31
+
+- Se adapta el tablero para consultarse desde telefono.
+- Las explicaciones de cada indicador ahora se abren con un toque. Antes solo
+  funcionaban con el puntero de una computadora, por lo que no se podian leer
+  desde el celular.
+- Los filtros se agrupan en un boton que despliega las opciones, y muestra
+  que filtros estan aplicados.
+- La tabla de detalle se muestra como tarjetas en pantallas pequeñas para
+  poder leerla sin desplazarse a los lados.
+- Se ajustan las graficas para que las etiquetas sean legibles en pantallas
+  angostas.
+
 ## v0.2.0 — 2026-07-31
 
 - Se cambia el filtro de rango de meses por dos selectores separados de año y

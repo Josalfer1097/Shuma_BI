@@ -14,16 +14,16 @@ interface KpiCardProps {
 
 export function KpiCard({ title, value, secondary, tooltip, alert }: KpiCardProps) {
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-5 flex flex-col justify-between hover:bg-bg-elevated transition-colors duration-150 group">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-text-secondary font-medium">{title}</span>
-        <Tooltip text={tooltip} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 flex flex-col justify-between hover:bg-bg-elevated transition-colors duration-150 group">
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <span className="text-xs sm:text-sm text-text-secondary font-medium leading-tight">{title}</span>
+        <Tooltip text={tooltip} />
       </div>
-      <div className={cn("text-3xl font-exo font-semibold tracking-tight", alert ? "text-warning" : "text-text-primary")}>
+      <div className={cn("text-2xl sm:text-3xl font-exo font-semibold tracking-tight", alert ? "text-warning" : "text-text-primary")}>
         {value}
       </div>
       {secondary && (
-        <div className="text-xs text-text-muted mt-1 tabular-nums">
+        <div className="text-[11px] sm:text-xs text-text-muted mt-1 tabular-nums leading-tight">
           {secondary}
         </div>
       )}

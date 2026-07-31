@@ -5,6 +5,7 @@ import { ReporteRow } from '@/lib/types'
 import { formatNumber, formatDecimal, formatPercent } from '@/lib/format'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 import { cn } from './ui/Tooltip'
+import { Select } from './ui/Select'
 
 interface DetailTableProps {
   data: ReporteRow[];
@@ -12,6 +13,18 @@ interface DetailTableProps {
 
 type SortField = keyof ReporteRow
 type SortDirection = 'asc' | 'desc'
+
+const SORT_OPTIONS = [
+  { label: 'Mes (Más reciente)', value: 'anio_mes-desc' },
+  { label: 'Mes (Más antiguo)', value: 'anio_mes-asc' },
+  { label: 'Zona (A-Z)', value: 'zona-asc' },
+  { label: 'Zona (Z-A)', value: 'zona-desc' },
+  { label: 'Entregas (Mayor a menor)', value: 'total-desc' },
+  { label: 'Entregas (Menor a mayor)', value: 'total-asc' },
+  { label: 'Mediana (Mayor a menor)', value: 'mediana_dias-desc' },
+  { label: 'Mediana (Menor a mayor)', value: 'mediana_dias-asc' },
+  { label: 'Fuera de rango (Mayor a menor)', value: 'facturas_fuera_de_rango-desc' }
+]
 
 export function DetailTable({ data }: DetailTableProps) {
   const [sortField, setSortField] = useState<SortField>('anio_mes')
@@ -68,7 +81,64 @@ export function DetailTable({ data }: DetailTableProps) {
 
   return (
     <div className="bg-bg-surface border border-border rounded-lg mt-8 overflow-hidden">
-      <div className="overflow-x-auto">
+      
+      {/* Mobile view */}
+      <div className="block sm:hidden p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-text-muted text-sm whitespace-nowrap">Ordenar:</span>
+          <Select 
+            className="w-full"
+            value={`${sortField}-${sortDirection}`}
+            onChange={(e) => {
+              const [field, dir] = e.target.value.split('-') as [SortField, SortDirection]
+              setSortField(field)
+              setSortDirection(dir)
+              setPage(1)
+            }}
+            options={SORT_OPTIONS}
+          />
+        </div>
+        <div className="flex flex-col gap-4">
+          {paginatedData.map((row) => {
+            const outOfRangePercent = row.total > 0 ? (row.facturas_fuera_de_rango / row.total) : 0
+            const isHigh = outOfRangePercent > 0.5
+            return (
+              <div key={`${row.anio_mes}-${row.zona}`} className="bg-bg-elevated border border-border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                  <span className="font-medium text-text-primary">{row.anio_mes}</span>
+                  <span className="text-sm text-text-secondary font-medium">{row.zona}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-y-4 gap-x-4">
+                  <div className="flex flex-col">
+                    <span className="text-text-muted text-xs mb-1">Entregas</span>
+                    <span className="font-medium text-text-primary tabular-nums">{formatNumber(row.total)}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-text-muted text-xs mb-1">Fuera de rango</span>
+                    <span className={cn(
+                      "font-medium tabular-nums",
+                      isHigh ? "text-warning" : "text-text-primary"
+                    )}>
+                      {formatNumber(row.facturas_fuera_de_rango)} <span className="text-xs font-normal opacity-70">({formatPercent(row.facturas_fuera_de_rango, row.total)})</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-text-muted text-xs mb-1">Mediana</span>
+                    <span className="font-medium text-text-primary tabular-nums">{formatDecimal(row.mediana_dias)}d</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-text-muted text-xs mb-1">Promedio</span>
+                    <span className="font-medium text-text-muted tabular-nums">{formatDecimal(row.promedio_dias)}d</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-border bg-bg-elevated/50">
@@ -117,14 +187,14 @@ export function DetailTable({ data }: DetailTableProps) {
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 bg-bg-surface border border-border rounded text-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
+              className="px-3 py-2 sm:py-1 min-w-[88px] min-h-[44px] sm:min-h-0 sm:min-w-0 bg-bg-surface border border-border rounded text-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
             >
               Anterior
             </button>
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1 bg-bg-surface border border-border rounded text-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
+              className="px-3 py-2 sm:py-1 min-w-[88px] min-h-[44px] sm:min-h-0 sm:min-w-0 bg-bg-surface border border-border rounded text-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
             >
               Siguiente
             </button>
