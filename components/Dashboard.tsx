@@ -12,6 +12,7 @@ import { DetailTable } from './DetailTable'
 import { Glossary } from './Glossary'
 import { StagesChart } from './StagesChart'
 import { AuthTypesPanel } from './AuthTypesPanel'
+import { KpiDescriptions } from './KpiDescriptions'
 
 interface DashboardProps {
   initialData: ReporteRow[];
@@ -120,15 +121,17 @@ export function Dashboard({ initialData }: DashboardProps) {
       <KpiRow metrics={metrics} />
       
       <StagesChart metrics={metrics} />
-      <AuthTypesPanel metrics={metrics} />
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         <TrendChart data={trendData} />
         <ZoneRanking data={zoneData} />
       </div>
 
+      <AuthTypesPanel metrics={metrics} />
+
       <DetailTable data={filteredData} />
       
+      <KpiDescriptions />
       <Glossary />
     </div>
   )

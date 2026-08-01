@@ -3,6 +3,7 @@
 import React from 'react'
 import { DashboardMetrics } from '@/lib/types'
 import { formatNumber, formatPercent } from '@/lib/format'
+import { Clock } from 'lucide-react'
 
 interface AuthTypesPanelProps {
   metrics: DashboardMetrics | null;
@@ -14,10 +15,23 @@ export function AuthTypesPanel({ metrics }: AuthTypesPanelProps) {
   }
 
   const authData = [
-    { label: 'Credito del cliente (CXC)', count: metrics.con_autoriz_cxc },
-    { label: 'Descuentos', count: metrics.con_autoriz_descuentos },
-    { label: 'Cambio de lista de precios', count: metrics.con_autoriz_lista },
+    { label: 'Credito del cliente (CXC)', count: metrics.con_autoriz_cxc ?? 0 },
+    { label: 'Descuentos', count: metrics.con_autoriz_descuentos ?? 0 },
+    { label: 'Cambio de lista de precios', count: metrics.con_autoriz_lista ?? 0 },
   ]
+
+  const totalAuths = authData.reduce((acc, curr) => acc + curr.count, 0)
+
+  if (totalAuths === 0) {
+    return (
+      <div className="bg-bg-surface border border-border rounded-lg p-6 flex flex-col items-center justify-center mb-8 gap-3">
+        <Clock className="w-5 h-5 text-text-muted" />
+        <span className="text-text-muted text-sm text-center">
+          El desglose por tipo de autorización aparecerá cuando el proceso automático cargue los datos
+        </span>
+      </div>
+    )
+  }
 
   // Sort by count descending for better visual presentation, though the prompt
   // didn't strictly require it, it makes sense for bar charts. Let's just 

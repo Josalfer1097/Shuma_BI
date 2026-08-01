@@ -3,18 +3,24 @@
 import React from 'react'
 import { DashboardMetrics } from '@/lib/types'
 import { formatDecimal, formatPercent } from '@/lib/format'
+import { Clock } from 'lucide-react'
 
 interface StagesChartProps {
   metrics: DashboardMetrics | null;
 }
 
 export function StagesChart({ metrics }: StagesChartProps) {
+  const emptyState = (
+    <div className="bg-bg-surface border border-border rounded-lg p-6 flex flex-col items-center justify-center mb-8 gap-3">
+      <Clock className="w-5 h-5 text-text-muted" />
+      <span className="text-text-muted text-sm text-center">
+        El desglose por etapa aparecerá cuando el proceso automático cargue los datos
+      </span>
+    </div>
+  );
+
   if (!metrics) {
-    return (
-      <div className="bg-bg-surface border border-border rounded-lg p-5 h-[200px] flex items-center justify-center mb-8">
-        <span className="text-text-muted text-sm">Sin datos para la selección actual</span>
-      </div>
-    )
+    return emptyState;
   }
 
   const stages = [
@@ -27,11 +33,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
   ].filter(s => s.value !== null && s.value > 0) as { key: string; label: string; value: number }[]
 
   if (stages.length === 0) {
-    return (
-      <div className="bg-bg-surface border border-border rounded-lg p-5 h-[200px] flex items-center justify-center mb-8">
-        <span className="text-text-muted text-sm">Sin datos de etapas para la selección actual</span>
-      </div>
-    )
+    return emptyState;
   }
 
   const totalCycle = stages.reduce((acc, curr) => acc + curr.value, 0)

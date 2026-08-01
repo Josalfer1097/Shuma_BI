@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.0 — 2026-08-01
+
+- Se reordena el tablero para que al abrirlo se vean primero los numeros
+  principales y las graficas, sin necesidad de desplazarse.
+- Los indicadores se muestran de forma compacta. Sus explicaciones se mueven
+  a una seccion desplegable mas abajo, junto al glosario.
+- El desglose por tipo de autorizacion se mueve debajo de las graficas, por
+  ser informacion de apoyo.
+- Se mejora el mensaje que aparece cuando aun no hay informacion cargada,
+  para distinguirlo de un valor en cero.
+
 ## v0.7.0 — 2026-08-01
 
 - Se agrega el desglose del tiempo de entrega por etapa del proceso, para ver
