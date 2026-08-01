@@ -20,6 +20,17 @@ export function aggregate(rows: ReporteRow[]): DashboardMetrics | null {
 
     // Conteos: suma simple.
     total_con_factura: rows.reduce((s, r) => s + r.total_con_factura, 0),
-    facturas_fuera_de_rango: rows.reduce((s, r) => s + r.facturas_fuera_de_rango, 0),
+    con_autoriz_lista: rows.reduce((s, r) => s + r.con_autoriz_lista, 0),
+    con_autoriz_cxc: rows.reduce((s, r) => s + r.con_autoriz_cxc, 0),
+    con_autoriz_descuentos: rows.reduce((s, r) => s + r.con_autoriz_descuentos, 0),
+
+    // Tramos del ciclo: medianas ponderadas por volumen
+    med_cot_autorizacion: rows.reduce((s, r) => s + (r.med_cot_autorizacion ?? 0) * r.total, 0) / total,
+    med_autorizacion_recepcion: rows.reduce((s, r) => s + (r.med_autorizacion_recepcion ?? 0) * r.total, 0) / total,
+    med_recepcion_surtido: rows.reduce((s, r) => s + (r.med_recepcion_surtido ?? 0) * r.total, 0) / total,
+    med_surtido_ruta: rows.reduce((s, r) => s + (r.med_surtido_ruta ?? 0) * r.total, 0) / total,
+    med_ruta_entrega: rows.reduce((s, r) => s + (r.med_ruta_entrega ?? 0) * r.total, 0) / total,
+    med_entrega_validacion: rows.reduce((s, r) => s + (r.med_entrega_validacion ?? 0) * r.total, 0) / total,
+    med_entrega_factura: rows.reduce((s, r) => s + (r.med_entrega_factura ?? 0) * r.total, 0) / total,
   }
 }

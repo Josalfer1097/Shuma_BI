@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { ReporteRow } from '@/lib/types'
-import { formatNumber, formatDecimal, formatPercent } from '@/lib/format'
+import { formatNumber, formatDecimal } from '@/lib/format'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 import { cn } from './ui/Tooltip'
 import { Select } from './ui/Select'
@@ -22,8 +22,7 @@ const SORT_OPTIONS = [
   { label: 'Entregas (Mayor a menor)', value: 'total-desc' },
   { label: 'Entregas (Menor a mayor)', value: 'total-asc' },
   { label: 'Mediana (Mayor a menor)', value: 'mediana_dias-desc' },
-  { label: 'Mediana (Menor a mayor)', value: 'mediana_dias-asc' },
-  { label: 'Fuera de rango (Mayor a menor)', value: 'facturas_fuera_de_rango-desc' }
+  { label: 'Mediana (Menor a mayor)', value: 'mediana_dias-asc' }
 ]
 
 export function DetailTable({ data }: DetailTableProps) {
@@ -51,9 +50,13 @@ export function DetailTable({ data }: DetailTableProps) {
   }
 
   const sortedData = [...data].sort((a, b) => {
-    const aVal = a[sortField]
-    const bVal = b[sortField]
+    let aVal = a[sortField]
+    let bVal = b[sortField]
     
+    // Handle null values that could come from the new metrics
+    if (aVal === null) aVal = 0
+    if (bVal === null) bVal = 0
+
     if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
     if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
     return 0
@@ -100,8 +103,6 @@ export function DetailTable({ data }: DetailTableProps) {
         </div>
         <div className="flex flex-col gap-4">
           {paginatedData.map((row) => {
-            const outOfRangePercent = row.total > 0 ? (row.facturas_fuera_de_rango / row.total) : 0
-            const isHigh = outOfRangePercent > 0.5
             return (
               <div key={`${row.anio_mes}-${row.zona}`} className="bg-bg-elevated border border-border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
@@ -112,15 +113,6 @@ export function DetailTable({ data }: DetailTableProps) {
                   <div className="flex flex-col">
                     <span className="text-text-muted text-xs mb-1">Entregas</span>
                     <span className="font-medium text-text-primary tabular-nums">{formatNumber(row.total)}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-text-muted text-xs mb-1">Fuera de rango</span>
-                    <span className={cn(
-                      "font-medium tabular-nums",
-                      isHigh ? "text-warning" : "text-text-primary"
-                    )}>
-                      {formatNumber(row.facturas_fuera_de_rango)} <span className="text-xs font-normal opacity-70">({formatPercent(row.facturas_fuera_de_rango, row.total)})</span>
-                    </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-text-muted text-xs mb-1">Mediana</span>
@@ -148,13 +140,10 @@ export function DetailTable({ data }: DetailTableProps) {
               <Th field="mediana_dias" label="Mediana" align="right" />
               <Th field="promedio_dias" label="Promedio" align="right" />
               <Th field="maximo_dias" label="Máximo" align="right" />
-              <Th field="facturas_fuera_de_rango" label="Fuera de rango" align="right" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {paginatedData.map((row) => {
-              const outOfRangePercent = row.total > 0 ? (row.facturas_fuera_de_rango / row.total) : 0
-              const isHigh = outOfRangePercent > 0.5
               
               return (
                 <tr key={`${row.anio_mes}-${row.zona}`} className="even:bg-bg-elevated hover:bg-bg-elevated transition-colors">
@@ -164,13 +153,6 @@ export function DetailTable({ data }: DetailTableProps) {
                   <td className="px-4 py-3 text-sm text-text-primary text-right tabular-nums">{formatDecimal(row.mediana_dias)}</td>
                   <td className="px-4 py-3 text-sm text-text-muted text-right tabular-nums">{formatDecimal(row.promedio_dias)}</td>
                   <td className="px-4 py-3 text-sm text-text-muted text-right tabular-nums">{formatNumber(row.maximo_dias)}</td>
-                  <td className={cn(
-                    "px-4 py-3 text-sm text-right tabular-nums",
-                    isHigh ? "bg-warning/20 text-warning font-medium" : "text-text-primary"
-                  )}>
-                    {formatNumber(row.facturas_fuera_de_rango)}
-                    <span className="text-text-muted text-xs ml-1">({formatPercent(row.facturas_fuera_de_rango, row.total)})</span>
-                  </td>
                 </tr>
               )
             })}

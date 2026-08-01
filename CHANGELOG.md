@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.7.0 — 2026-08-01
+
+- Se agrega el desglose del tiempo de entrega por etapa del proceso, para ver
+  en cual se va el tiempo. La etapa mas lenta se resalta automaticamente.
+- Se agrega el indicador de autorizacion, que antes no se media y resulto ser
+  la etapa mas lenta: se lleva alrededor de una quinta parte del tiempo total.
+- Se agrega el desglose de que tipo de autorizacion se solicita, para
+  identificar cual es la que mas frena la operacion.
+- Se retira el indicador de facturas fuera de rango. Al revisarlo contra la
+  operacion real se confirmo que la facturacion por lote al cierre del dia es
+  la practica normal, por lo que el indicador marcaba como problema algo que
+  no lo es.
+- Se agrega el indicador de dias entre la entrega y la facturacion, que si
+  refleja un tiempo accionable porque de el depende el arranque de la
+  cobranza.
+
 ## v0.6.0 — 2026-08-01
 
 - Se agrega modo claro, con un boton en la parte superior para alternar entre

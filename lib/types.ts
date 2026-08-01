@@ -7,7 +7,19 @@ export interface ReporteRow {
   mediana_dias: number;
   maximo_dias: number;
   total_con_factura: number;
-  facturas_fuera_de_rango: number;
+  
+  // v0.7.0 New metrics
+  med_cot_autorizacion: number | null;
+  med_autorizacion_recepcion: number | null;
+  med_recepcion_surtido: number | null;
+  med_surtido_ruta: number | null;
+  med_ruta_entrega: number | null;
+  med_entrega_validacion: number | null;
+  med_entrega_factura: number | null;
+  con_autoriz_lista: number;
+  con_autoriz_cxc: number;
+  con_autoriz_descuentos: number;
+
   actualizado_en: string;
 }
 
@@ -25,5 +37,16 @@ export interface DashboardMetrics {
   mediana_dias: number;
   maximo_dias: number;
   total_con_factura: number;
-  facturas_fuera_de_rango: number;
+  
+  // v0.7.0 New metrics
+  med_cot_autorizacion: number | null;
+  med_autorizacion_recepcion: number | null;
+  med_recepcion_surtido: number | null;
+  med_surtido_ruta: number | null;
+  med_ruta_entrega: number | null;
+  med_entrega_validacion: number | null;
+  med_entrega_factura: number | null;
+  con_autoriz_lista: number;
+  con_autoriz_cxc: number;
+  con_autoriz_descuentos: number;
 }

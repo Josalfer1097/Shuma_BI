@@ -10,6 +10,8 @@ import { TrendChart } from './TrendChart'
 import { ZoneRanking } from './ZoneRanking'
 import { DetailTable } from './DetailTable'
 import { Glossary } from './Glossary'
+import { StagesChart } from './StagesChart'
+import { AuthTypesPanel } from './AuthTypesPanel'
 
 interface DashboardProps {
   initialData: ReporteRow[];
@@ -117,6 +119,9 @@ export function Dashboard({ initialData }: DashboardProps) {
       </div>
       <KpiRow metrics={metrics} />
       
+      <StagesChart metrics={metrics} />
+      <AuthTypesPanel metrics={metrics} />
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <TrendChart data={trendData} />
         <ZoneRanking data={zoneData} />

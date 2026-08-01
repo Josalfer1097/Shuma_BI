@@ -3,7 +3,7 @@
 import React from 'react'
 import { DashboardMetrics } from '@/lib/types'
 import { KpiCard } from './KpiCard'
-import { formatNumber, formatDecimal, formatPercent } from '@/lib/format'
+import { formatNumber, formatDecimal } from '@/lib/format'
 
 interface KpiRowProps {
   metrics: DashboardMetrics | null;
@@ -22,13 +22,12 @@ export function KpiRow({ metrics }: KpiRowProps) {
     )
   }
 
-  const outOfRangePercent = metrics.total > 0 ? (metrics.facturas_fuera_de_rango / metrics.total) : 0;
-  
-  let outOfRangeColor = 'text-success';
-  if (outOfRangePercent >= 0.1 && outOfRangePercent <= 0.4) {
-    outOfRangeColor = 'text-warning';
-  } else if (outOfRangePercent > 0.4) {
-    outOfRangeColor = 'text-danger';
+  const diasFactura = metrics.med_entrega_factura ?? 0;
+  let facturaColor = 'text-success';
+  if (diasFactura >= 1 && diasFactura <= 3) {
+    facturaColor = 'text-warning';
+  } else if (diasFactura > 3) {
+    facturaColor = 'text-danger';
   }
 
   return (
@@ -59,11 +58,10 @@ export function KpiRow({ metrics }: KpiRowProps) {
         description="Cotizaciones que si se lograron ligar a su factura por la cadena pedido → remision → factura."
       />
       <KpiCard
-        title="Facturas fuera de rango"
-        value={formatNumber(metrics.facturas_fuera_de_rango)}
-        secondary={`${formatPercent(metrics.facturas_fuera_de_rango, metrics.total)} del total`}
-        valueColor={outOfRangeColor}
-        description="Casos donde la factura se genero fuera de la ventana surtido → ruta esperada. Foco de atencion de proceso."
+        title="Dias hasta facturar"
+        value={`${formatDecimal(diasFactura)}d`}
+        valueColor={facturaColor}
+        description="Tiempo entre que se entrega el material y se genera la factura. En Shuma se factura por lote al cierre del dia."
       />
     </div>
   )

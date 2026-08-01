@@ -24,7 +24,18 @@ create table if not exists reporte_tiempos_zona_mes (
   maximo_dias              numeric(10,2),
 
   total_con_factura        integer,
-  facturas_fuera_de_rango  integer,
+  
+  med_cot_autorizacion       numeric(10,2),
+  med_autorizacion_recepcion numeric(10,2),
+  med_recepcion_surtido      numeric(10,2),
+  med_surtido_ruta           numeric(10,2),
+  med_ruta_entrega           numeric(10,2),
+  med_entrega_validacion     numeric(10,2),
+  med_entrega_factura        numeric(10,2),
+  
+  con_autoriz_lista          integer,
+  con_autoriz_cxc            integer,
+  con_autoriz_descuentos     integer,
 
   actualizado_en           timestamptz not null default now(),
 
@@ -50,8 +61,6 @@ comment on column reporte_tiempos_zona_mes.maximo_dias is
   'Caso mas lento del mes/zona. Util para detectar focos rojos, no para promediar.';
 comment on column reporte_tiempos_zona_mes.total_con_factura is
   'Cotizaciones que se lograron ligar a su factura via cadena pedido->remision->factura.';
-comment on column reporte_tiempos_zona_mes.facturas_fuera_de_rango is
-  'INDICADOR DE CALIDAD: casos donde la factura se genero fuera de la ventana esperada surtido->ruta. Mayor a 0 = revisar orden del proceso.';
 
 create index if not exists idx_tiempos_anio_mes on reporte_tiempos_zona_mes (anio_mes);
 create index if not exists idx_tiempos_zona     on reporte_tiempos_zona_mes (zona);
@@ -98,7 +107,16 @@ select
   round(sum(mediana_dias  * total) / nullif(sum(total), 0), 2) as mediana_dias,
   max(maximo_dias)                                             as maximo_dias,
   sum(total_con_factura)                                       as total_con_factura,
-  sum(facturas_fuera_de_rango)                                 as facturas_fuera_de_rango
+  round(sum(med_cot_autorizacion * total) / nullif(sum(total), 0), 2) as med_cot_autorizacion,
+  round(sum(med_autorizacion_recepcion * total) / nullif(sum(total), 0), 2) as med_autorizacion_recepcion,
+  round(sum(med_recepcion_surtido * total) / nullif(sum(total), 0), 2) as med_recepcion_surtido,
+  round(sum(med_surtido_ruta * total) / nullif(sum(total), 0), 2) as med_surtido_ruta,
+  round(sum(med_ruta_entrega * total) / nullif(sum(total), 0), 2) as med_ruta_entrega,
+  round(sum(med_entrega_validacion * total) / nullif(sum(total), 0), 2) as med_entrega_validacion,
+  round(sum(med_entrega_factura * total) / nullif(sum(total), 0), 2) as med_entrega_factura,
+  sum(con_autoriz_lista) as con_autoriz_lista,
+  sum(con_autoriz_cxc) as con_autoriz_cxc,
+  sum(con_autoriz_descuentos) as con_autoriz_descuentos
 from reporte_tiempos_zona_mes
 group by anio_mes;
 
@@ -115,7 +133,16 @@ select
   round(sum(mediana_dias  * total) / nullif(sum(total), 0), 2) as mediana_dias,
   max(maximo_dias)                                             as maximo_dias,
   sum(total_con_factura)                                       as total_con_factura,
-  sum(facturas_fuera_de_rango)                                 as facturas_fuera_de_rango
+  round(sum(med_cot_autorizacion * total) / nullif(sum(total), 0), 2) as med_cot_autorizacion,
+  round(sum(med_autorizacion_recepcion * total) / nullif(sum(total), 0), 2) as med_autorizacion_recepcion,
+  round(sum(med_recepcion_surtido * total) / nullif(sum(total), 0), 2) as med_recepcion_surtido,
+  round(sum(med_surtido_ruta * total) / nullif(sum(total), 0), 2) as med_surtido_ruta,
+  round(sum(med_ruta_entrega * total) / nullif(sum(total), 0), 2) as med_ruta_entrega,
+  round(sum(med_entrega_validacion * total) / nullif(sum(total), 0), 2) as med_entrega_validacion,
+  round(sum(med_entrega_factura * total) / nullif(sum(total), 0), 2) as med_entrega_factura,
+  sum(con_autoriz_lista) as con_autoriz_lista,
+  sum(con_autoriz_cxc) as con_autoriz_cxc,
+  sum(con_autoriz_descuentos) as con_autoriz_descuentos
 from reporte_tiempos_zona_mes
 group by zona;
 

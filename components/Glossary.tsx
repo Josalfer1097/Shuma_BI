@@ -14,7 +14,16 @@ export function Glossary() {
     { field: 'MEDIANA_DIAS', desc: 'El caso tipico: la mitad de las cotizaciones tardan menos que este numero y la otra mitad tarda mas. Es el numero mas confiable para saber cuanto tarda realmente el proceso, porque no lo distorsionan los casos extremos.' },
     { field: 'MAXIMO_DIAS', desc: 'El caso mas lento del mes y la zona. Util para detectar focos rojos, no para sacar promedios generales.' },
     { field: 'TOTAL_CON_FACTURA', desc: 'De esas cotizaciones, cuantas se lograron ligar a una factura. Algunas no se pueden conectar por limites tecnicos de los datos: es un hueco conocido, no un error de la operacion.' },
-    { field: 'FACTURAS_FUERA_DE_RANGO', desc: 'El indicador de calidad de proceso. Cuenta las cotizaciones donde la factura se genero antes de surtir el pedido o despues de que ya salio a ruta, lo cual no deberia pasar segun el flujo esperado: surtir, facturar y luego enviar a ruta.' }
+    { field: 'MED_COT_AUTORIZACION', desc: 'Dias que tarda una cotizacion en ser autorizada. Es la etapa mas lenta del proceso y es tiempo de espera, no de trabajo.' },
+    { field: 'MED_AUTORIZACION_RECEPCION', desc: 'Dias entre que se autoriza y almacen la toma para trabajarla.' },
+    { field: 'MED_RECEPCION_SURTIDO', desc: 'Dias que tarda almacen en preparar el material.' },
+    { field: 'MED_SURTIDO_RUTA', desc: 'Dias entre que el material esta listo y sale a ruta.' },
+    { field: 'MED_RUTA_ENTREGA', desc: 'Dias entre que sale el camion y llega al cliente.' },
+    { field: 'MED_ENTREGA_VALIDACION', desc: 'Dias entre que se reporta la entrega y logistica la confirma.' },
+    { field: 'MED_ENTREGA_FACTURA', desc: 'Dias entre la entrega y la facturacion. Mientras mas tarda, mas tarda en arrancar la cobranza.' },
+    { field: 'CON_AUTORIZ_CXC', desc: 'Cotizaciones que necesitaron aprobacion de credito del cliente. Es la mas frecuente de las tres.' },
+    { field: 'CON_AUTORIZ_DESCUENTOS', desc: 'Cotizaciones que necesitaron aprobacion de descuentos.' },
+    { field: 'CON_AUTORIZ_LISTA', desc: 'Cotizaciones que necesitaron aprobacion de cambio de lista de precios.' }
   ]
 
   return (
