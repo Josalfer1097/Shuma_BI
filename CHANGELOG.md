@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.0 — 2026-08-01
+
+- Se agrega modo claro, con un boton en la parte superior para alternar entre
+  claro y oscuro. La preferencia se recuerda para la proxima visita.
+- Se aumenta el contraste de los textos en ambos modos. Las descripciones de
+  los indicadores y las notas del glosario estaban por debajo del nivel
+  recomendado de legibilidad y ahora cumplen el estandar.
+- Se ajustan los bordes y las lineas de las graficas para que se distingan
+  correctamente en los dos modos.
+
 ## v0.5.0 — 2026-07-31
 
 - Se agrega el proceso automatico que trae la informacion de tiempos de

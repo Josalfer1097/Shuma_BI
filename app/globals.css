@@ -2,21 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg-base: #050C1A;
-  --bg-surface: #0A1628;
-  --bg-elevated: #111F38;
-  --border: #1B2C4A;
+/* ---------- MODO OSCURO (por defecto) ---------- */
+:root,
+[data-theme="dark"] {
+  --bg-base:        #050C1A;
+  --bg-surface:     #0A1628;
+  --bg-elevated:    #16273F;
+  --border:         #2A3F63;   /* subido desde #1B2C4A: los bordes eran casi invisibles */
 
-  --text-primary: #E8EDF5;
-  --text-secondary: #8FA3BF;
-  --text-muted: #5A6E8C;
+  --text-primary:   #F0F4FA;   /* 16.43:1 */
+  --text-secondary: #A9BCD4;   /*  9.35:1 */
+  --text-muted:     #8296B2;   /*  6.00:1  (antes 3.49:1, no pasaba) */
 
-  --accent: #2196F3;
-  --accent-deep: #0047AB;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
+  --accent:         #4DA9F7;   /*  7.19:1  (antes 5.80:1) */
+  --accent-deep:    #1E4E8C;   /* fondo de barra de titulo, blanco encima = 8.32:1 */
+
+  --success:        #34D399;   /*  9.43:1 */
+  --warning:        #FBBF24;   /* 10.86:1 */
+  --danger:         #F87171;   /*  6.55:1 */
+}
+
+/* ---------- MODO CLARO ---------- */
+[data-theme="light"] {
+  --bg-base:        #F5F7FA;
+  --bg-surface:     #FFFFFF;
+  --bg-elevated:    #EDF1F7;
+  --border:         #D3DCE8;
+
+  --text-primary:   #0F1E33;   /* 16.75:1 */
+  --text-secondary: #3D5573;   /*  7.65:1 */
+  --text-muted:     #5A7192;   /*  4.99:1 */
+
+  --accent:         #0B5FBF;   /*  6.17:1 */
+  --accent-deep:    #0B5FBF;   /* blanco encima = 6.17:1 */
+
+  --success:        #047857;   /*  5.48:1 */
+  --warning:        #B45309;   /*  5.02:1 */
+  --danger:         #B91C1C;   /*  6.47:1 */
 }
 
 body {

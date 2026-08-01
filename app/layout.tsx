@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Exo_2 } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const dmSans = DM_Sans({ 
   subsets: ["latin"], 
@@ -22,9 +23,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={`${dmSans.variable} ${exo2.variable} font-sans min-h-screen`}>
-        {children}
+        <ThemeProvider
+          attribute="data-theme"
+          defaultTheme="dark"
+          enableSystem={true}
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

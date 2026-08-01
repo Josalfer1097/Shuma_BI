@@ -157,7 +157,7 @@ export function DetailTable({ data }: DetailTableProps) {
               const isHigh = outOfRangePercent > 0.5
               
               return (
-                <tr key={`${row.anio_mes}-${row.zona}`} className="hover:bg-bg-elevated transition-colors">
+                <tr key={`${row.anio_mes}-${row.zona}`} className="even:bg-bg-elevated hover:bg-bg-elevated transition-colors">
                   <td className="px-4 py-3 text-sm text-text-primary">{row.anio_mes}</td>
                   <td className="px-4 py-3 text-sm text-text-primary">{row.zona}</td>
                   <td className="px-4 py-3 text-sm text-text-primary text-right tabular-nums">{formatNumber(row.total)}</td>
