@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.11.0 — 2026-08-03
+
+- Se incorpora la meta de cinco dias comprometida con el cliente. El tablero
+  ahora indica si se esta cumpliendo, no solo cuanto se tarda.
+- Se agrega un indicador de cumplimiento de meta y se marcan en rojo las
+  zonas que estan fuera del compromiso.
+- Se puede elegir contra que comparar el mes seleccionado: el mes anterior,
+  el mismo mes del año pasado o el promedio del periodo.
+- La grafica de tendencia muestra la linea de meta y el promedio del periodo,
+  para ubicar cada mes respecto a ambos.
+- Se marcan automaticamente los meses donde el promedio se dispara por casos
+  aislados, aclarando que el proceso general no empeoro.
+- Se agrega la grafica de evolucion por etapa, que permite ver en cual parte
+  del proceso se dio una mejora o un retroceso.
 ## v0.10.0 — 2026-08-03
 
 - Se corrige el boton de ayuda de los indicadores, que no mostraba nada al

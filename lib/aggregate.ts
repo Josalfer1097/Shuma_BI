@@ -1,10 +1,20 @@
 import { ReporteRow, DashboardMetrics } from './types'
+import { META_DIAS } from './config'
 
 export function aggregate(rows: ReporteRow[]): DashboardMetrics | null {
   if (rows.length === 0) return null
 
   const total = rows.reduce((s, r) => s + r.total, 0)
   if (total === 0) return null
+  
+  let zonas_mes_cumplen_meta = 0
+  let entregas_cumplen_meta = 0
+  for (const row of rows) {
+    if (row.mediana_dias <= META_DIAS) {
+      zonas_mes_cumplen_meta++
+      entregas_cumplen_meta += row.total
+    }
+  }
 
   return {
     total,
@@ -43,5 +53,9 @@ export function aggregate(rows: ReporteRow[]): DashboardMetrics | null {
         ? valores[Math.floor(valores.length / 2)]
         : null;
     })(),
+    
+    total_zonas_mes_evaluadas: rows.length,
+    zonas_mes_cumplen_meta,
+    entregas_cumplen_meta
   }
 }

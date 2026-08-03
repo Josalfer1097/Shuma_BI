@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   LineChart,
   Line,
@@ -13,7 +14,9 @@ import {
 } from 'recharts'
 import { formatNumber, formatDecimal } from '@/lib/format'
 import { Tooltip as CustomUITooltip } from './ui/Tooltip'
+import { Select } from './ui/Select'
 import { DashboardMetrics } from '@/lib/types'
+import { META_DIAS } from '@/lib/config'
 
 interface TrendChartProps {
   data: {
@@ -30,23 +33,39 @@ interface TrendChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
+    const meetsMeta = data.mediana_dias <= META_DIAS
+    const isAnomaly = data.promedio_dias > data.mediana_dias * 2
+    
     return (
-      <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-sm">
-        <p className="text-text-muted mb-2">{label}</p>
-        <div className="space-y-1">
-          <p className="text-accent flex justify-between gap-4">
-            <span>Tiempo típico:</span> 
-            <span className="font-semibold">{formatDecimal(data.mediana_dias)}d</span>
-          </p>
-          <p className="text-text-secondary flex justify-between gap-4">
-            <span>Promedio:</span> 
+      <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-sm max-w-[280px] z-[60]">
+        <p className="text-text-muted mb-2 font-medium">{label}</p>
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center gap-4">
+            <span className="text-accent">Mediana:</span> 
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">{formatDecimal(data.mediana_dias)}d</span>
+              {meetsMeta ? (
+                <span className="text-success text-xs">✓ dentro de meta</span>
+              ) : (
+                <span className="text-danger text-xs">✗ fuera de meta</span>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-between items-center gap-4">
+            <span className="text-text-secondary">Promedio:</span> 
             <span className="font-semibold">{formatDecimal(data.promedio_dias)}d</span>
-          </p>
-          <p className="text-text-primary flex justify-between gap-4 mt-2 pt-2 border-t border-border">
-            <span>Volumen:</span> 
-            <span className="font-semibold">{formatNumber(data.total)}</span>
-          </p>
+          </div>
+          <div className="flex justify-between items-center gap-4 pt-1.5 border-t border-border mt-1.5">
+            <span className="text-text-primary">Volumen:</span> 
+            <span className="font-semibold">{formatNumber(data.total)} entregas</span>
+          </div>
         </div>
+        
+        {isAnomaly && (
+          <div className="mt-3 pt-3 border-t border-border text-xs text-text-muted leading-relaxed">
+            <strong className="text-warning font-semibold">Anomalía:</strong> Ese mes el promedio se disparó por unas pocas entregas muy lentas. La mediana casi no cambió, así que el proceso general no empeoró: fueron casos aislados.
+          </div>
+        )}
       </div>
     )
   }
@@ -71,7 +90,22 @@ const CustomDot = (props: any) => {
   return <circle cx={cx} cy={cy} r={4} fill="var(--accent)" strokeWidth={0} />;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PromedioDot = (props: any) => {
+  const { cx, cy, payload } = props;
+  if (payload.promedio_dias > payload.mediana_dias * 2) {
+    return (
+      <polygon points={`${cx},${cy-6} ${cx-5},${cy+4} ${cx+5},${cy+4}`} fill="var(--warning)" />
+    );
+  }
+  return null;
+}
+
 export function TrendChart({ data, selectedMonth }: TrendChartProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const compMode = searchParams.get('comp') || 'anterior'
+
   if (data.length === 0) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 h-60 sm:h-80 flex items-center justify-center">
@@ -89,22 +123,63 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
 
   let comparisonNode = null;
   let chartTitle = "Tendencia mensual";
-  let chartTooltip = "La linea solida es la mediana: lo que tarda una entrega tipica. La punteada es el promedio, que sube cuando hay entregas muy lentas. Cuando las dos lineas se separan, ese mes hubo casos extremos. Si el promedio sube pero la mediana se mantiene, el problema son casos aislados y no el proceso general.";
+  let chartTooltip = "La línea sólida es la mediana: lo que tarda una entrega típica. La punteada es el promedio, que sube cuando hay entregas muy lentas. Cuando las dos líneas se separan, ese mes hubo casos extremos. Si el promedio sube pero la mediana se mantiene, el problema son casos aislados y no el proceso general.";
+
+  const sumTotalVisible = data.reduce((acc, d) => acc + d.total, 0);
+  const tuNormal = sumTotalVisible > 0 ? data.reduce((acc, d) => acc + d.mediana_dias * d.total, 0) / sumTotalVisible : 0;
 
   if (selectedMonth) {
     const [anio, mes] = selectedMonth.split('-')
     const label = `${MONTHS_ES[mes] || mes} ${anio}`
     chartTitle = `Tendencia mensual — ${label} en contexto`;
-    chartTooltip = "Se muestran los ultimos doce meses para poder ubicar el mes seleccionado en contexto. El punto resaltado es el mes que elegiste. Un mes aislado no dice mucho: lo que importa es si esta por encima o por debajo de su tendencia.";
+    chartTooltip = "Se muestran los últimos doce meses para poder ubicar el mes seleccionado en contexto. El punto resaltado es el mes que elegiste. Un mes aislado no dice mucho: lo que importa es si está por encima o por debajo de su tendencia.";
 
-    // Compare with previous month
+    // Compare logic
     const current = data[data.length - 1];
-    const prev = data.length > 1 ? data[data.length - 2] : null;
+    let prev = null;
+    let pLabel = '';
+
+    if (compMode === 'anterior') {
+      if (data.length > 1) {
+        prev = data[data.length - 2];
+        const [pAnio, pMes] = prev.anio_mes.split('-');
+        pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
+      }
+    } else if (compMode === 'anual') {
+      if (data.length > 12) {
+        prev = data[data.length - 13];
+        const [pAnio, pMes] = prev.anio_mes.split('-');
+        pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
+      }
+    } else if (compMode === 'promedio') {
+      if (data.length > 1) {
+        // Average of ALL visible data up to this point
+        const sumTotal = data.reduce((acc, d) => acc + d.total, 0);
+        const avgMediana = sumTotal > 0 ? data.reduce((acc, d) => acc + d.mediana_dias * d.total, 0) / sumTotal : 0;
+        const avgTotal = sumTotal / data.length;
+        
+        const avgMetrics = {} as DashboardMetrics;
+        const stages = ['med_cot_autorizacion', 'med_autorizacion_recepcion', 'med_recepcion_surtido', 'med_surtido_ruta', 'med_ruta_entrega', 'med_entrega_validacion'];
+        stages.forEach(s => {
+          // @ts-expect-error type index
+          avgMetrics[s] = sumTotal > 0 ? data.reduce((acc, d) => acc + (d.metrics?.[s] || 0) * d.total, 0) / sumTotal : 0;
+        });
+
+        prev = {
+          anio_mes: 'Promedio',
+          mediana_dias: avgMediana,
+          promedio_dias: 0,
+          total: avgTotal,
+          metrics: avgMetrics
+        };
+        pLabel = 'promedio del periodo';
+      }
+    }
 
     if (!prev) {
       comparisonNode = (
         <div className="bg-bg-elevated/30 border border-border rounded p-3 mb-4 flex justify-center text-sm text-text-muted">
-          sin mes previo para comparar
+          sin dato para comparar
         </div>
       );
     } else {
@@ -155,13 +230,10 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
         );
       };
 
-      const [pAnio, pMes] = prev.anio_mes.split('-');
-      const pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
-
       comparisonNode = (
         <div className="bg-bg-elevated/30 border border-border rounded p-4 mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
           <div className="flex flex-col gap-1 px-2">
-            <span className="text-text-muted text-xs">Tiempo tipico (mediana)</span>
+            <span className="text-text-muted text-xs">Tiempo típico (mediana)</span>
             <div className="flex flex-col items-start mt-1">
               <span className="text-text-primary text-xl font-semibold leading-none mb-1.5">{formatDecimal(current.mediana_dias)}d</span>
               <span className="text-xs font-medium">{formatDiff(diffMediana, percMediana, "d", true)} <span className="text-text-muted opacity-70 font-normal">vs {pLabel}</span></span>
@@ -175,7 +247,7 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
             </div>
           </div>
           <div className="flex flex-col gap-1 px-2 sm:pl-4">
-            <span className="text-text-muted text-xs">Etapa mas lenta</span>
+            <span className="text-text-muted text-xs">Etapa más lenta</span>
             <div className="flex flex-col items-start mt-1">
               <span className="text-text-primary text-xl font-semibold leading-none mb-1.5 truncate" title={currSlowest?.label}>{currSlowest?.label || 'N/A'}</span>
               <span className="text-text-secondary font-medium text-xs">{currSlowest ? `${formatDecimal(currSlowest.value)}d` : ''}</span>
@@ -186,6 +258,12 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
     }
   }
 
+  const handleCompChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('comp', e.target.value)
+    router.push(`/?${params.toString()}`, { scroll: false })
+  }
+
   return (
     <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 mb-8 flex flex-col">
       <div className="flex items-start justify-between mb-4 sm:mb-6">
@@ -193,14 +271,28 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
           <h3 className="text-text-primary font-medium">{chartTitle}</h3>
           {!selectedMonth && <p className="text-text-muted text-sm mt-0.5">¿Estamos mejorando o empeorando mes a mes?</p>}
         </div>
-        <CustomUITooltip text={chartTooltip} />
+        <div className="flex items-center gap-3">
+          {selectedMonth && (
+            <Select 
+              value={compMode} 
+              onChange={handleCompChange} 
+              options={[
+                { label: 'Mes anterior', value: 'anterior' },
+                { label: 'Mismo mes año pasado', value: 'anual' },
+                { label: 'Promedio del periodo', value: 'promedio' }
+              ]}
+              className="py-1 text-xs sm:min-h-[32px] pr-8"
+            />
+          )}
+          <CustomUITooltip text={chartTooltip} />
+        </div>
       </div>
-
+      
       {comparisonNode}
 
       <div className="h-60 sm:h-80 w-full flex-1">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis 
               dataKey="anio_mes" 
@@ -218,11 +310,17 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
               tickLine={false}
               axisLine={false}
               dx={-10}
-              label={{ value: 'Dias', angle: -90, position: 'insideLeft', offset: 10, style: { fill: 'var(--text-muted)', fontSize: 11 } }}
+              domain={[0, (dataMax: number) => Math.max(6, Math.ceil(dataMax * 1.1))]}
+              label={{ value: 'Días', angle: -90, position: 'insideLeft', offset: 10, style: { fill: 'var(--text-muted)', fontSize: 11 } }}
             />
+            
+            <ReferenceLine y={tuNormal} stroke="var(--text-muted)" strokeWidth={1} strokeOpacity={0.3} label={{ value: `Tu normal: ${formatDecimal(tuNormal)}d`, position: 'insideTopLeft', fill: 'var(--text-muted)', fontSize: 10 }} />
+            <ReferenceLine y={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'right', fill: 'var(--danger)', fontSize: 11 }} />
+            
             {selectedMonth && (
               <ReferenceLine x={selectedMonth} stroke="var(--warning)" strokeDasharray="3 3" />
             )}
+            
             <RechartsTooltip 
               content={<CustomTooltip />} 
               cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} 
@@ -243,7 +341,8 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
               stroke="var(--text-muted)" 
               strokeWidth={2}
               strokeDasharray="4 4"
-              dot={false}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              dot={(props: any) => <PromedioDot {...props} />}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -254,7 +353,7 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
           <div className="w-4 h-0.5 bg-accent relative flex items-center justify-center">
             <div className="w-2 h-2 rounded-full bg-accent absolute"></div>
           </div>
-          <span className="text-sm text-text-secondary">Mediana (caso tipico)</span>
+          <span className="text-sm text-text-secondary">Mediana (caso típico)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 border-b-2 border-dashed border-text-muted"></div>

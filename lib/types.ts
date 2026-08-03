@@ -49,4 +49,9 @@ export interface DashboardMetrics {
   con_autoriz_lista: number;
   con_autoriz_cxc: number;
   con_autoriz_descuentos: number;
+  
+  // v0.11.0 Compliance
+  total_zonas_mes_evaluadas: number;
+  zonas_mes_cumplen_meta: number;
+  entregas_cumplen_meta: number;
 }

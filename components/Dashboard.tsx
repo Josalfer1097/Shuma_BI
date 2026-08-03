@@ -11,6 +11,7 @@ import { ZoneRanking } from './ZoneRanking'
 import { DetailTable } from './DetailTable'
 import { Glossary } from './Glossary'
 import { StagesChart } from './StagesChart'
+import { StagesEvolutionChart } from './StagesEvolutionChart'
 import { AuthTypesPanel } from './AuthTypesPanel'
 import { KpiDescriptions } from './KpiDescriptions'
 
@@ -86,6 +87,45 @@ export function Dashboard({ initialData }: DashboardProps) {
         aggregated = aggregated.slice(startIdx, idx + 1)
       }
     }
+    return aggregated
+  }, [initialData, activeZone, activeAnio, activeMes])
+
+  // Aggregate stages evolution data
+  const stagesEvolutionData = useMemo(() => {
+    const baseData = initialData.filter(row => {
+      return !activeZone || row.zona === activeZone
+    })
+
+    const byMonth = new Map<string, ReporteRow[]>()
+    for (const row of baseData) {
+      const existing = byMonth.get(row.anio_mes) || []
+      existing.push(row)
+      byMonth.set(row.anio_mes, existing)
+    }
+
+    let aggregated = Array.from(byMonth.entries())
+      .map(([anio_mes, rows]) => {
+        const sumTotal = rows.reduce((s, r) => s + r.total, 0)
+        return {
+          anio_mes,
+          autorizacion: sumTotal ? rows.reduce((s, r) => s + (r.med_cot_autorizacion ?? 0) * r.total, 0) / sumTotal : 0,
+          a_recepcion: sumTotal ? rows.reduce((s, r) => s + (r.med_autorizacion_recepcion ?? 0) * r.total, 0) / sumTotal : 0,
+          surtido: sumTotal ? rows.reduce((s, r) => s + (r.med_recepcion_surtido ?? 0) * r.total, 0) / sumTotal : 0,
+          a_ruta: sumTotal ? rows.reduce((s, r) => s + (r.med_surtido_ruta ?? 0) * r.total, 0) / sumTotal : 0,
+          entrega: sumTotal ? rows.reduce((s, r) => s + (r.med_ruta_entrega ?? 0) * r.total, 0) / sumTotal : 0,
+          validacion: sumTotal ? rows.reduce((s, r) => s + (r.med_entrega_validacion ?? 0) * r.total, 0) / sumTotal : 0,
+        }
+      })
+      .sort((a, b) => a.anio_mes.localeCompare(b.anio_mes))
+      
+    if (activeAnio && activeMes) {
+      const selectedAnioMes = `${activeAnio}-${activeMes}`
+      const idx = aggregated.findIndex(d => d.anio_mes === selectedAnioMes)
+      if (idx !== -1) {
+        const startIdx = Math.max(0, idx - 11)
+        aggregated = aggregated.slice(startIdx, idx + 1)
+      }
+    }
 
     return aggregated
   }, [initialData, activeZone, activeAnio, activeMes])
@@ -138,11 +178,12 @@ export function Dashboard({ initialData }: DashboardProps) {
       <KpiRow metrics={metrics} />
       
       <StagesChart metrics={metrics} />
-      
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
         <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} />
         <ZoneRanking data={zoneData} />
       </div>
+      
+      <StagesEvolutionChart data={stagesEvolutionData} />
 
       <AuthTypesPanel metrics={metrics} />
 

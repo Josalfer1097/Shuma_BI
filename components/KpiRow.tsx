@@ -33,7 +33,7 @@ export function KpiRow({ metrics }: KpiRowProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
+    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 mb-8">
       <KpiCard
         title="Total entregas"
         value={formatNumber(metrics.total)}
@@ -65,6 +65,40 @@ export function KpiRow({ metrics }: KpiRowProps) {
         valueColor={facturaColor}
         tooltip="Dias entre que el material se entrega al cliente y que se genera la factura. En Shuma se factura por lote al cierre del dia, asi que lo normal es que sea menos de un dia. Importa porque la cobranza no arranca hasta que existe la factura."
       />
+      
+      {(() => {
+        if (metrics.total_zonas_mes_evaluadas < 3) {
+          return (
+            <KpiCard
+              className="xl:col-span-2"
+              title="Zonas-mes en meta"
+              value="-"
+              secondaryValue="muestra insuficiente"
+              valueColor="text-text-muted"
+              tooltip="Porcentaje de combinaciones de zona y mes cuya mediana esta dentro de los cinco dias. Se mide por combinacion y no por volumen para que una zona con pocas entregas y mal desempeno no quede escondida. El dato de abajo si es por volumen de entregas."
+            />
+          )
+        }
+
+        const pct = (metrics.zonas_mes_cumplen_meta / metrics.total_zonas_mes_evaluadas) * 100
+        const pctVol = (metrics.entregas_cumplen_meta / metrics.total) * 100
+
+        let color = 'text-success'
+        if (pct < 75) color = 'text-danger'
+        else if (pct < 90) color = 'text-warning'
+
+        return (
+          <KpiCard
+            className="xl:col-span-2"
+            title="Zonas-mes en meta"
+            value={`${formatDecimal(pct)}%`}
+            secondaryValue={`${formatDecimal(pctVol)}% de las entregas`}
+            secondaryLayout="inline"
+            valueColor={color}
+            tooltip="Porcentaje de combinaciones de zona y mes cuya mediana esta dentro de los cinco dias. Se mide por combinacion y no por volumen para que una zona con pocas entregas y mal desempeno no quede escondida. El dato de abajo si es por volumen de entregas."
+          />
+        )
+      })()}
     </div>
   )
 }

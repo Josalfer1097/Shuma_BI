@@ -10,10 +10,12 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts'
 import { formatDecimal } from '@/lib/format'
 import { Tooltip as CustomUITooltip } from './ui/Tooltip'
+import { META_DIAS } from '@/lib/config'
 
 interface ZoneRankingProps {
   data: {
@@ -135,6 +137,7 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
                 width={100}
                 tick={<CustomYAxisTick />}
               />
+              <ReferenceLine x={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'insideBottomRight', fill: 'var(--danger)', fontSize: 11, offset: 10 }} />
               <RechartsTooltip 
                 content={<CustomTooltip />} 
                 cursor={{ fill: 'var(--bg-elevated)', opacity: 0.4 }}
@@ -151,9 +154,13 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
                 {data.map((entry, index) => {
                   const isSelected = selectedZone === entry.zona
                   const hasSelection = !!selectedZone
+                  const isOutOfMeta = entry.mediana_dias > META_DIAS
                   const isSlowest = entry.mediana_dias === slowestZoneValue
                   
-                  const baseColor = isSlowest ? 'var(--warning)' : 'var(--accent)'
+                  let baseColor = 'var(--accent)'
+                  if (isOutOfMeta) baseColor = 'var(--danger)'
+                  else if (isSlowest) baseColor = 'var(--warning)'
+
                   const opacity = hasSelection && !isSelected ? 0.4 : 1
                   
                   return (
