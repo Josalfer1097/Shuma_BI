@@ -24,7 +24,9 @@ export function KpiRow({ metrics }: KpiRowProps) {
 
   const diasFactura = metrics.med_entrega_factura ?? 0;
   let facturaColor = 'text-success';
-  if (diasFactura >= 1 && diasFactura <= 3) {
+  if (diasFactura < 0) {
+    facturaColor = 'text-warning';
+  } else if (diasFactura >= 1 && diasFactura <= 3) {
     facturaColor = 'text-warning';
   } else if (diasFactura > 3) {
     facturaColor = 'text-danger';
@@ -35,27 +37,33 @@ export function KpiRow({ metrics }: KpiRowProps) {
       <KpiCard
         title="Total entregas"
         value={formatNumber(metrics.total)}
+        tooltip="Cotizaciones validadas y cerradas correctamente en la seleccion actual."
       />
       <KpiCard
         title="Promedio dias"
         value={formatDecimal(metrics.promedio_dias)}
+        tooltip="Promedio real de dias, exacto para la seleccion. Sensible a casos extremos."
       />
       <KpiCard
         title="Mediana dias"
         value={formatDecimal(metrics.mediana_dias)}
+        tooltip='Promedio ponderado de las medianas mensuales — el numero mas confiable de "tiempo tipico".'
       />
       <KpiCard
         title="Maximo dias"
         value={formatDecimal(metrics.maximo_dias)}
+        tooltip="El caso mas lento dentro de la seleccion — util para detectar focos rojos."
       />
       <KpiCard
         title="Con factura ligada"
         value={formatNumber(metrics.total_con_factura)}
+        tooltip="Cotizaciones que si se lograron ligar a su factura por la cadena pedido → remision → factura."
       />
       <KpiCard
-        title="Dias hasta facturar"
-        value={`${formatDecimal(diasFactura)}d`}
+        title="Entrega a factura"
+        value={`${diasFactura > 0 ? '+' : ''}${formatDecimal(diasFactura)}d`}
         valueColor={facturaColor}
+        tooltip="Dias entre que el material se entrega al cliente y que se genera la factura. En Shuma se factura por lote al cierre del dia, asi que lo normal es que sea menos de un dia. Importa porque la cobranza no arranca hasta que existe la factura."
       />
     </div>
   )

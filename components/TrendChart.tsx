@@ -11,6 +11,7 @@ import {
   ResponsiveContainer
 } from 'recharts'
 import { formatNumber, formatDecimal } from '@/lib/format'
+import { Tooltip as CustomUITooltip } from './ui/Tooltip'
 
 interface TrendChartProps {
   data: {
@@ -101,9 +102,15 @@ export function TrendChart({ data }: TrendChartProps) {
   }
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 mb-8">
-      <h3 className="text-text-primary font-medium mb-4 sm:mb-6">Tendencia mensual</h3>
-      <div className="h-60 sm:h-80 w-full">
+    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 mb-8 flex flex-col">
+      <div className="flex items-start justify-between mb-4 sm:mb-6">
+        <div>
+          <h3 className="text-text-primary font-medium">Tendencia mensual</h3>
+          <p className="text-text-muted text-sm mt-0.5">¿Estamos mejorando o empeorando mes a mes?</p>
+        </div>
+        <CustomUITooltip text="La linea solida es la mediana: lo que tarda una entrega tipica. La punteada es el promedio, que sube cuando hay entregas muy lentas. Cuando las dos lineas se separan, ese mes hubo casos extremos. Si el promedio sube pero la mediana se mantiene, el problema son casos aislados y no el proceso general." />
+      </div>
+      <div className="h-60 sm:h-80 w-full flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
@@ -123,6 +130,7 @@ export function TrendChart({ data }: TrendChartProps) {
               tickLine={false}
               axisLine={false}
               dx={-10}
+              label={{ value: 'Dias', angle: -90, position: 'insideLeft', offset: 10, style: { fill: 'var(--text-muted)', fontSize: 11 } }}
             />
             <RechartsTooltip 
               content={<CustomTooltip />} 
@@ -147,6 +155,19 @@ export function TrendChart({ data }: TrendChartProps) {
             />
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      
+      <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-border">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-accent relative flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-accent absolute"></div>
+          </div>
+          <span className="text-sm text-text-secondary">Mediana (caso tipico)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 border-b-2 border-dashed border-text-muted"></div>
+          <span className="text-sm text-text-secondary">Promedio</span>
+        </div>
       </div>
     </div>
   )

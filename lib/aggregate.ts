@@ -31,6 +31,17 @@ export function aggregate(rows: ReporteRow[]): DashboardMetrics | null {
     med_surtido_ruta: rows.reduce((s, r) => s + (r.med_surtido_ruta ?? 0) * r.total, 0) / total,
     med_ruta_entrega: rows.reduce((s, r) => s + (r.med_ruta_entrega ?? 0) * r.total, 0) / total,
     med_entrega_validacion: rows.reduce((s, r) => s + (r.med_entrega_validacion ?? 0) * r.total, 0) / total,
-    med_entrega_factura: rows.reduce((s, r) => s + (r.med_entrega_factura ?? 0) * r.total, 0) / total,
+    // med_entrega_factura NO se agrega ponderado: unos pocos registros con
+    // valores negativos extremos (-14 dias) distorsionan el resultado y lo
+    // vuelven negativo. La mediana de las medianas es robusta a esos casos.
+    med_entrega_factura: (() => {
+      const valores = rows
+        .map(r => r.med_entrega_factura)
+        .filter((v): v is number => v !== null)
+        .sort((a, b) => a - b);
+      return valores.length
+        ? valores[Math.floor(valores.length / 2)]
+        : null;
+    })(),
   }
 }

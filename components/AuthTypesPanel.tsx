@@ -4,6 +4,7 @@ import React from 'react'
 import { DashboardMetrics } from '@/lib/types'
 import { formatNumber, formatPercent } from '@/lib/format'
 import { Clock } from 'lucide-react'
+import { Tooltip } from './ui/Tooltip'
 
 interface AuthTypesPanelProps {
   metrics: DashboardMetrics | null;
@@ -41,7 +42,13 @@ export function AuthTypesPanel({ metrics }: AuthTypesPanelProps) {
   
   return (
     <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-6 mb-8">
-      <h3 className="text-text-primary font-medium mb-5">Tipo de autorización</h3>
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <h3 className="text-text-primary font-medium">Tipo de autorización</h3>
+          <p className="text-text-muted text-sm mt-0.5">¿Que tramite frena mas las cotizaciones?</p>
+        </div>
+        <Tooltip text="Antes de que una cotizacion pase a almacen debe liberarse. Aqui se ve que tipo de autorizacion se solicita con mas frecuencia. Una misma cotizacion puede requerir varias, por eso los porcentajes suman mas de 100%." />
+      </div>
       
       <div className="space-y-4">
         {authData.map((item) => {

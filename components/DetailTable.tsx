@@ -6,6 +6,7 @@ import { formatNumber, formatDecimal } from '@/lib/format'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 import { cn } from './ui/Tooltip'
 import { Select } from './ui/Select'
+import { Tooltip } from './ui/Tooltip'
 
 interface DetailTableProps {
   data: ReporteRow[];
@@ -83,7 +84,13 @@ export function DetailTable({ data }: DetailTableProps) {
   )
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg mt-8 overflow-hidden">
+    <div className="bg-bg-surface border border-border rounded-lg mt-8 flex flex-col">
+      <div className="flex items-start justify-between p-4 sm:p-5 border-b border-border">
+        <div>
+          <h3 className="text-text-primary font-medium">El dato fila por fila, por zona y mes</h3>
+        </div>
+        <Tooltip text="Cada renglon es una combinacion de zona y mes. Puedes ordenar por cualquier columna para encontrar los casos extremos." />
+      </div>
       
       {/* Mobile view */}
       <div className="block sm:hidden p-4">

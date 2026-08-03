@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.9.0 — 2026-08-03
+
+- Cada grafica ahora indica que pregunta responde y cuenta con un boton de
+  ayuda que explica como leerla y que buscar en ella.
+- Se agregan leyendas y etiquetas de eje. En la grafica de tendencia ya se
+  distingue cual linea es la mediana y cual el promedio.
+- El ranking por zona muestra el numero de dias al final de cada barra.
+- Se corrige el indicador de dias entre entrega y facturacion, que mostraba
+  un valor negativo por el efecto de unos pocos registros atipicos. Ahora se
+  calcula de una forma que no se distorsiona por esos casos.
+- Se aclara por que la etapa de surtido aparece en cero: el sistema registra
+  la recepcion y el surtido en el mismo momento.
+
 ## v0.8.0 — 2026-08-01
 
 - Se reordena el tablero para que al abrirlo se vean primero los numeros

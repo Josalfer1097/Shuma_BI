@@ -13,6 +13,7 @@ import {
   Cell
 } from 'recharts'
 import { formatDecimal } from '@/lib/format'
+import { Tooltip as CustomUITooltip } from './ui/Tooltip'
 
 interface ZoneRankingProps {
   data: {
@@ -38,6 +39,24 @@ const CustomTooltip = ({ active, payload }: any) => {
   }
   return null
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomLabel = (props: any) => {
+  const { x, y, width, height, value } = props;
+  return (
+    <text 
+      x={x + width + 8} 
+      y={y + height / 2} 
+      dy={4}
+      fill="var(--text-secondary)" 
+      fontSize={11} 
+      fontWeight={500}
+      textAnchor="start"
+    >
+      {formatDecimal(value)}d
+    </text>
+  );
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomYAxisTick = ({ x, y, payload }: any) => {
@@ -86,9 +105,15 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
   const chartHeight = Math.max(minChartHeight, data.length * 32 + 60) // 32px per bar + margins
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5">
-      <h3 className="text-text-primary font-medium mb-4 sm:mb-6">Ranking por zona</h3>
-      <div className="overflow-y-auto overflow-x-hidden max-h-[420px] sm:max-h-none w-full pr-1 custom-scrollbar">
+    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 flex flex-col">
+      <div className="flex items-start justify-between mb-4 sm:mb-6">
+        <div>
+          <h3 className="text-text-primary font-medium">Ranking por zona</h3>
+          <p className="text-text-muted text-sm mt-0.5">¿Que zonas tardan mas en entregar?</p>
+        </div>
+        <CustomUITooltip text="Ordena las zonas por su tiempo tipico de entrega, de mas lenta a mas rapida. La mas lenta se resalta. Haz clic en cualquier barra para filtrar todo el tablero por esa zona." />
+      </div>
+      <div className="overflow-y-auto overflow-x-hidden max-h-[420px] sm:max-h-none w-full pr-1 custom-scrollbar flex-1">
         <div style={{ height: `${chartHeight}px` }} className="w-full min-h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -99,6 +124,8 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
                 fontSize={11} 
                 tickLine={false}
                 axisLine={false}
+                label={{ value: 'Dias (mediana)', position: 'insideBottom', offset: -5, style: { fill: 'var(--text-muted)', fontSize: 11 } }}
+                domain={[0, 'dataMax + (dataMax * 0.1)']}
               />
               <YAxis 
                 type="category"
@@ -119,6 +146,7 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onClick={(data: any) => handleBarClick(data.zona)}
                 className="cursor-pointer"
+                label={<CustomLabel />}
               >
                 {data.map((entry, index) => {
                   const isSelected = selectedZone === entry.zona

@@ -4,6 +4,7 @@ import React from 'react'
 import { DashboardMetrics } from '@/lib/types'
 import { formatDecimal, formatPercent } from '@/lib/format'
 import { Clock } from 'lucide-react'
+import { Tooltip } from './ui/Tooltip'
 
 interface StagesChartProps {
   metrics: DashboardMetrics | null;
@@ -53,8 +54,14 @@ export function StagesChart({ metrics }: StagesChartProps) {
   ]
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-6 mb-8">
-      <h3 className="text-text-primary font-medium mb-4">Desglose por etapa</h3>
+    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-6 mb-8 flex flex-col">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-text-primary font-medium">Desglose por etapa</h3>
+          <p className="text-text-muted text-sm mt-0.5">¿En que parte del proceso se va el tiempo?</p>
+        </div>
+        <Tooltip text="Divide el tiempo total de entrega en las seis etapas del proceso. La barra completa representa el 100% del ciclo y la etapa mas lenta se resalta. Sirve para saber donde atacar primero: reducir la etapa mas grande tiene mucho mas impacto que optimizar las pequeñas." />
+      </div>
       
       {/* 100% Stacked Bar */}
       <div className="w-full h-8 sm:h-10 flex rounded overflow-hidden mb-6">
@@ -70,7 +77,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
               className="h-full flex items-center justify-center transition-all duration-300 border-r border-bg-surface last:border-r-0 group relative"
               title={`${stage.label}: ${formatDecimal(stage.value)}d (${formatPercent(stage.value, totalCycle)})`}
             >
-              {width > 10 && (
+              {width > 8 && (
                 <span className="text-[10px] sm:text-xs font-semibold text-white truncate px-1 opacity-90 drop-shadow-md">
                   {formatPercent(stage.value, totalCycle)}
                 </span>
@@ -102,9 +109,12 @@ export function StagesChart({ metrics }: StagesChartProps) {
 
       {/* Conclusion Text */}
       <div className="pt-4 border-t border-border">
-        <p className="text-sm text-text-primary">
+        <p className="text-sm text-text-primary mb-2">
           La etapa mas lenta es <strong className="font-semibold">{slowestStage.label}</strong>, 
           con {formatDecimal(slowestStage.value)} dias ({formatPercent(slowestStage.value, totalCycle)} del ciclo).
+        </p>
+        <p className="text-xs text-text-muted leading-relaxed">
+          La etapa &quot;Surtido&quot; aparece en cero porque en el sistema la recepcion y el surtido se registran casi al mismo tiempo, no como dos momentos separados.
         </p>
       </div>
     </div>
