@@ -44,6 +44,23 @@ Run `../sql/02_supabase_schema.sql` in the Supabase SQL Editor.
 Get the **service role key** from Project Settings → API. The ETL needs it to
 write. Never put this key in the frontend.
 
+### 2.5 — Instalar el Oracle Instant Client
+
+**Solo para correr el ETL fuera de Docker.** En el contenedor ya viene.
+
+La base es Oracle 11.2 y python-oracledb necesita el modo thick para
+conectarse. Requiere el Instant Client **19c**: las versiones 21c y 23ai
+ya no soportan bases 11.2.
+
+1. Descarga el **Basic Light Package (ZIP)** version 19.x desde
+   https://www.oracle.com/database/technologies/instant-client/downloads.html
+2. Descomprime en una ruta sin espacios ni acentos, por ejemplo
+   `C:\oracle\instantclient_19_28`
+3. Verifica que `oci.dll` este directamente en esa carpeta, no anidado
+4. Define `ORACLE_CLIENT_DIR` en el `.env` con esa ruta
+
+Si al correr aparece `DPY-3010`, es que falta este paso.
+
 ### 3. Configure
 
 ```bash

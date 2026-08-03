@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.11.1 — 2026-08-03
+
+- Se ajusta el proceso automatico para poder conectarse a la base de datos
+  del sistema, que corre sobre una version que requiere un componente
+  adicional de Oracle. Sin ese ajuste la conexion no era posible.
+
 ## v0.11.0 — 2026-08-03
 
 - Se incorpora la meta de cinco dias comprometida con el cliente. El tablero
