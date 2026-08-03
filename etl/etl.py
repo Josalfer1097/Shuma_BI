@@ -1,17 +1,3 @@
-"""
-ETL de tiempos de entrega: Oracle (SGE_CFS_PROD) -> Supabase.
-
-Agrega el ciclo completo cotizacion -> validacion en granularidad zona x mes
-y publica el resultado en Supabase, que es lo unico que consume el tablero.
-
-Refresco completo, no incremental: una cotizacion abierta en marzo puede
-validarse en julio y alterar retroactivamente la mediana de marzo.
-
-Variables requeridas (ver .env.example):
-    ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN, ORACLE_CLIENT_DIR
-    SUPABASE_URL, SUPABASE_SERVICE_KEY
-"""
-
 import os
 import sys
 import time
@@ -23,8 +9,6 @@ import oracledb
 from supabase import create_client
 from dotenv import load_dotenv
 
-# Ruta absoluta al .env: cron no hereda el entorno del contenedor ni
-# garantiza el working directory del job.
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 logging.basicConfig(
@@ -33,14 +17,6 @@ logging.basicConfig(
 )
 log = logging.getLogger("etl")
 
-# Ventana movil de historia, en meses. El default de 25 cubre la comparacion
-# contra el mismo mes del ano anterior (requiere 13) mas un segundo ano de
-# tendencia. Con esta ventana la tabla se estabiliza en ~340 filas y deja de
-# crecer; lo que sale del rango lo purga limpiar_obsoletos().
-#
-# ETL_FECHA_INICIO tiene prioridad y desactiva la ventana movil. Es el modo
-# en produccion: fecha fija 2025-01-01, porque el crecimiento real es de
-# 163 filas al ano y no justifica descartar historia.
 MESES_HISTORIA = int(os.environ.get("ETL_MESES_HISTORIA", "25"))
 
 
@@ -57,27 +33,10 @@ def calcular_fecha_inicio() -> str:
     log.info(f"Ventana movil de {MESES_HISTORIA} meses: desde {inicio}")
     return inicio.isoformat()
 
-
-# Piso de cordura sobre el volumen de origen. La operacion no baja de
-# cientos de combinaciones zona x mes a un punado de un dia para otro; si
-# ocurre, es un query roto o una conexion a la base equivocada. Se aborta
-# antes de tocar Supabase.
 MIN_FILAS_ESPERADAS = int(os.environ.get("ETL_MIN_FILAS", "10"))
 
-# Cinturon de seguridad a nivel de sesion. El usuario de Oracle disponible
-# conserva permisos de escritura, asi que cada transaccion se abre READ ONLY:
-# Oracle rechaza INSERT/UPDATE/DELETE con ORA-01456 independientemente de los
-# grants. Protege al proceso, no a las credenciales; sustituir por un usuario
-# de solo lectura en cuanto exista.
 SOLO_LECTURA = "SET TRANSACTION READ ONLY"
 
-# Modo thick. SGE_CFS_PROD corre sobre Oracle 11.2.0.1 y el modo thin de
-# python-oracledb exige 12.1 o superior, de modo que la conexion depende de
-# las librerias del Instant Client.
-#
-# La version del Instant Client debe ser 19c: 21c y 23ai retiraron el soporte
-# a servidores 11.2. ORACLE_CLIENT_DIR apunta al directorio descomprimido y
-# su valor difiere entre entornos (Windows local vs. contenedor en el NAS).
 _cliente_iniciado = False
 
 
@@ -350,15 +309,11 @@ def verificar_conexiones() -> int:
             with conn.cursor() as cur:
                 cur.execute("SELECT 1 FROM DUAL")
                 cur.fetchone()
-                # Conectar no implica poder leer: verificar un GRANT real.
                 cur.execute("SELECT COUNT(*) FROM VTATD_COTIZACION "
                             "WHERE ROWNUM <= 1")
                 cur.fetchone()
                 log.info("  Oracle OK — conecta y puede leer VTATD_COTIZACION")
 
-                # UPDATE deliberadamente sin efecto (WHERE 1 = 0). Lo que se
-                # comprueba es que la sesion READ ONLY lo rechace, no el
-                # resultado del statement.
                 cur.execute(SOLO_LECTURA)
                 try:
                     cur.execute("UPDATE VTATD_COTIZACION SET STATUS = STATUS "
@@ -448,16 +403,11 @@ def resumen_datos(rows: list[dict]) -> None:
     log.info(f"  Meses              : {len(meses)}  ({meses[0]} a {meses[-1]})")
     log.info(f"  Zonas              : {len(zonas)}")
 
-    # Ponderada por volumen: una zona con 40,000 entregas no puede pesar
-    # igual que una con 2. Es una aproximacion, no la mediana recalculada
-    # sobre el detalle.
     if total:
         med = sum((r.get("mediana_dias") or 0) * (r.get("total") or 0)
                   for r in rows) / total
         log.info(f"  Mediana ponderada  : {med:.2f} dias")
 
-    # Una columna enteramente nula apunta a un join roto o a un GRANT
-    # faltante, no a ausencia de datos.
     vacias = [c for c in rows[0]
               if all(r.get(c) is None for r in rows)]
     if vacias:
@@ -502,7 +452,6 @@ def main() -> int:
             os.environ["SUPABASE_SERVICE_KEY"],
         )
 
-        # El dato de ayer es preferible a un tablero incompleto.
         if len(rows) < MIN_FILAS_ESPERADAS:
             raise RuntimeError(
                 f"Oracle devolvio solo {len(rows)} filas, menos del minimo "
@@ -524,8 +473,7 @@ def main() -> int:
     except Exception as exc:
         duracion = time.time() - inicio
         log.exception("ETL fallo")
-        # El registro del error depende de que Supabase este arriba; si el
-        # fallo fue justamente ese, solo queda el log local.
+
         if client is not None:
             try:
                 actualizar_status(client, 0, duracion, "ERROR", str(exc)[:500])

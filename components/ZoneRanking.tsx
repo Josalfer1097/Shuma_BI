@@ -27,15 +27,22 @@ interface ZoneRankingProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, onFilter, selectedZone }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
+    const isSelected = selectedZone === data.zona
     return (
-      <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-sm z-50 relative">
+      <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-sm z-50 relative pointer-events-auto">
         <p className="text-text-primary font-medium mb-1">{data.zona}</p>
-        <p className="text-accent">
+        <p className="text-accent mb-3">
           Tiempo típico: <span className="font-semibold">{formatDecimal(data.mediana_dias)}d</span>
         </p>
+        <button 
+          onClick={() => onFilter(data.zona)}
+          className="w-full text-center py-1.5 px-3 bg-bg-surface hover:bg-bg-base border border-border rounded text-xs font-medium transition-colors"
+        >
+          {isSelected ? 'Quitar filtro de esta zona' : 'Filtrar por esta zona'}
+        </button>
       </div>
     )
   }
@@ -115,7 +122,7 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
         </div>
         <CustomUITooltip text="Ordena las zonas por su tiempo tipico de entrega, de mas lenta a mas rapida. La mas lenta se resalta. Haz clic en cualquier barra para filtrar todo el tablero por esa zona." />
       </div>
-      <div className="overflow-y-auto overflow-x-hidden max-h-[420px] sm:max-h-none w-full pr-1 custom-scrollbar flex-1">
+      <div className="w-full pr-1 flex-1">
         <div style={{ height: `${chartHeight}px` }} className="w-full min-h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -139,15 +146,13 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
               />
               <ReferenceLine x={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'insideBottomRight', fill: 'var(--danger)', fontSize: 11, offset: 10 }} />
               <RechartsTooltip 
-                content={<CustomTooltip />} 
+                content={<CustomTooltip onFilter={handleBarClick} selectedZone={selectedZone} />} 
                 cursor={{ fill: 'var(--bg-elevated)', opacity: 0.4 }}
                 trigger="click"
               />
               <Bar 
                 dataKey="mediana_dias" 
                 radius={[0, 4, 4, 0]}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                onClick={(data: any) => handleBarClick(data.zona)}
                 className="cursor-pointer"
                 label={<CustomLabel />}
               >

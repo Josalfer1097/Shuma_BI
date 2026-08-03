@@ -27,18 +27,27 @@ interface TrendChartProps {
     metrics?: DashboardMetrics | null;
   }[];
   selectedMonth?: string | null;
+  partialMonth?: string | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
     const meetsMeta = data.mediana_dias <= META_DIAS
     const isAnomaly = data.promedio_dias > data.mediana_dias * 2
+    const isPartial = partialMonth === data.anio_mes
     
     return (
       <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-sm max-w-[280px] z-[60]">
         <p className="text-text-muted mb-2 font-medium">{label}</p>
+        
+        {isPartial && (
+          <div className="mb-3 px-2 py-1.5 bg-warning/10 text-warning text-xs font-medium rounded border border-warning/20">
+            Datos parciales del mes en curso.
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <div className="flex justify-between items-center gap-4">
             <span className="text-accent">Mediana:</span> 
@@ -80,11 +89,17 @@ const MONTHS_ES: Record<string, string> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomDot = (props: any) => {
-  const { cx, cy, payload, selectedMonth } = props;
+  const { cx, cy, payload, selectedMonth, partialMonth } = props;
   const isSelected = selectedMonth === payload.anio_mes;
+  const isPartial = partialMonth === payload.anio_mes;
   if (isSelected) {
     return (
       <circle cx={cx} cy={cy} r={6} fill="var(--warning)" stroke="var(--bg-surface)" strokeWidth={2} />
+    );
+  }
+  if (isPartial) {
+    return (
+      <circle cx={cx} cy={cy} r={5} fill="var(--bg-surface)" stroke="var(--accent)" strokeWidth={2} strokeDasharray="2 2" />
     );
   }
   return <circle cx={cx} cy={cy} r={4} fill="var(--accent)" strokeWidth={0} />;
@@ -101,7 +116,7 @@ const PromedioDot = (props: any) => {
   return null;
 }
 
-export function TrendChart({ data, selectedMonth }: TrendChartProps) {
+export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const compMode = searchParams.get('comp') || 'anterior'
@@ -322,7 +337,7 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
             )}
             
             <RechartsTooltip 
-              content={<CustomTooltip />} 
+              content={<CustomTooltip partialMonth={partialMonth} />} 
               cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} 
               trigger="click"
             />
@@ -332,7 +347,7 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
               stroke="var(--accent)" 
               strokeWidth={2}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              dot={(props: any) => <CustomDot {...props} selectedMonth={selectedMonth} />}
+              dot={(props: any) => <CustomDot {...props} selectedMonth={selectedMonth} partialMonth={partialMonth} />}
               activeDot={{ r: 6, stroke: 'var(--bg-surface)', strokeWidth: 2 }}
             />
             <Line 

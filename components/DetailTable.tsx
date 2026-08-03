@@ -10,6 +10,7 @@ import { Tooltip } from './ui/Tooltip'
 
 interface DetailTableProps {
   data: ReporteRow[];
+  partialMonth?: string | null;
 }
 
 type SortField = keyof ReporteRow
@@ -26,7 +27,7 @@ const SORT_OPTIONS = [
   { label: 'Mediana (Menor a mayor)', value: 'mediana_dias-asc' }
 ]
 
-export function DetailTable({ data }: DetailTableProps) {
+export function DetailTable({ data, partialMonth }: DetailTableProps) {
   const [sortField, setSortField] = useState<SortField>('anio_mes')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [page, setPage] = useState(1)
@@ -113,7 +114,12 @@ export function DetailTable({ data }: DetailTableProps) {
             return (
               <div key={`${row.anio_mes}-${row.zona}`} className="bg-bg-elevated border border-border rounded-lg p-4">
                 <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
-                  <span className="font-medium text-text-primary">{row.anio_mes}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-text-primary">{row.anio_mes}</span>
+                    {row.anio_mes === partialMonth && (
+                      <span className="px-1.5 py-0.5 rounded bg-warning/10 text-warning text-[10px] font-bold uppercase tracking-wider">En curso</span>
+                    )}
+                  </div>
                   <span className="text-sm text-text-secondary font-medium">{row.zona}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4">
@@ -154,7 +160,14 @@ export function DetailTable({ data }: DetailTableProps) {
               
               return (
                 <tr key={`${row.anio_mes}-${row.zona}`} className="even:bg-bg-elevated hover:bg-bg-elevated transition-colors">
-                  <td className="px-4 py-3 text-sm text-text-primary">{row.anio_mes}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary">
+                    <div className="flex items-center gap-2">
+                      {row.anio_mes}
+                      {row.anio_mes === partialMonth && (
+                        <span className="px-1.5 py-0.5 rounded bg-warning/10 text-warning text-[10px] font-bold uppercase tracking-wider">En curso</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-sm text-text-primary">{row.zona}</td>
                   <td className="px-4 py-3 text-sm text-text-primary text-right tabular-nums">{formatNumber(row.total)}</td>
                   <td className="px-4 py-3 text-sm text-text-primary text-right tabular-nums">{formatDecimal(row.mediana_dias)}</td>

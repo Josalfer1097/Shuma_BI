@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.14.0 — 2026-08-03
+
+- El indicador de estado ahora avisa en rojo cuando la actualizacion
+  automatica falla. Antes se mostraba en verde aunque no hubiera datos
+  nuevos, lo que daba una falsa sensacion de que todo estaba al dia.
+- Se muestra hasta que dia llegan los datos, para saber con claridad que
+  periodo se esta viendo.
+- El mes en curso se identifica como incompleto en las graficas y en la
+  tabla. Al llevar solo unos dias de operacion se veia como una caida
+  fuerte, cuando en realidad el mes apenas va empezando.
+- Se revisa el tablero completo en telefono, tableta y computadora para
+  confirmar que toda la informacion se lee bien en cualquier pantalla.
+
 ## v0.13.0 — 2026-08-03
 
 - Se documenta internamente el proceso de actualizacion automatica, para que

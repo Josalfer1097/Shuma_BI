@@ -169,6 +169,11 @@ export function Dashboard({ initialData }: DashboardProps) {
     periodoLabel = `${MONTHS_ES[activeMes]} (todos los años)`
   }
 
+  const now = new Date()
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const maxAnioMes = initialData.reduce((max, row) => row.anio_mes > max ? row.anio_mes : max, '')
+  const partialMonth = maxAnioMes === currentYearMonth ? maxAnioMes : null
+
   return (
     <div>
       <FilterBar rawData={initialData} />
@@ -179,15 +184,15 @@ export function Dashboard({ initialData }: DashboardProps) {
       
       <StagesChart metrics={metrics} />
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-        <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} />
+        <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} partialMonth={partialMonth} />
         <ZoneRanking data={zoneData} />
       </div>
       
-      <StagesEvolutionChart data={stagesEvolutionData} />
+      <StagesEvolutionChart data={stagesEvolutionData} partialMonth={partialMonth} />
 
       <AuthTypesPanel metrics={metrics} />
 
-      <DetailTable data={filteredData} />
+      <DetailTable data={filteredData} partialMonth={partialMonth} />
       
       <KpiDescriptions />
       <Glossary />

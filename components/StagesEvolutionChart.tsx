@@ -27,6 +27,7 @@ export interface StagesEvolutionData {
 
 interface StagesEvolutionChartProps {
   data: StagesEvolutionData[];
+  partialMonth?: string | null;
 }
 
 const MONTHS_ES: Record<string, string> = {
@@ -36,7 +37,7 @@ const MONTHS_ES: Record<string, string> = {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
   if (active && payload && payload.length) {
     // payload comes in the order rendered. Reversing so it displays top-to-bottom
     const reversedPayload = [...payload].reverse();
@@ -44,10 +45,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     // Sum total to show total days
     const totalDays = reversedPayload.reduce((sum, entry) => sum + (entry.value as number), 0);
     const meetsMeta = totalDays <= META_DIAS;
+    const isPartial = partialMonth === label;
 
     return (
       <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-sm min-w-[200px] z-[60]">
         <p className="text-text-muted mb-2 font-medium">{label}</p>
+        
+        {isPartial && (
+          <div className="mb-3 px-2 py-1.5 bg-warning/10 text-warning text-xs font-medium rounded border border-warning/20">
+            Datos parciales del mes en curso.
+          </div>
+        )}
+
         <div className="space-y-1 mb-2">
           {reversedPayload.map((entry: any, index: number) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
             <div key={`item-${index}`} className="flex justify-between items-center gap-4">
@@ -85,7 +94,7 @@ const blueShades = [
   '#BFDBFE'  // Validacion
 ]
 
-export function StagesEvolutionChart({ data }: StagesEvolutionChartProps) {
+export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChartProps) {
   if (data.length === 0) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 h-60 sm:h-80 flex items-center justify-center mb-8">
@@ -136,11 +145,15 @@ export function StagesEvolutionChart({ data }: StagesEvolutionChartProps) {
             />
             
             <RechartsTooltip 
-              content={<CustomTooltip />} 
+              content={<CustomTooltip partialMonth={partialMonth} />} 
               cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} 
             />
             
             <ReferenceLine y={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'right', fill: 'var(--danger)', fontSize: 11 }} />
+
+            {partialMonth && (
+              <ReferenceLine x={partialMonth} stroke="var(--warning)" strokeDasharray="3 3" />
+            )}
 
             {/* Rendered from bottom to top */}
             <Area type="monotone" dataKey="autorizacion" name="Autorización" stackId="1" stroke={blueShades[0]} fill={blueShades[0]} fillOpacity={0.8} />
