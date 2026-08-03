@@ -53,14 +53,19 @@ export function Dashboard({ initialData }: DashboardProps) {
 
   // Aggregate trend data (group by anio_mes)
   const trendData = useMemo(() => {
+    // Trend should ONLY be filtered by zone, NOT by month/year.
+    const baseForTrend = initialData.filter(row => {
+      return !activeZone || row.zona === activeZone
+    })
+
     const byMonth = new Map<string, ReporteRow[]>()
-    for (const row of filteredData) {
+    for (const row of baseForTrend) {
       const existing = byMonth.get(row.anio_mes) || []
       existing.push(row)
       byMonth.set(row.anio_mes, existing)
     }
 
-    return Array.from(byMonth.entries())
+    let aggregated = Array.from(byMonth.entries())
       .map(([anio_mes, rows]) => {
         const agg = aggregate(rows)
         return {
@@ -68,10 +73,22 @@ export function Dashboard({ initialData }: DashboardProps) {
           mediana_dias: agg?.mediana_dias || 0,
           promedio_dias: agg?.promedio_dias || 0,
           total: agg?.total || 0,
+          metrics: agg,
         }
       })
       .sort((a, b) => a.anio_mes.localeCompare(b.anio_mes))
-  }, [filteredData])
+      
+    if (activeAnio && activeMes) {
+      const selectedAnioMes = `${activeAnio}-${activeMes}`
+      const idx = aggregated.findIndex(d => d.anio_mes === selectedAnioMes)
+      if (idx !== -1) {
+        const startIdx = Math.max(0, idx - 11)
+        aggregated = aggregated.slice(startIdx, idx + 1)
+      }
+    }
+
+    return aggregated
+  }, [initialData, activeZone, activeAnio, activeMes])
 
   // Aggregate zone ranking data (group by zona)
   const zoneData = useMemo(() => {
@@ -123,7 +140,7 @@ export function Dashboard({ initialData }: DashboardProps) {
       <StagesChart metrics={metrics} />
       
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-        <TrendChart data={trendData} />
+        <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} />
         <ZoneRanking data={zoneData} />
       </div>
 

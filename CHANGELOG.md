@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.10.0 — 2026-08-03
+
+- Se corrige el boton de ayuda de los indicadores, que no mostraba nada al
+  presionarlo porque el texto quedaba oculto detras de la tarjeta.
+- Al consultar un mes especifico ya no se pierde la grafica: ahora se
+  muestran los ultimos doce meses con el mes elegido resaltado, para poder
+  ubicarlo en su contexto.
+- Se agrega la comparacion contra el mes anterior en tiempo de entrega,
+  volumen y etapa mas lenta, indicando si mejoro o empeoro.
+
 ## v0.9.0 — 2026-08-03
 
 - Cada grafica ahora indica que pregunta responde y cuenta con un boton de
