@@ -1,12 +1,14 @@
 """
-ETL: Tiempos de entrega Shuma -- Oracle (SGE_CFS_PROD) -> Supabase
+ETL de tiempos de entrega: Oracle (SGE_CFS_PROD) -> Supabase.
 
-Corre una vez al dia (madrugada) via cron. Recalcula TODO el rango
-(no incremental) porque cotizaciones viejas pueden validarse tarde
-y cambiar retroactivamente los promedios/medianas de meses pasados.
+Agrega el ciclo completo cotizacion -> validacion en granularidad zona x mes
+y publica el resultado en Supabase, que es lo unico que consume el tablero.
 
-Requiere variables de entorno (ver .env.example):
-    ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN
+Refresco completo, no incremental: una cotizacion abierta en marzo puede
+validarse en julio y alterar retroactivamente la mediana de marzo.
+
+Variables requeridas (ver .env.example):
+    ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN, ORACLE_CLIENT_DIR
     SUPABASE_URL, SUPABASE_SERVICE_KEY
 """
 
@@ -21,8 +23,8 @@ import oracledb
 from supabase import create_client
 from dotenv import load_dotenv
 
-# Carga /app/.env explicitamente -- necesario porque cron NO hereda
-# las variables de entorno del contenedor por defecto.
+# Ruta absoluta al .env: cron no hereda el entorno del contenedor ni
+# garantiza el working directory del job.
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 logging.basicConfig(
@@ -31,25 +33,19 @@ logging.basicConfig(
 )
 log = logging.getLogger("etl")
 
-# ============================================================
-# VENTANA DE HISTORIA
+# Ventana movil de historia, en meses. El default de 25 cubre la comparacion
+# contra el mismo mes del ano anterior (requiere 13) mas un segundo ano de
+# tendencia. Con esta ventana la tabla se estabiliza en ~340 filas y deja de
+# crecer; lo que sale del rango lo purga limpiar_obsoletos().
 #
-# Por defecto se conservan los ultimos 25 meses. El motivo del 25 y no
-# 12: para comparar un mes contra el mismo mes del ano anterior hacen
-# falta al menos 13 meses de historia. Con 25 esa comparacion siempre
-# tiene con que trabajar y ademas quedan dos anos de tendencia.
-#
-# La tabla en Supabase se estabiliza asi en unas 340 filas y deja de
-# crecer: las filas que salen de la ventana las borra limpiar_obsoletos.
-#
-# Para usar una fecha fija en vez de ventana movil, define
-# ETL_FECHA_INICIO (por ejemplo 2025-01-01) y tiene prioridad.
-# ============================================================
+# ETL_FECHA_INICIO tiene prioridad y desactiva la ventana movil. Es el modo
+# en produccion: fecha fija 2025-01-01, porque el crecimiento real es de
+# 163 filas al ano y no justifica descartar historia.
 MESES_HISTORIA = int(os.environ.get("ETL_MESES_HISTORIA", "25"))
 
 
 def calcular_fecha_inicio() -> str:
-    """Primer dia del mes, MESES_HISTORIA meses hacia atras."""
+    """Devuelve la fecha de corte inferior en formato YYYY-MM-DD."""
     fijo = os.environ.get("ETL_FECHA_INICIO")
     if fijo:
         log.info(f"Usando fecha de inicio fija: {fijo}")
@@ -61,46 +57,33 @@ def calcular_fecha_inicio() -> str:
     log.info(f"Ventana movil de {MESES_HISTORIA} meses: desde {inicio}")
     return inicio.isoformat()
 
-# Si Oracle devuelve menos filas que esto, algo anda mal (la operacion
-# no pasa de cientos de combinaciones zona x mes a cero de un dia a otro).
-# Abortamos sin tocar Supabase en vez de escribir datos incompletos.
+
+# Piso de cordura sobre el volumen de origen. La operacion no baja de
+# cientos de combinaciones zona x mes a un punado de un dia para otro; si
+# ocurre, es un query roto o una conexion a la base equivocada. Se aborta
+# antes de tocar Supabase.
 MIN_FILAS_ESPERADAS = int(os.environ.get("ETL_MIN_FILAS", "10"))
 
-# ============================================================
-# PROTECCION DE ESCRITURA
-#
-# El usuario de Oracle disponible tiene permisos de UPDATE, no es de
-# solo lectura. Para que este proceso no pueda escribir en produccion
-# ni por accidente, cada sesion se marca como READ ONLY a nivel de base
-# de datos: Oracle rechaza cualquier INSERT/UPDATE/DELETE con ORA-01456,
-# sin importar los permisos que tenga el usuario.
-#
-# Es el mismo efecto que un usuario de solo lectura, aplicado por sesion.
-# Aun asi, conviene pedir el usuario de solo lectura cuando se pueda:
-# esto protege a este proceso, no a las credenciales si se filtran.
-# ============================================================
+# Cinturon de seguridad a nivel de sesion. El usuario de Oracle disponible
+# conserva permisos de escritura, asi que cada transaccion se abre READ ONLY:
+# Oracle rechaza INSERT/UPDATE/DELETE con ORA-01456 independientemente de los
+# grants. Protege al proceso, no a las credenciales; sustituir por un usuario
+# de solo lectura en cuanto exista.
 SOLO_LECTURA = "SET TRANSACTION READ ONLY"
 
-# ============================================================
-# MODO THICK — obligatorio con Oracle 11g
+# Modo thick. SGE_CFS_PROD corre sobre Oracle 11.2.0.1 y el modo thin de
+# python-oracledb exige 12.1 o superior, de modo que la conexion depende de
+# las librerias del Instant Client.
 #
-# El modo "thin" de python-oracledb (el que no necesita instalar nada)
-# solo funciona con Oracle 12.1 o superior. SGE_CFS_PROD corre sobre
-# Oracle 11.2.0.1, asi que hay que usar el modo "thick", que se apoya
-# en las librerias del Oracle Instant Client.
-#
-# Version del Instant Client: usar 19c. Las versiones 21c y 23ai ya no
-# soportan conectarse a bases 11.2.
-#
-# ORACLE_CLIENT_DIR apunta a la carpeta donde se descomprimio:
-#   Windows: C:\oracle\instantclient_19_28
-#   Linux:   /opt/oracle/instantclient_19_28
-# ============================================================
+# La version del Instant Client debe ser 19c: 21c y 23ai retiraron el soporte
+# a servidores 11.2. ORACLE_CLIENT_DIR apunta al directorio descomprimido y
+# su valor difiere entre entornos (Windows local vs. contenedor en el NAS).
 _cliente_iniciado = False
 
 
 def iniciar_cliente_oracle() -> None:
-    """Activa el modo thick una sola vez por proceso."""
+    """Inicializa el modo thick. Idempotente: init_oracle_client() no admite
+    mas de una llamada por proceso."""
     global _cliente_iniciado
     if _cliente_iniciado:
         return
@@ -126,18 +109,19 @@ def iniciar_cliente_oracle() -> None:
             raise
     _cliente_iniciado = True
 
+
 QUERY = """
 SELECT
     TO_CHAR(LR.FECHA_RUTA, 'YYYY-MM')                               AS ANIO_MES,
     COALESCE(ZONAENT.DESCRIPCION, ZONAFIS.DESCRIPCION, 'SIN ZONA')  AS ZONA,
     COUNT(*)                                                         AS TOTAL,
 
-    -- ---------- Ciclo completo: cotizacion -> validacion ----------
+    -- Ciclo completo: cotizacion -> validacion de entrega
     ROUND(AVG(LR.FECHA_VALIDADO - COT.FECHA_COTIZACION), 2)          AS PROMEDIO_DIAS,
     ROUND(MEDIAN(LR.FECHA_VALIDADO - COT.FECHA_COTIZACION), 2)       AS MEDIANA_DIAS,
     ROUND(MAX(LR.FECHA_VALIDADO - COT.FECHA_COTIZACION), 2)          AS MAXIMO_DIAS,
 
-    -- ---------- Las 6 etapas, en orden del proceso ----------
+    -- Desglose por etapa, en orden del proceso
     ROUND(MEDIAN(WFL.FECHA_END        - COT.FECHA_COTIZACION), 3)    AS MED_COT_AUTORIZACION,
     ROUND(MEDIAN(LR.FECHA_RECEPCION   - WFL.FECHA_END), 3)           AS MED_AUTORIZACION_RECEPCION,
     ROUND(MEDIAN(LR.FECHA_SURTIDO     - LR.FECHA_RECEPCION), 3)      AS MED_RECEPCION_SURTIDO,
@@ -145,13 +129,13 @@ SELECT
     ROUND(MEDIAN(LR.FECHA_ENTREGADO   - LR.FECHA_RUTA), 3)           AS MED_RUTA_ENTREGA,
     ROUND(MEDIAN(LR.FECHA_VALIDADO    - LR.FECHA_ENTREGADO), 3)      AS MED_ENTREGA_VALIDACION,
 
-    -- ---------- Facturacion ----------
+    -- Facturacion. El signo suele ser negativo: el material sale con
+    -- remision y se factura por lote al cierre del dia, despues de entregar.
     COUNT(FACT.FECHA_PRIMERA_FACTURA)                                AS TOTAL_CON_FACTURA,
     ROUND(MEDIAN(FACT.FECHA_PRIMERA_FACTURA - LR.FECHA_ENTREGADO),3) AS MED_ENTREGA_FACTURA,
 
-    -- ---------- Tipo de autorizacion solicitada ----------
-    -- Una cotizacion puede requerir varias a la vez, por eso la suma
-    -- de las tres puede superar el TOTAL.
+    -- Tipo de autorizacion solicitada. No son mutuamente excluyentes:
+    -- la suma de las tres puede superar TOTAL.
     SUM(CASE WHEN WFL.FECHA_B1 IS NOT NULL THEN 1 ELSE 0 END)        AS CON_AUTORIZ_LISTA,
     SUM(CASE WHEN WFL.FECHA_B2 IS NOT NULL THEN 1 ELSE 0 END)        AS CON_AUTORIZ_CXC,
     SUM(CASE WHEN WFL.FECHA_B3 IS NOT NULL THEN 1 ELSE 0 END)        AS CON_AUTORIZ_DESCUENTOS
@@ -164,6 +148,10 @@ FROM VTATD_COTIZACION COT
          LEFT JOIN COBTR_DIRECCION DIRENT ON (COT.ID_DIRECCION_ENTREGA = DIRENT.ID_DIRECCION)
          LEFT JOIN UTITC_ZONA ZONAFIS ON (DIRFIS.ID_ZONA = ZONAFIS.ID_ZONA)
          LEFT JOIN UTITC_ZONA ZONAENT ON (DIRENT.ID_ZONA = ZONAENT.ID_ZONA)
+         -- Cadena cotizacion -> factura. No hay FK directo; esta ruta de
+         -- cuatro saltos usa indices en los cuatro. La alternativa era
+         -- parsear el CSV de COT.NUMEROS_FACTURAS, sin indices y con el
+         -- folio partido en SERIE_FACTURA || NUMERO_FACTURA.
          LEFT JOIN (
              SELECT PED.ID_COTIZACION,
                     MIN(FAC.FECHA_FACTURA)         AS FECHA_PRIMERA_FACTURA,
@@ -184,9 +172,12 @@ WHERE LR.BANDERA_VALIDADO = 'V'
   AND LR.FECHA_RUTA      IS NOT NULL
   AND LR.FECHA_ENTREGADO IS NOT NULL
   AND LR.FECHA_VALIDADO  IS NOT NULL
-  AND LR.FECHA_ENTREGADO <> LR.FECHA_VALIDADO   -- excluye cierres masivos por lote
+  -- Descarta cierres masivos por lote: ~6,552 registros con entrega y
+  -- validacion identicas al segundo, concentrados en dos fechas. Inflaban
+  -- el maximo a 3,745 dias.
+  AND LR.FECHA_ENTREGADO <> LR.FECHA_VALIDADO
   AND LR.FECHA_RUTA >= TO_DATE(:fecha_inicio, 'YYYY-MM-DD')
-  AND LR.FECHA_RUTA <  TRUNC(SYSDATE)           -- corte en D-1
+  AND LR.FECHA_RUTA <  TRUNC(SYSDATE)   -- corte en D-1: el dia en curso esta abierto
 
 GROUP BY TO_CHAR(LR.FECHA_RUTA, 'YYYY-MM'),
          COALESCE(ZONAENT.DESCRIPCION, ZONAFIS.DESCRIPCION, 'SIN ZONA')
@@ -196,19 +187,18 @@ ORDER BY ANIO_MES, ZONA
 
 def construir_dsn() -> str:
     """
-    Arma el DSN de Oracle aceptando los tres formatos comunes.
+    Normaliza el DSN de Oracle a un formato que python-oracledb acepte.
 
-    python-oracledb solo entiende el formato corto con SERVICE NAME
-    (host:puerto/servicio). Con SID hay que armar el descriptor completo
-    con makedsn(), porque el formato host:puerto:sid que usan JDBC y el
-    viejo cx_Oracle NO lo reconoce: intenta buscarlo en tnsnames.ora y
-    falla con DPY-4027.
+    Solo el formato corto con service name (host:puerto/servicio) se pasa
+    tal cual. Con SID hay que construir el descriptor con makedsn(): el
+    formato host:puerto:sid que usan JDBC y cx_Oracle no se reconoce, se
+    interpreta como alias de tnsnames.ora y falla con DPY-4027.
 
-    Formatos aceptados en ORACLE_DSN:
-      host:puerto/servicio   -> se usa tal cual
-      host:puerto:sid        -> se convierte a descriptor con SID
-    Alternativa por variables sueltas:
-      ORACLE_HOST + ORACLE_PORT + ORACLE_SID
+    Entradas admitidas:
+        ORACLE_DSN = host:puerto/servicio
+        ORACLE_DSN = host:puerto:sid
+        ORACLE_DSN = (DESCRIPTION=...)
+        ORACLE_HOST + ORACLE_PORT + ORACLE_SID
     """
     host = os.environ.get("ORACLE_HOST")
     sid = os.environ.get("ORACLE_SID")
@@ -223,17 +213,14 @@ def construir_dsn() -> str:
         raise RuntimeError(
             "Falta ORACLE_DSN (o ORACLE_HOST + ORACLE_SID) en el .env")
 
-    # Service name: formato nativo, se usa sin tocar
     if "/" in dsn:
         log.info(f"DSN con service name: {dsn}")
         return dsn
 
-    # Descriptor completo ya armado
     if dsn.upper().startswith("(DESCRIPTION"):
         log.info("DSN con descriptor completo")
         return dsn
 
-    # host:puerto:sid -> convertir
     partes = dsn.split(":")
     if len(partes) == 3:
         h, p, sid_ = partes
@@ -250,6 +237,7 @@ def construir_dsn() -> str:
 
 
 def fetch_from_oracle() -> list[dict]:
+    """Ejecuta el query agregado y devuelve las filas como dicts."""
     iniciar_cliente_oracle()
     log.info("Conectando a Oracle...")
     with oracledb.connect(
@@ -258,9 +246,8 @@ def fetch_from_oracle() -> list[dict]:
         dsn=construir_dsn(),
         tcp_connect_timeout=30,
     ) as conn:
-        conn.call_timeout = 300_000  # 5 min max por query, en milisegundos
+        conn.call_timeout = 300_000  # ms
         with conn.cursor() as cur:
-            # Bloquea cualquier escritura a nivel de base de datos.
             cur.execute(SOLO_LECTURA)
             log.info("  Sesion marcada READ ONLY (no puede escribir).")
             cur.execute(QUERY, fecha_inicio=calcular_fecha_inicio())
@@ -272,13 +259,11 @@ def fetch_from_oracle() -> list[dict]:
 
 def push_to_supabase(client, rows: list[dict]) -> None:
     """
-    UPSERT en lugar de DELETE + INSERT.
+    Publica el resultado con UPSERT sobre la restriccion unique
+    (anio_mes, zona).
 
-    Con delete+insert, si el proceso falla entre ambos pasos la tabla queda
-    VACIA y el tablero no muestra nada hasta la corrida del dia siguiente.
-    El upsert aprovecha la restriccion unique (anio_mes, zona) del esquema:
-    actualiza lo que ya existe, inserta lo nuevo, y nunca deja la tabla en
-    un estado vacio.
+    No se usa DELETE + INSERT: un fallo entre ambos pasos deja la tabla
+    vacia y el tablero en blanco hasta la corrida siguiente.
     """
     ahora = datetime.now(timezone.utc).isoformat()
     for r in rows:
@@ -297,11 +282,11 @@ def push_to_supabase(client, rows: list[dict]) -> None:
 
 def limpiar_obsoletos(client, rows: list[dict]) -> int:
     """
-    Elimina filas en Supabase que ya no existen en el origen.
+    Purga las combinaciones zona x mes que ya no existen en el origen.
 
-    Caso real: si una cotizacion se cancela o se recategoriza y una
-    combinacion zona x mes se queda sin registros, la fila vieja quedaria
-    ahi para siempre mostrando datos que ya no son ciertos.
+    Sin esto, una zona que se queda sin registros validos (cancelacion,
+    recategorizacion, o salida de la ventana movil) conservaria su ultima
+    fila en Supabase de forma indefinida.
     """
     vigentes = {(r["anio_mes"], r["zona"]) for r in rows}
     existentes = client.table("reporte_tiempos_zona_mes") \
@@ -319,6 +304,7 @@ def limpiar_obsoletos(client, rows: list[dict]) -> int:
 
 def actualizar_status(client, filas: int, duracion: float,
                       estado: str, error: str = None) -> None:
+    """Registra el resultado de la corrida en etl_status (fila unica, id=1)."""
     client.table("etl_status").upsert({
         "id": 1,
         "ultima_corrida": datetime.now(timezone.utc).isoformat(),
@@ -332,10 +318,12 @@ def actualizar_status(client, filas: int, duracion: float,
 
 def verificar_conexiones() -> int:
     """
-    Prueba ambas conexiones por separado y explica que revisar si falla.
+    Diagnostico de --check: valida entorno, Oracle y Supabase por separado.
 
-    Un stacktrace de oracledb no le dice nada a quien esta diagnosticando
-    a las 5 de la manana: mejor un mensaje que apunte al problema concreto.
+    Los codigos de error se traducen a la causa concreta en lugar de dejar
+    el stacktrace crudo. Es lo que se lee cuando falla la corrida nocturna.
+
+    Return: 0 si ambas conexiones responden, 1 en cualquier otro caso.
     """
     faltantes = [v for v in ("ORACLE_USER", "ORACLE_PASSWORD",
                              "SUPABASE_URL", "SUPABASE_SERVICE_KEY")
@@ -362,15 +350,15 @@ def verificar_conexiones() -> int:
             with conn.cursor() as cur:
                 cur.execute("SELECT 1 FROM DUAL")
                 cur.fetchone()
-                # Confirmar que el usuario si puede leer las tablas del reporte
+                # Conectar no implica poder leer: verificar un GRANT real.
                 cur.execute("SELECT COUNT(*) FROM VTATD_COTIZACION "
                             "WHERE ROWNUM <= 1")
                 cur.fetchone()
                 log.info("  Oracle OK — conecta y puede leer VTATD_COTIZACION")
 
-                # Confirmar que la proteccion de escritura si funciona.
-                # Se intenta un UPDATE que no afecta ninguna fila; lo que
-                # importa es que Oracle lo rechace por ser sesion READ ONLY.
+                # UPDATE deliberadamente sin efecto (WHERE 1 = 0). Lo que se
+                # comprueba es que la sesion READ ONLY lo rechace, no el
+                # resultado del statement.
                 cur.execute(SOLO_LECTURA)
                 try:
                     cur.execute("UPDATE VTATD_COTIZACION SET STATUS = STATUS "
@@ -404,6 +392,10 @@ def verificar_conexiones() -> int:
                 log.error("     de ORACLE_DSN, y que se alcance esa red.")
         elif "ORA-01017" in msg:
             log.error("  -> Usuario o contrasena incorrectos.")
+        elif "ORA-28009" in msg:
+            log.error("  -> ORACLE_USER esta puesto como SYS. Usa el usuario")
+            log.error("     de la aplicacion (ETL_DASHBOARD), no una cuenta")
+            log.error("     administrativa.")
         elif "ORA-12514" in msg or "ORA-12154" in msg:
             log.error("  -> El service name del DSN no existe. Formato:")
             log.error("     host:puerto/service_name")
@@ -441,7 +433,7 @@ def verificar_conexiones() -> int:
 
 
 def resumen_datos(rows: list[dict]) -> None:
-    """Imprime un resumen de lo que se traeria, sin escribir nada."""
+    """Reporte de --dry-run: volumetria y primera fila, sin escribir."""
     if not rows:
         log.warning("Oracle no devolvio filas.")
         return
@@ -456,14 +448,16 @@ def resumen_datos(rows: list[dict]) -> None:
     log.info(f"  Meses              : {len(meses)}  ({meses[0]} a {meses[-1]})")
     log.info(f"  Zonas              : {len(zonas)}")
 
-    # Mediana global ponderada por volumen
+    # Ponderada por volumen: una zona con 40,000 entregas no puede pesar
+    # igual que una con 2. Es una aproximacion, no la mediana recalculada
+    # sobre el detalle.
     if total:
         med = sum((r.get("mediana_dias") or 0) * (r.get("total") or 0)
                   for r in rows) / total
         log.info(f"  Mediana ponderada  : {med:.2f} dias")
 
-    # Columnas que vengan completamente vacias: sintoma de un problema
-    # en la query o en los permisos del usuario de Oracle.
+    # Una columna enteramente nula apunta a un join roto o a un GRANT
+    # faltante, no a ausencia de datos.
     vacias = [c for c in rows[0]
               if all(r.get(c) is None for r in rows)]
     if vacias:
@@ -493,13 +487,11 @@ def main() -> int:
     inicio = time.time()
     client = None
     try:
-        # --check: probar las dos conexiones y salir
         if args.check:
             return verificar_conexiones()
 
         rows = fetch_from_oracle()
 
-        # --dry-run: mostrar que se traeria y salir sin escribir
         if args.dry_run:
             resumen_datos(rows)
             log.info("MODO PRUEBA: no se escribio nada en Supabase.")
@@ -510,8 +502,7 @@ def main() -> int:
             os.environ["SUPABASE_SERVICE_KEY"],
         )
 
-        # Salvaguarda: nunca escribir si el origen devolvio sospechosamente
-        # poco. Es preferible dejar el dato de ayer que romper el tablero.
+        # El dato de ayer es preferible a un tablero incompleto.
         if len(rows) < MIN_FILAS_ESPERADAS:
             raise RuntimeError(
                 f"Oracle devolvio solo {len(rows)} filas, menos del minimo "
@@ -533,6 +524,8 @@ def main() -> int:
     except Exception as exc:
         duracion = time.time() - inicio
         log.exception("ETL fallo")
+        # El registro del error depende de que Supabase este arriba; si el
+        # fallo fue justamente ese, solo queda el log local.
         if client is not None:
             try:
                 actualizar_status(client, 0, duracion, "ERROR", str(exc)[:500])

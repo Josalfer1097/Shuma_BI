@@ -1,10 +1,24 @@
 # Changelog
 
-## v0.11.1 — 2026-08-03
+## v0.13.0 — 2026-08-03
 
-- Se ajusta el proceso automatico para poder conectarse a la base de datos
-  del sistema, que corre sobre una version que requiere un componente
-  adicional de Oracle. Sin ese ajuste la conexion no era posible.
+- Se documenta internamente el proceso de actualizacion automatica, para que
+  cualquier persona del area pueda darle mantenimiento sin depender de quien
+  lo escribio.
+- Se agrega un mensaje claro cuando la conexion se intenta con una cuenta
+  administrativa en lugar de la cuenta propia del proceso. Era la causa mas
+  comun de falla al configurarlo por primera vez.
+
+## v0.12.0 — 2026-08-03
+
+- Se corrige la conexion automatica con el sistema administrativo. La
+  actualizacion nocturna no lograba conectarse porque el metodo de conexion
+  no era compatible con la version de base de datos que usa la empresa.
+- Se incorpora al proceso automatico el componente de conexion que Oracle
+  requiere, tanto en el servidor donde corre la tarea nocturna como en los
+  equipos de trabajo.
+- Se documenta la instalacion de ese componente, para poder levantar el
+  proceso desde cero sin depender de quien lo configuro la primera vez.
 
 ## v0.11.0 — 2026-08-03
 
