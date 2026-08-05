@@ -36,7 +36,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
   if (data.length === 0) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-5 h-40 flex items-center justify-center mt-8">
-        <span className="text-text-muted text-sm">Sin datos para la selección actual</span>
+        <span className="text-text-muted text-scale-sm">Sin datos para la selección actual</span>
       </div>
     )
   }
@@ -74,7 +74,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
 
   const Th = ({ field, label, align = 'left' }: { field: SortField; label: string; align?: 'left' | 'right' }) => (
     <th 
-      className={cn("px-4 py-3 text-sm font-medium text-text-secondary cursor-pointer hover:text-text-primary transition-colors whitespace-nowrap", align === 'right' ? 'text-right' : 'text-left')}
+      className={cn("px-4 py-3 text-scale-sm font-medium text-text-secondary cursor-pointer hover:text-text-primary transition-colors whitespace-nowrap", align === 'right' ? 'text-right' : 'text-left')}
       onClick={() => handleSort(field)}
     >
       <div className={cn("flex items-center gap-1", align === 'right' && 'justify-end')}>
@@ -96,7 +96,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
       {/* Mobile view */}
       <div className="block sm:hidden p-4">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-text-muted text-sm whitespace-nowrap">Ordenar:</span>
+          <span className="text-text-muted text-scale-sm whitespace-nowrap">Ordenar:</span>
           <Select 
             className="w-full"
             value={`${sortField}-${sortDirection}`}
@@ -120,19 +120,19 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
                       <span className="px-1.5 py-0.5 rounded bg-warning/10 text-warning text-[10px] font-bold uppercase tracking-wider">En curso</span>
                     )}
                   </div>
-                  <span className="text-sm text-text-secondary font-medium">{row.zona}</span>
+                  <span className="text-scale-sm text-text-secondary font-medium">{row.zona}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4">
                   <div className="flex flex-col">
-                    <span className="text-text-muted text-xs mb-1">Entregas</span>
+                    <span className="text-text-muted text-scale-xs mb-1">Entregas</span>
                     <span className="font-medium text-text-primary tabular-nums">{formatNumber(row.total)}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-text-muted text-xs mb-1">Mediana</span>
+                    <span className="text-text-muted text-scale-xs mb-1">Mediana</span>
                     <span className="font-medium text-text-primary tabular-nums">{formatDecimal(row.mediana_dias)}d</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-text-muted text-xs mb-1">Promedio</span>
+                    <span className="text-text-muted text-scale-xs mb-1">Promedio</span>
                     <span className="font-medium text-text-muted tabular-nums">{formatDecimal(row.promedio_dias)}d</span>
                   </div>
                 </div>
@@ -160,7 +160,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
               
               return (
                 <tr key={`${row.anio_mes}-${row.zona}`} className="even:bg-bg-elevated hover:bg-bg-elevated transition-colors">
-                  <td className="px-4 py-3 text-sm text-text-primary">
+                  <td className="px-4 py-3 text-scale-sm text-text-primary">
                     <div className="flex items-center gap-2">
                       {row.anio_mes}
                       {row.anio_mes === partialMonth && (
@@ -168,11 +168,11 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-text-primary">{row.zona}</td>
-                  <td className="px-4 py-3 text-sm text-text-primary text-right tabular-nums">{formatNumber(row.total)}</td>
-                  <td className="px-4 py-3 text-sm text-text-primary text-right tabular-nums">{formatDecimal(row.mediana_dias)}</td>
-                  <td className="px-4 py-3 text-sm text-text-muted text-right tabular-nums">{formatDecimal(row.promedio_dias)}</td>
-                  <td className="px-4 py-3 text-sm text-text-muted text-right tabular-nums">{formatNumber(row.maximo_dias)}</td>
+                  <td className="px-4 py-3 text-scale-sm text-text-primary">{row.zona}</td>
+                  <td className="px-4 py-3 text-scale-sm text-text-primary text-right tabular-nums">{formatNumber(row.total)}</td>
+                  <td className="px-4 py-3 text-scale-sm text-text-primary text-right tabular-nums">{formatDecimal(row.mediana_dias)}</td>
+                  <td className="px-4 py-3 text-scale-sm text-text-muted text-right tabular-nums">{formatDecimal(row.promedio_dias)}</td>
+                  <td className="px-4 py-3 text-scale-sm text-text-muted text-right tabular-nums">{formatNumber(row.maximo_dias)}</td>
                 </tr>
               )
             })}
@@ -182,21 +182,21 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
       
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-bg-elevated/30">
-          <span className="text-sm text-text-muted">
+          <span className="text-scale-sm text-text-muted">
             Página {page} de {totalPages}
           </span>
           <div className="flex gap-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-2 sm:py-1 min-w-[88px] min-h-[44px] sm:min-h-0 sm:min-w-0 bg-bg-surface border border-border rounded text-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
+              className="px-3 py-2 sm:py-1 min-w-[88px] min-h-[44px] sm:min-h-0 sm:min-w-0 bg-bg-surface border border-border rounded text-scale-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
             >
               Anterior
             </button>
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-2 sm:py-1 min-w-[88px] min-h-[44px] sm:min-h-0 sm:min-w-0 bg-bg-surface border border-border rounded text-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
+              className="px-3 py-2 sm:py-1 min-w-[88px] min-h-[44px] sm:min-h-0 sm:min-w-0 bg-bg-surface border border-border rounded text-scale-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-elevated transition-colors"
             >
               Siguiente
             </button>

@@ -21,7 +21,7 @@ export function KpiDescriptions() {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-5 text-left hover:bg-bg-elevated transition-colors"
       >
-        <h3 className="text-lg font-medium text-text-primary">Que significa cada indicador</h3>
+        <h3 className="text-scale-lg font-medium text-text-primary">Que significa cada indicador</h3>
         {isOpen ? <ChevronUp className="w-5 h-5 text-text-muted" /> : <ChevronDown className="w-5 h-5 text-text-muted" />}
       </button>
 
@@ -31,7 +31,7 @@ export function KpiDescriptions() {
             {items.map(item => (
               <div key={item.title} className="flex flex-col">
                 <span className="font-semibold text-text-primary mb-1">{item.title}</span>
-                <p className="text-sm text-text-secondary leading-relaxed">
+                <p className="text-scale-sm text-text-secondary leading-relaxed">
                   {item.desc}
                 </p>
               </div>

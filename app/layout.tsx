@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Exo_2 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { FontScaleProvider } from "@/lib/fontScaleContext";
 
 const dmSans = DM_Sans({ 
   subsets: ["latin"], 
@@ -24,13 +25,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('shuma-bi-font-scale');if(s&&[1,1.15,1.3,1.5].indexOf(parseFloat(s))>-1){document.documentElement.style.setProperty('--font-scale',s);}}catch(e){}}())`,
+          }}
+        />
+      </head>
       <body className={`${dmSans.variable} ${exo2.variable} font-sans min-h-screen`}>
         <ThemeProvider
           attribute="data-theme"
           defaultTheme="dark"
           enableSystem={true}
         >
-          {children}
+          <FontScaleProvider>
+            {children}
+          </FontScaleProvider>
         </ThemeProvider>
       </body>
     </html>

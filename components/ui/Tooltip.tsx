@@ -103,7 +103,7 @@ export function Tooltip({ text, className }: { text: string; className?: string 
         <div 
           ref={tooltipRef}
           className={cn(
-            "fixed w-64 p-3 bg-bg-elevated border border-border rounded shadow-xl z-[9999] text-sm sm:text-xs text-text-primary leading-relaxed",
+            "fixed w-64 p-3 bg-bg-elevated border border-border rounded shadow-xl z-[9999] text-scale-sm sm:text-scale-xs text-text-primary leading-relaxed",
             coords.vAlign === 'top' && "-translate-y-full",
             coords.hAlign === 'center' && "-translate-x-1/2",
             coords.hAlign === 'right' && "-translate-x-full"

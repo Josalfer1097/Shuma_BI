@@ -178,7 +178,7 @@ export function Dashboard({ initialData }: DashboardProps) {
     <div>
       <FilterBar rawData={initialData} />
       <div className="mb-4">
-        <span className="text-sm text-text-muted">{periodoLabel}</span>
+        <span className="text-scale-sm text-text-muted">{periodoLabel}</span>
       </div>
       <KpiRow metrics={metrics} />
       

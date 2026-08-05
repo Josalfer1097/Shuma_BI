@@ -14,7 +14,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
   const emptyState = (
     <div className="bg-bg-surface border border-border rounded-lg p-6 flex flex-col items-center justify-center mb-8 gap-3">
       <Clock className="w-5 h-5 text-text-muted" />
-      <span className="text-text-muted text-sm text-center">
+      <span className="text-text-muted text-scale-sm text-center">
         El desglose por etapa aparecerá cuando el proceso automático cargue los datos
       </span>
     </div>
@@ -58,13 +58,13 @@ export function StagesChart({ metrics }: StagesChartProps) {
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-text-primary font-medium">Desglose por etapa</h3>
-          <p className="text-text-muted text-sm mt-0.5">¿En que parte del proceso se va el tiempo?</p>
+          <p className="text-text-muted text-scale-sm mt-0.5">¿En que parte del proceso se va el tiempo?</p>
         </div>
         <Tooltip text="Divide el tiempo total de entrega en las seis etapas del proceso. La barra completa representa el 100% del ciclo y la etapa mas lenta se resalta. Sirve para saber donde atacar primero: reducir la etapa mas grande tiene mucho mas impacto que optimizar las pequeñas." />
       </div>
       
       {/* 100% Stacked Bar */}
-      <div className="w-full h-8 sm:h-10 flex rounded overflow-hidden mb-6">
+      <div className="w-full min-h-[2rem] sm:min-h-[2.5rem] flex rounded overflow-hidden mb-6">
         {stages.map((stage, i) => {
           const width = (stage.value / totalCycle) * 100
           const isSlowest = stage.key === slowestStage.key
@@ -78,7 +78,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
               title={`${stage.label}: ${formatDecimal(stage.value)}d (${formatPercent(stage.value, totalCycle)})`}
             >
               {width > 8 && (
-                <span className="text-[10px] sm:text-xs font-semibold text-white truncate px-1 opacity-90 drop-shadow-md">
+                <span className="text-[10px] sm:text-scale-xs font-semibold text-white truncate px-1 opacity-90 drop-shadow-md">
                   {formatPercent(stage.value, totalCycle)}
                 </span>
               )}
@@ -88,7 +88,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
       </div>
 
       {/* Legend */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
+      <div className="flex flex-wrap gap-x-6 gap-y-4 mb-6">
         {stages.map((stage, i) => {
           const isSlowest = stage.key === slowestStage.key
           const bgColor = isSlowest ? 'var(--warning)' : blueShades[i % blueShades.length]
@@ -97,9 +97,9 @@ export function StagesChart({ metrics }: StagesChartProps) {
             <div key={stage.key} className="flex flex-col">
               <div className="flex items-center gap-1.5 mb-1">
                 <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: bgColor }} />
-                <span className="text-xs text-text-secondary font-medium truncate" title={stage.label}>{stage.label}</span>
+                <span className="text-scale-xs text-text-secondary font-medium truncate" title={stage.label}>{stage.label}</span>
               </div>
-              <span className="text-sm font-semibold text-text-primary">
+              <span className="text-scale-sm font-semibold text-text-primary">
                 {formatDecimal(stage.value)}d
               </span>
             </div>
@@ -109,11 +109,11 @@ export function StagesChart({ metrics }: StagesChartProps) {
 
       {/* Conclusion Text */}
       <div className="pt-4 border-t border-border">
-        <p className="text-sm text-text-primary mb-2">
+        <p className="text-scale-sm text-text-primary mb-2">
           La etapa mas lenta es <strong className="font-semibold">{slowestStage.label}</strong>, 
           con {formatDecimal(slowestStage.value)} dias ({formatPercent(slowestStage.value, totalCycle)} del ciclo).
         </p>
-        <p className="text-xs text-text-muted leading-relaxed">
+        <p className="text-scale-xs text-text-muted leading-relaxed">
           La etapa &quot;Surtido&quot; aparece en cero porque en el sistema la recepcion y el surtido se registran casi al mismo tiempo, no como dos momentos separados.
         </p>
       </div>

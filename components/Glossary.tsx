@@ -32,7 +32,7 @@ export function Glossary() {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-5 text-left hover:bg-bg-elevated transition-colors"
       >
-        <h3 className="text-lg font-medium text-text-primary">Glosario de indicadores</h3>
+        <h3 className="text-scale-lg font-medium text-text-primary">Glosario de indicadores</h3>
         {isOpen ? <ChevronUp className="w-5 h-5 text-text-muted" /> : <ChevronDown className="w-5 h-5 text-text-muted" />}
       </button>
 
@@ -41,7 +41,7 @@ export function Glossary() {
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-border text-sm text-text-secondary">
+                <tr className="border-b border-border text-scale-sm text-text-secondary">
                   <th className="py-3 px-4 font-medium w-1/4 whitespace-nowrap">Campo</th>
                   <th className="py-3 px-4 font-medium">Qué significa</th>
                 </tr>
@@ -50,9 +50,9 @@ export function Glossary() {
                 {items.map(item => (
                   <tr key={item.field} className="hover:bg-bg-elevated/50 transition-colors">
                     <td className="py-3 px-4 align-top">
-                      <code className="font-mono text-xs bg-bg-elevated text-accent px-2 py-1 rounded border border-border/50 whitespace-nowrap">{item.field}</code>
+                      <code className="font-mono text-scale-xs bg-bg-elevated text-accent px-2 py-1 rounded border border-border/50 whitespace-nowrap">{item.field}</code>
                     </td>
-                    <td className="py-3 px-4 text-sm text-text-primary leading-relaxed">
+                    <td className="py-3 px-4 text-scale-sm text-text-primary leading-relaxed">
                       {item.desc}
                     </td>
                   </tr>
@@ -64,10 +64,10 @@ export function Glossary() {
           <div className="sm:hidden flex flex-col gap-4">
             {items.map(item => (
               <div key={item.field} className="bg-bg-elevated border border-border rounded-lg p-4">
-                <code className="font-mono text-xs bg-bg-surface text-accent px-2 py-1 rounded border border-border/50 mb-2 inline-block">
+                <code className="font-mono text-scale-xs bg-bg-surface text-accent px-2 py-1 rounded border border-border/50 mb-2 inline-block">
                   {item.field}
                 </code>
-                <p className="text-sm text-text-primary leading-relaxed mt-1">
+                <p className="text-scale-sm text-text-primary leading-relaxed mt-1">
                   {item.desc}
                 </p>
               </div>

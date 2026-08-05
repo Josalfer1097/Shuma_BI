@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.15.0 — 2026-08-05
+
+- Se agrega un control para aumentar el tamaño del texto de todo el tablero,
+  con cuatro tamanos disponibles. Al elegir uno se muestra una vista previa
+  antes de aplicarlo, para poder comparar sin cambiar la pantalla completa.
+- El tamano elegido se recuerda para la proxima visita y no se reinicia al
+  cambiar entre modo claro y oscuro.
+- El texto de las graficas tambien crece junto con el resto del tablero, para
+  que la informacion sea legible en presentaciones y en pantallas grandes.
+
 ## v0.14.0 — 2026-08-03
 
 - El indicador de estado ahora avisa en rojo cuando la actualizacion

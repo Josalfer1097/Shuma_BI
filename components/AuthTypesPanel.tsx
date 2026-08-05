@@ -27,7 +27,7 @@ export function AuthTypesPanel({ metrics }: AuthTypesPanelProps) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-6 flex flex-col items-center justify-center mb-8 gap-3">
         <Clock className="w-5 h-5 text-text-muted" />
-        <span className="text-text-muted text-sm text-center">
+        <span className="text-text-muted text-scale-sm text-center">
           El desglose por tipo de autorización aparecerá cuando el proceso automático cargue los datos
         </span>
       </div>
@@ -45,7 +45,7 @@ export function AuthTypesPanel({ metrics }: AuthTypesPanelProps) {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h3 className="text-text-primary font-medium">Tipo de autorización</h3>
-          <p className="text-text-muted text-sm mt-0.5">¿Que tramite frena mas las cotizaciones?</p>
+          <p className="text-text-muted text-scale-sm mt-0.5">¿Que tramite frena mas las cotizaciones?</p>
         </div>
         <Tooltip text="Antes de que una cotizacion pase a almacen debe liberarse. Aqui se ve que tipo de autorizacion se solicita con mas frecuencia. Una misma cotizacion puede requerir varias, por eso los porcentajes suman mas de 100%." />
       </div>
@@ -58,10 +58,10 @@ export function AuthTypesPanel({ metrics }: AuthTypesPanelProps) {
           
           return (
             <div key={item.label} className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-end text-sm">
+              <div className="flex justify-between items-end text-scale-sm">
                 <span className="text-text-secondary font-medium">{item.label}</span>
                 <div className="flex gap-2 items-baseline">
-                  <span className="text-xs text-text-muted">{formatNumber(item.count)}</span>
+                  <span className="text-scale-xs text-text-muted">{formatNumber(item.count)}</span>
                   <span className="font-semibold text-text-primary">{percentageFormatted}</span>
                 </div>
               </div>
@@ -77,7 +77,7 @@ export function AuthTypesPanel({ metrics }: AuthTypesPanelProps) {
       </div>
 
       <div className="mt-5 pt-4 border-t border-border">
-        <p className="text-xs text-text-muted italic leading-relaxed">
+        <p className="text-scale-xs text-text-muted italic leading-relaxed">
           Una cotizacion puede requerir varias autorizaciones a la vez, por eso los porcentajes suman mas de 100%.
         </p>
       </div>

@@ -17,6 +17,7 @@ import { Tooltip as CustomUITooltip } from './ui/Tooltip'
 import { Select } from './ui/Select'
 import { DashboardMetrics } from '@/lib/types'
 import { META_DIAS } from '@/lib/config'
+import { useFontScale } from '@/lib/fontScaleContext'
 
 interface TrendChartProps {
   data: {
@@ -39,11 +40,11 @@ const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
     const isPartial = partialMonth === data.anio_mes
     
     return (
-      <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-sm max-w-[280px] z-[60]">
+      <div className="bg-bg-elevated border border-border rounded shadow-lg p-3 text-scale-sm max-w-[280px] z-[60]">
         <p className="text-text-muted mb-2 font-medium">{label}</p>
         
         {isPartial && (
-          <div className="mb-3 px-2 py-1.5 bg-warning/10 text-warning text-xs font-medium rounded border border-warning/20">
+          <div className="mb-3 px-2 py-1.5 bg-warning/10 text-warning text-scale-xs font-medium rounded border border-warning/20">
             Datos parciales del mes en curso.
           </div>
         )}
@@ -54,9 +55,9 @@ const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
             <div className="flex items-center gap-2">
               <span className="font-semibold">{formatDecimal(data.mediana_dias)}d</span>
               {meetsMeta ? (
-                <span className="text-success text-xs">✓ dentro de meta</span>
+                <span className="text-success text-scale-xs">✓ dentro de meta</span>
               ) : (
-                <span className="text-danger text-xs">✗ fuera de meta</span>
+                <span className="text-danger text-scale-xs">✗ fuera de meta</span>
               )}
             </div>
           </div>
@@ -71,7 +72,7 @@ const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
         </div>
         
         {isAnomaly && (
-          <div className="mt-3 pt-3 border-t border-border text-xs text-text-muted leading-relaxed">
+          <div className="mt-3 pt-3 border-t border-border text-scale-xs text-text-muted leading-relaxed">
             <strong className="text-warning font-semibold">Anomalía:</strong> Ese mes el promedio se disparó por unas pocas entregas muy lentas. La mediana casi no cambió, así que el proceso general no empeoró: fueron casos aislados.
           </div>
         )}
@@ -120,11 +121,12 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
   const router = useRouter()
   const searchParams = useSearchParams()
   const compMode = searchParams.get('comp') || 'anterior'
+  const { scale } = useFontScale()
 
   if (data.length === 0) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 h-60 sm:h-80 flex items-center justify-center">
-        <span className="text-text-muted text-sm">Sin datos para la selección actual</span>
+        <span className="text-text-muted text-scale-sm">Sin datos para la selección actual</span>
       </div>
     )
   }
@@ -193,7 +195,7 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
 
     if (!prev) {
       comparisonNode = (
-        <div className="bg-bg-elevated/30 border border-border rounded p-3 mb-4 flex justify-center text-sm text-text-muted">
+        <div className="bg-bg-elevated/30 border border-border rounded p-3 mb-4 flex justify-center text-scale-sm text-text-muted">
           sin dato para comparar
         </div>
       );
@@ -248,24 +250,24 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
       comparisonNode = (
         <div className="bg-bg-elevated/30 border border-border rounded p-4 mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
           <div className="flex flex-col gap-1 px-2">
-            <span className="text-text-muted text-xs">Tiempo típico (mediana)</span>
+            <span className="text-text-muted text-scale-xs">Tiempo típico (mediana)</span>
             <div className="flex flex-col items-start mt-1">
-              <span className="text-text-primary text-xl font-semibold leading-none mb-1.5">{formatDecimal(current.mediana_dias)}d</span>
-              <span className="text-xs font-medium">{formatDiff(diffMediana, percMediana, "d", true)} <span className="text-text-muted opacity-70 font-normal">vs {pLabel}</span></span>
+              <span className="text-text-primary text-scale-xl font-semibold leading-none mb-1.5">{formatDecimal(current.mediana_dias)}d</span>
+              <span className="text-scale-xs font-medium">{formatDiff(diffMediana, percMediana, "d", true)} <span className="text-text-muted opacity-70 font-normal">vs {pLabel}</span></span>
             </div>
           </div>
           <div className="flex flex-col gap-1 px-2 sm:pl-4">
-            <span className="text-text-muted text-xs">Volumen de entregas</span>
+            <span className="text-text-muted text-scale-xs">Volumen de entregas</span>
             <div className="flex flex-col items-start mt-1">
-              <span className="text-text-primary text-xl font-semibold leading-none mb-1.5">{formatNumber(current.total)}</span>
-              <span className="text-xs font-medium">{formatDiff(diffVolumen, percVolumen, "", false)} <span className="text-text-muted opacity-70 font-normal">vs {pLabel}</span></span>
+              <span className="text-text-primary text-scale-xl font-semibold leading-none mb-1.5">{formatNumber(current.total)}</span>
+              <span className="text-scale-xs font-medium">{formatDiff(diffVolumen, percVolumen, "", false)} <span className="text-text-muted opacity-70 font-normal">vs {pLabel}</span></span>
             </div>
           </div>
           <div className="flex flex-col gap-1 px-2 sm:pl-4">
-            <span className="text-text-muted text-xs">Etapa más lenta</span>
+            <span className="text-text-muted text-scale-xs">Etapa más lenta</span>
             <div className="flex flex-col items-start mt-1">
-              <span className="text-text-primary text-xl font-semibold leading-none mb-1.5 truncate" title={currSlowest?.label}>{currSlowest?.label || 'N/A'}</span>
-              <span className="text-text-secondary font-medium text-xs">{currSlowest ? `${formatDecimal(currSlowest.value)}d` : ''}</span>
+              <span className="text-text-primary text-scale-xl font-semibold leading-none mb-1.5 truncate" title={currSlowest?.label}>{currSlowest?.label || 'N/A'}</span>
+              <span className="text-text-secondary font-medium text-scale-xs">{currSlowest ? `${formatDecimal(currSlowest.value)}d` : ''}</span>
             </div>
           </div>
         </div>
@@ -284,7 +286,7 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
       <div className="flex items-start justify-between mb-4 sm:mb-6">
         <div>
           <h3 className="text-text-primary font-medium">{chartTitle}</h3>
-          {!selectedMonth && <p className="text-text-muted text-sm mt-0.5">¿Estamos mejorando o empeorando mes a mes?</p>}
+          {!selectedMonth && <p className="text-text-muted text-scale-sm mt-0.5">¿Estamos mejorando o empeorando mes a mes?</p>}
         </div>
         <div className="flex items-center gap-3">
           {selectedMonth && (
@@ -296,7 +298,7 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
                 { label: 'Mismo mes año pasado', value: 'anual' },
                 { label: 'Promedio del periodo', value: 'promedio' }
               ]}
-              className="py-1 text-xs sm:min-h-[32px] pr-8"
+              className="py-1 text-scale-xs sm:min-h-[32px] pr-8"
             />
           )}
           <CustomUITooltip text={chartTooltip} />
@@ -305,32 +307,32 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
       
       {comparisonNode}
 
-      <div className="h-60 sm:h-80 w-full flex-1">
+      <div className="w-full flex-1" style={{ minHeight: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis 
               dataKey="anio_mes" 
               stroke="var(--text-muted)" 
-              fontSize={11} 
+              fontSize={Math.round(11 * scale)} 
               tickLine={false}
               axisLine={false}
-              dy={10}
+              dy={Math.round(10 * scale)}
               tickFormatter={formatXAxis}
               minTickGap={30}
             />
             <YAxis 
               stroke="var(--text-muted)" 
-              fontSize={11} 
+              fontSize={Math.round(11 * scale)} 
               tickLine={false}
               axisLine={false}
-              dx={-10}
+              dx={Math.round(-10 * scale)}
               domain={[0, (dataMax: number) => Math.max(6, Math.ceil(dataMax * 1.1))]}
-              label={{ value: 'Días', angle: -90, position: 'insideLeft', offset: 10, style: { fill: 'var(--text-muted)', fontSize: 11 } }}
+              label={{ value: 'Días', angle: -90, position: 'insideLeft', offset: Math.round(10 * scale), style: { fill: 'var(--text-muted)', fontSize: Math.round(11 * scale) } }}
             />
             
-            <ReferenceLine y={tuNormal} stroke="var(--text-muted)" strokeWidth={1} strokeOpacity={0.3} label={{ value: `Tu normal: ${formatDecimal(tuNormal)}d`, position: 'insideTopLeft', fill: 'var(--text-muted)', fontSize: 10 }} />
-            <ReferenceLine y={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'right', fill: 'var(--danger)', fontSize: 11 }} />
+            <ReferenceLine y={tuNormal} stroke="var(--text-muted)" strokeWidth={1} strokeOpacity={0.3} label={{ value: `Tu normal: ${formatDecimal(tuNormal)}d`, position: 'insideTopLeft', fill: 'var(--text-muted)', fontSize: Math.round(10 * scale) }} />
+            <ReferenceLine y={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'right', fill: 'var(--danger)', fontSize: Math.round(11 * scale) }} />
             
             {selectedMonth && (
               <ReferenceLine x={selectedMonth} stroke="var(--warning)" strokeDasharray="3 3" />
@@ -368,11 +370,11 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
           <div className="w-4 h-0.5 bg-accent relative flex items-center justify-center">
             <div className="w-2 h-2 rounded-full bg-accent absolute"></div>
           </div>
-          <span className="text-sm text-text-secondary">Mediana (caso típico)</span>
+          <span className="text-scale-sm text-text-secondary">Mediana (caso típico)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 border-b-2 border-dashed border-text-muted"></div>
-          <span className="text-sm text-text-secondary">Promedio</span>
+          <span className="text-scale-sm text-text-secondary">Promedio</span>
         </div>
       </div>
     </div>

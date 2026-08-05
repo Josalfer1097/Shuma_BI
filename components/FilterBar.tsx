@@ -123,7 +123,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
   let activeCount = 0
   if (zoneParam) {
     activeFiltersChipsMobile.push(
-      <button key="zona" onClick={removeZone} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-sm whitespace-nowrap font-medium">
+      <button key="zona" onClick={removeZone} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
         {zoneParam}
         <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
       </button>
@@ -137,7 +137,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
     else if (mesParam) label = MONTHS_ES[mesParam]
 
     activeFiltersChipsMobile.push(
-      <button key="periodo" onClick={removePeriod} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-sm whitespace-nowrap font-medium">
+      <button key="periodo" onClick={removePeriod} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
         {label}
         <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
       </button>
@@ -146,7 +146,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
   }
   if (activeCount >= 2) {
     activeFiltersChipsMobile.push(
-      <button key="clear-all" onClick={clearFilters} className="flex-shrink-0 flex items-center gap-1.5 bg-danger/10 text-danger hover:bg-danger/20 transition-colors border border-danger/30 rounded-full pl-3 pr-2 min-h-[44px] text-sm whitespace-nowrap font-medium">
+      <button key="clear-all" onClick={clearFilters} className="flex-shrink-0 flex items-center gap-1.5 bg-danger/10 text-danger hover:bg-danger/20 transition-colors border border-danger/30 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
         Limpiar todo
         <X className="w-4 h-4" />
       </button>
@@ -156,7 +156,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
   const selectsContent = (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-sm whitespace-nowrap">Zona:</span>
+        <span className="text-text-muted text-scale-sm whitespace-nowrap">Zona:</span>
         <Select
           className="w-full sm:w-48"
           value={zoneParam || 'Todas'}
@@ -168,7 +168,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
         />
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-sm whitespace-nowrap">Año:</span>
+        <span className="text-text-muted text-scale-sm whitespace-nowrap">Año:</span>
         <Select
           className="w-full sm:w-32"
           value={anioParam || 'Todos'}
@@ -180,7 +180,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
         />
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-sm whitespace-nowrap">Mes:</span>
+        <span className="text-text-muted text-scale-sm whitespace-nowrap">Mes:</span>
         <Select
           className="w-full sm:w-40"
           value={mesParam || 'Todos'}
@@ -194,7 +194,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
       {hasFilters && (
         <button
           onClick={clearFilters}
-          className="mt-4 sm:mt-0 sm:ml-auto text-sm text-text-muted hover:text-text-primary transition-colors flex items-center gap-1 min-h-[44px] sm:min-h-0"
+          className="mt-4 sm:mt-0 sm:ml-auto text-scale-sm text-text-muted hover:text-text-primary transition-colors flex items-center gap-1 min-h-[44px] sm:min-h-0"
         >
           <X className="w-4 h-4" />
           Limpiar filtros
@@ -210,7 +210,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
         <div className="flex items-center gap-2 overflow-x-auto pb-1 w-full custom-scrollbar">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex-shrink-0 flex items-center gap-2 bg-bg-surface border border-border rounded-full px-4 min-h-[44px] text-sm text-text-primary font-medium"
+            className="flex-shrink-0 flex items-center gap-2 bg-bg-surface border border-border rounded-full px-4 min-h-[44px] text-scale-sm text-text-primary font-medium"
           >
             <Filter className="w-4 h-4" />
             Filtros

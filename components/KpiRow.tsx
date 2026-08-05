@@ -15,7 +15,7 @@ export function KpiRow({ metrics }: KpiRowProps) {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
         {[1, 2, 3, 4, 5, 6].map(i => (
           <div key={i} className="bg-bg-surface border border-border rounded-lg p-5 h-[100px] flex flex-col justify-center items-center">
-            <span className="text-text-muted text-sm">Sin datos</span>
+            <span className="text-text-muted text-scale-sm">Sin datos</span>
           </div>
         ))}
       </div>
