@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 import { cn } from '../ui/Tooltip'
 import { Select } from '../ui/Select'
 import { Tooltip } from '../ui/Tooltip'
+import { useEmpresa } from '@/lib/empresaContext'
 
 interface DetailTableProps {
   data: ReporteRow[];
@@ -28,6 +29,7 @@ const SORT_OPTIONS = [
 ]
 
 export function DetailTable({ data, partialMonth }: DetailTableProps) {
+  const { usaZonas } = useEmpresa()
   const [sortField, setSortField] = useState<SortField>('anio_mes')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [page, setPage] = useState(1)
@@ -106,7 +108,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
               setSortDirection(dir)
               setPage(1)
             }}
-            options={SORT_OPTIONS}
+            options={SORT_OPTIONS.filter(opt => usaZonas || !opt.value.includes('zona'))}
           />
         </div>
         <div className="flex flex-col gap-4">
@@ -120,7 +122,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
                       <span className="px-1.5 py-0.5 rounded bg-warning/10 text-warning text-[10px] font-bold uppercase tracking-wider">En curso</span>
                     )}
                   </div>
-                  <span className="text-scale-sm text-text-secondary font-medium">{row.zona}</span>
+                  {usaZonas && <span className="text-scale-sm text-text-secondary font-medium">{row.zona}</span>}
                 </div>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4">
                   <div className="flex flex-col">
@@ -148,7 +150,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
           <thead>
             <tr className="border-b border-border bg-bg-elevated/50">
               <Th field="anio_mes" label="Mes" />
-              <Th field="zona" label="Zona" />
+              {usaZonas && <Th field="zona" label="Zona" />}
               <Th field="total" label="Entregas" align="right" />
               <Th field="mediana_dias" label="Mediana" align="right" />
               <Th field="promedio_dias" label="Promedio" align="right" />
@@ -168,7 +170,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-scale-sm text-text-primary">{row.zona}</td>
+                  {usaZonas && <td className="px-4 py-3 text-scale-sm text-text-primary">{row.zona}</td>}
                   <td className="px-4 py-3 text-scale-sm text-text-primary text-right tabular-nums">{formatNumber(row.total)}</td>
                   <td className="px-4 py-3 text-scale-sm text-text-primary text-right tabular-nums">{formatDecimal(row.mediana_dias)}</td>
                   <td className="px-4 py-3 text-scale-sm text-text-muted text-right tabular-nums">{formatDecimal(row.promedio_dias)}</td>

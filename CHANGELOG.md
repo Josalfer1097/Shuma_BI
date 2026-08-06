@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.19.0 — 2026-08-06
+
+- Arquitectura multiempresa: se separa la operación de Comercializadora (CFS) y Acabados.
+- Enrutamiento dinámico `/[empresa]/logistica`.
+- Inyección de contexto de empresa (`EmpresaProvider`) para parametrizar metas y comportamientos de interfaz.
+- Ajuste de filtros, recorridos guiados y gráficas condicionales según si la empresa usa distribución por zonas.
+
 ## v0.18.4 — 2026-08-06
 
 - Se corrige definitivamente el hueco en la barra de etapas. Las etapas mas

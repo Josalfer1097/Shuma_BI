@@ -1,6 +1,6 @@
 /**
- * Meta de tiempo de entrega comprometida con el cliente: 5 dias desde que
- * se crea la cotizacion hasta que logistica valida la entrega.
- * Si el negocio cambia el compromiso, este es el unico lugar a tocar.
+ * Meta de tiempo de entrega por defecto.
+ * La meta real vive por empresa en lib/empresas.ts, ya que son
+ * operaciones y compromisos distintos.
  */
-export const META_DIAS = 5;
+export const META_DIAS_DEFECTO = 5;

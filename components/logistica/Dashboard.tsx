@@ -14,6 +14,7 @@ import { StagesChart } from './StagesChart'
 import { StagesEvolutionChart } from './StagesEvolutionChart'
 import { AuthTypesPanel } from './AuthTypesPanel'
 import { KpiDescriptions } from './KpiDescriptions'
+import { useEmpresa } from '@/lib/empresaContext'
 
 interface DashboardProps {
   initialData: ReporteRow[];
@@ -26,6 +27,7 @@ const MONTHS_ES: Record<string, string> = {
 }
 
 export function Dashboard({ initialData }: DashboardProps) {
+  const { usaZonas, metaDias } = useEmpresa()
   const searchParams = useSearchParams()
   const zoneParam = searchParams.get('zona')
   const anioParam = searchParams.get('anio')
@@ -50,7 +52,7 @@ export function Dashboard({ initialData }: DashboardProps) {
     })
   }, [initialData, activeZone, activeAnio, activeMes])
 
-  const metrics = useMemo(() => aggregate(filteredData), [filteredData])
+  const metrics = useMemo(() => aggregate(filteredData, metaDias), [filteredData, metaDias])
 
   // Aggregate trend data (group by anio_mes)
   const trendData = useMemo(() => {
@@ -68,7 +70,7 @@ export function Dashboard({ initialData }: DashboardProps) {
 
     let aggregated = Array.from(byMonth.entries())
       .map(([anio_mes, rows]) => {
-        const agg = aggregate(rows)
+        const agg = aggregate(rows, metaDias)
         return {
           anio_mes,
           mediana_dias: agg?.mediana_dias || 0,
@@ -88,7 +90,7 @@ export function Dashboard({ initialData }: DashboardProps) {
       }
     }
     return aggregated
-  }, [initialData, activeZone, activeAnio, activeMes])
+  }, [initialData, activeZone, activeAnio, activeMes, metaDias])
 
   // Aggregate stages evolution data
   const stagesEvolutionData = useMemo(() => {
@@ -149,7 +151,7 @@ export function Dashboard({ initialData }: DashboardProps) {
 
     return Array.from(byZone.entries())
       .map(([zona, rows]) => {
-        const agg = aggregate(rows)
+        const agg = aggregate(rows, metaDias)
         return {
           zona,
           mediana_dias: agg?.mediana_dias || 0,
@@ -158,7 +160,7 @@ export function Dashboard({ initialData }: DashboardProps) {
         }
       })
       .sort((a, b) => b.mediana_dias - a.mediana_dias)
-  }, [initialData, activeAnio, activeMes])
+  }, [initialData, activeAnio, activeMes, metaDias])
 
   let periodoLabel = 'Todos los periodos'
   if (activeAnio && activeMes) {
@@ -190,8 +192,10 @@ export function Dashboard({ initialData }: DashboardProps) {
         <StagesChart metrics={metrics} />
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-        <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} partialMonth={partialMonth} anclaTour="tendencia" />
-        <ZoneRanking data={zoneData} />
+        <div className={usaZonas ? "" : "xl:col-span-2"}>
+          <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} partialMonth={partialMonth} anclaTour="tendencia" />
+        </div>
+        {usaZonas && <ZoneRanking data={zoneData} />}
       </div>
       
       <StagesEvolutionChart data={stagesEvolutionData} partialMonth={partialMonth} />

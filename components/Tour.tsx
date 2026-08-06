@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ArrowLeft, ArrowRight } from 'lucide-react'
+import { FontScaleButton } from './FontScaleButton'
 
 /**
  * Recorrido guiado con foco, sin dependencias externas.
@@ -227,14 +228,17 @@ export function Tour({ pasos, llaveStorage }: { pasos: PasoTour[]; llaveStorage:
           <span className="text-scale-xs uppercase tracking-wide text-text-muted">
             Paso {indice + 1} de {pasos.length}
           </span>
-          <button
-            type="button"
-            onClick={cerrar}
-            aria-label="Cerrar recorrido"
-            className="-mr-2 -mt-2 flex h-11 w-11 items-center justify-center rounded text-text-muted transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
+          <div className="flex items-center gap-1 -mr-2 -mt-2">
+            <FontScaleButton />
+            <button
+              type="button"
+              onClick={cerrar}
+              aria-label="Cerrar recorrido"
+              className="flex h-11 w-11 items-center justify-center rounded text-text-muted transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <h3 className="text-scale-lg font-semibold text-text-primary">{paso.titulo}</h3>

@@ -3,6 +3,7 @@ import { Header } from '@/components/Header'
 import { AreaCard } from '@/components/AreaCard'
 import { PanelLogistica } from '@/components/PanelLogistica'
 import { resumenLogistica } from '@/lib/aggregate'
+import { EMPRESAS } from '@/lib/empresas'
 import { AREAS_PENDIENTES } from '@/lib/areas'
 import { Tour } from '@/components/Tour'
 import { TOUR_PORTADA, LLAVE_TOUR_PORTADA } from '@/lib/tours'
@@ -15,13 +16,12 @@ export default async function Portada() {
   // consultas nuevas: la portada deriva sus cifras de estos datos.
   const [reporteRes, etlRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*'),
-    supabase.from('etl_status').select('*').eq('id', 1).single(),
+    supabase.from('etl_status').select('*').eq('id', 'cfs').single(),
   ])
 
   // Un fallo de datos degrada solo el panel de logistica. La portada nunca
   // se queda en blanco: las demas areas no dependen de esta consulta.
-  const filas = (reporteRes.error ? null : (reporteRes.data as ReporteRow[])) ?? []
-  const resumen = filas.length > 0 ? resumenLogistica(filas) : null
+  const filasTotales = (reporteRes.error ? [] : (reporteRes.data as ReporteRow[]))
   const etlStatus = (etlRes.error ? null : (etlRes.data as EtlStatus)) ?? null
 
   return (
@@ -32,7 +32,14 @@ export default async function Portada() {
         subtitulo="Indicadores por área — Grupo Shuma"
       />
 
-      <PanelLogistica resumen={resumen} />
+      {EMPRESAS.map((empresa) => {
+        const filasEmpresa = filasTotales.filter((f) => f.empresa === empresa.id)
+        const resumen = filasEmpresa.length > 0 ? resumenLogistica(filasEmpresa, empresa.metaDias) : null
+        
+        return (
+          <PanelLogistica key={empresa.id} resumen={resumen} empresa={empresa} />
+        )
+      })}
 
       <section>
         <div className="mb-4 flex items-baseline justify-between gap-3">

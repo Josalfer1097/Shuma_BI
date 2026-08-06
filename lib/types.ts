@@ -1,5 +1,6 @@
 export interface ReporteRow {
   id: number;
+  empresa: string;
   anio_mes: string;
   zona: string;
   total: number;

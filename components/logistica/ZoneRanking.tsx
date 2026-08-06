@@ -15,7 +15,7 @@ import {
 } from 'recharts'
 import { formatDecimal } from '@/lib/format'
 import { Tooltip as CustomUITooltip } from '../ui/Tooltip'
-import { META_DIAS } from '@/lib/config'
+import { useEmpresa } from '@/lib/empresaContext'
 import { useFontScale } from '@/lib/fontScaleContext'
 
 interface ZoneRankingProps {
@@ -93,6 +93,7 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
   const searchParams = useSearchParams()
   const selectedZone = searchParams.get('zona')
   const { scale } = useFontScale()
+  const { metaDias } = useEmpresa()
 
   if (data.length === 0) {
     return (
@@ -150,7 +151,7 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 tick={(props: any) => <CustomYAxisTick {...props} payload={{...props.payload, scale}} />}
               />
-              <ReferenceLine x={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'insideBottomRight', fill: 'var(--danger)', fontSize: Math.round(11 * scale), offset: 10 }} />
+              <ReferenceLine x={metaDias} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${metaDias}d`, position: 'insideBottomRight', fill: 'var(--danger)', fontSize: Math.round(11 * scale), offset: 10 }} />
               <RechartsTooltip 
                 content={<CustomTooltip onFilter={handleBarClick} selectedZone={selectedZone} />} 
                 cursor={{ fill: 'var(--bg-elevated)', opacity: 0.4 }}
@@ -166,7 +167,7 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
                 {data.map((entry, index) => {
                   const isSelected = selectedZone === entry.zona
                   const hasSelection = !!selectedZone
-                  const isOutOfMeta = entry.mediana_dias > META_DIAS
+                  const isOutOfMeta = entry.mediana_dias > metaDias
                   const isSlowest = entry.mediana_dias === slowestZoneValue
                   
                   let baseColor = 'var(--accent)'

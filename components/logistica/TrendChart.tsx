@@ -16,7 +16,7 @@ import { formatNumber, formatDecimal } from '@/lib/format'
 import { Tooltip as CustomUITooltip } from '../ui/Tooltip'
 import { Select } from '../ui/Select'
 import { DashboardMetrics } from '@/lib/types'
-import { META_DIAS } from '@/lib/config'
+import { useEmpresa } from '@/lib/empresaContext'
 import { useFontScale } from '@/lib/fontScaleContext'
 
 interface TrendChartProps {
@@ -37,7 +37,7 @@ interface TrendChartProps {
 const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
-    const meetsMeta = data.mediana_dias <= META_DIAS
+    const meetsMeta = data.mediana_dias <= payload[0].payload.metaDias
     const isAnomaly = data.promedio_dias > data.mediana_dias * 2
     const isPartial = partialMonth === data.anio_mes
     
@@ -127,6 +127,10 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
   const searchParams = useSearchParams()
   const compMode = searchParams.get('comp') || 'anterior'
   const { scale } = useFontScale()
+  const { metaDias } = useEmpresa()
+
+  // Inject metaDias into data for tooltip access
+  const dataWithMeta = data.map(d => ({ ...d, metaDias }))
 
   if (data.length === 0) {
     return (
@@ -147,8 +151,8 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
   let chartTitle = "Tendencia mensual";
   let chartTooltip = "La línea sólida es la mediana: lo que tarda una entrega típica. La punteada es el promedio, que sube cuando hay entregas muy lentas. Cuando las dos líneas se separan, ese mes hubo casos extremos. Si el promedio sube pero la mediana se mantiene, el problema son casos aislados y no el proceso general.";
 
-  const sumTotalVisible = data.reduce((acc, d) => acc + d.total, 0);
-  const tuNormal = sumTotalVisible > 0 ? data.reduce((acc, d) => acc + d.mediana_dias * d.total, 0) / sumTotalVisible : 0;
+  const sumTotalVisible = dataWithMeta.reduce((acc, d) => acc + d.total, 0);
+  const tuNormal = sumTotalVisible > 0 ? dataWithMeta.reduce((acc, d) => acc + d.mediana_dias * d.total, 0) / sumTotalVisible : 0;
 
   if (selectedMonth) {
     const [anio, mes] = selectedMonth.split('-')
@@ -157,34 +161,34 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
     chartTooltip = "Se muestran los últimos doce meses para poder ubicar el mes seleccionado en contexto. El punto resaltado es el mes que elegiste. Un mes aislado no dice mucho: lo que importa es si está por encima o por debajo de su tendencia.";
 
     // Compare logic
-    const current = data[data.length - 1];
+    const current = dataWithMeta[dataWithMeta.length - 1];
     let prev = null;
     let pLabel = '';
 
     if (compMode === 'anterior') {
-      if (data.length > 1) {
-        prev = data[data.length - 2];
+      if (dataWithMeta.length > 1) {
+        prev = dataWithMeta[dataWithMeta.length - 2];
         const [pAnio, pMes] = prev.anio_mes.split('-');
         pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
       }
     } else if (compMode === 'anual') {
-      if (data.length > 12) {
-        prev = data[data.length - 13];
+      if (dataWithMeta.length > 12) {
+        prev = dataWithMeta[dataWithMeta.length - 13];
         const [pAnio, pMes] = prev.anio_mes.split('-');
         pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
       }
     } else if (compMode === 'promedio') {
-      if (data.length > 1) {
+      if (dataWithMeta.length > 1) {
         // Average of ALL visible data up to this point
-        const sumTotal = data.reduce((acc, d) => acc + d.total, 0);
-        const avgMediana = sumTotal > 0 ? data.reduce((acc, d) => acc + d.mediana_dias * d.total, 0) / sumTotal : 0;
-        const avgTotal = sumTotal / data.length;
+        const sumTotal = dataWithMeta.reduce((acc, d) => acc + d.total, 0);
+        const avgMediana = sumTotal > 0 ? dataWithMeta.reduce((acc, d) => acc + d.mediana_dias * d.total, 0) / sumTotal : 0;
+        const avgTotal = sumTotal / dataWithMeta.length;
         
         const avgMetrics = {} as DashboardMetrics;
         const stages = ['med_cot_autorizacion', 'med_autorizacion_recepcion', 'med_recepcion_surtido', 'med_surtido_ruta', 'med_ruta_entrega', 'med_entrega_validacion'];
         stages.forEach(s => {
           // @ts-expect-error type index
-          avgMetrics[s] = sumTotal > 0 ? data.reduce((acc, d) => acc + (d.metrics?.[s] || 0) * d.total, 0) / sumTotal : 0;
+          avgMetrics[s] = sumTotal > 0 ? dataWithMeta.reduce((acc, d) => acc + (d.metrics?.[s] || 0) * d.total, 0) / sumTotal : 0;
         });
 
         prev = {
@@ -317,7 +321,7 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
           min-height el area de dibujo colapsaba a cero. */}
       <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+          <LineChart data={dataWithMeta} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis 
               dataKey="anio_mes" 
@@ -340,7 +344,7 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
             />
             
             <ReferenceLine y={tuNormal} stroke="var(--text-muted)" strokeWidth={1} strokeOpacity={0.3} label={{ value: `Tu normal: ${formatDecimal(tuNormal)}d`, position: 'insideTopLeft', fill: 'var(--text-muted)', fontSize: Math.round(10 * scale) }} />
-            <ReferenceLine y={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'right', fill: 'var(--danger)', fontSize: Math.round(11 * scale) }} />
+            <ReferenceLine y={metaDias} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${metaDias}d`, position: 'right', fill: 'var(--danger)', fontSize: Math.round(11 * scale) }} />
             
             {selectedMonth && (
               <ReferenceLine x={selectedMonth} stroke="var(--warning)" strokeDasharray="3 3" />

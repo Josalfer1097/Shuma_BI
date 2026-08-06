@@ -4,17 +4,21 @@ import React from 'react'
 import { DashboardMetrics } from '@/lib/types'
 import { KpiCard } from './KpiCard'
 import { formatNumber, formatDecimal } from '@/lib/format'
+import { useEmpresa } from '@/lib/empresaContext'
+import { cn } from '../ui/Tooltip'
 
 interface KpiRowProps {
   metrics: DashboardMetrics | null;
 }
 
 export function KpiRow({ metrics }: KpiRowProps) {
+  const { usaZonas } = useEmpresa()
+
   if (!metrics) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
-        {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="bg-bg-surface border border-border rounded-lg p-5 h-[100px] flex flex-col justify-center items-center">
+      <div className={cn("grid gap-3 sm:gap-4 mb-8", usaZonas ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6")}>
+        {Array.from({ length: usaZonas ? 8 : 6 }).map((_, i) => (
+          <div key={i} className={cn("bg-bg-surface border border-border rounded-lg p-5 h-[100px] flex flex-col justify-center items-center", usaZonas && i === 6 ? "lg:col-span-2" : "")}>
             <span className="text-text-muted text-scale-sm">Sin datos</span>
           </div>
         ))}
@@ -33,7 +37,7 @@ export function KpiRow({ metrics }: KpiRowProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 mb-8">
+    <div className={cn("grid gap-3 sm:gap-4 mb-8", usaZonas ? "grid-cols-2 sm:grid-cols-3 xl:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 xl:grid-cols-6")}>
       <KpiCard
         title="Total entregas"
         value={formatNumber(metrics.total)}
@@ -66,7 +70,7 @@ export function KpiRow({ metrics }: KpiRowProps) {
         tooltip="Dias entre que el material se entrega al cliente y que se genera la factura. En Shuma se factura por lote al cierre del dia, asi que lo normal es que sea menos de un dia. Importa porque la cobranza no arranca hasta que existe la factura."
       />
       
-      {(() => {
+      {usaZonas && (() => {
         if (metrics.total_zonas_mes_evaluadas < 3) {
           return (
             <KpiCard

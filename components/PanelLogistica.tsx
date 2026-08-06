@@ -1,9 +1,9 @@
 import React from 'react'
 import Link from 'next/link'
 import { Truck, ArrowRight } from 'lucide-react'
-import { META_DIAS } from '@/lib/config'
 import { formatDecimal, formatNumber } from '@/lib/format'
 import type { ResumenLogistica } from '@/lib/aggregate'
+import type { Empresa } from '@/lib/empresas'
 
 function Indicador({
   etiqueta,
@@ -30,7 +30,7 @@ function Indicador({
   )
 }
 
-export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }) {
+export function PanelLogistica({ resumen, empresa }: { resumen: ResumenLogistica | null, empresa: Empresa }) {
   return (
     <section data-tour="panel-logistica" className="mb-10 rounded-lg border border-border bg-bg-surface p-5 sm:p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -39,7 +39,9 @@ export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }
             <Truck className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-scale-xl font-semibold font-exo text-text-primary">Logística</h2>
+            <h2 className="text-scale-xl font-semibold font-exo text-text-primary">
+              Logística - {empresa.nombreCorto}
+            </h2>
             <p className="text-scale-sm text-text-muted">
               Tiempos de entrega desde la cotización hasta la validación
             </p>
@@ -47,7 +49,7 @@ export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }
         </div>
 
         <Link
-          href="/logistica"
+          href={`/${empresa.id}/logistica`}
           className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-border bg-bg-elevated px-4 text-scale-sm font-medium text-text-primary transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           Ver el módulo completo
@@ -68,7 +70,7 @@ export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }
             <Indicador
               etiqueta="Tiempo típico de entrega"
               valor={`${formatDecimal(resumen.medianaDias)} d`}
-              nota={`Meta: ${META_DIAS} días`}
+              nota={`Meta: ${empresa.metaDias} días`}
               tono={resumen.cumpleMeta ? 'bueno' : 'alerta'}
             />
             <Indicador
@@ -83,12 +85,21 @@ export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }
               nota={`${resumen.etapaMasLentaNombre} — del ciclo total`}
               ancla="etapa-lenta"
             />
-            <Indicador
-              etiqueta="Zonas fuera de meta"
-              valor={`${resumen.zonasFueraDeMeta} de ${resumen.zonasTotales}`}
-              nota="Zonas con mediana arriba de la meta"
-              tono={resumen.zonasFueraDeMeta === 0 ? 'bueno' : 'alerta'}
-            />
+            {empresa.usaZonas ? (
+              <Indicador
+                etiqueta="Zonas fuera de meta"
+                valor={`${resumen.zonasFueraDeMeta} de ${resumen.zonasTotales}`}
+                nota="Zonas con mediana arriba de la meta"
+                tono={resumen.zonasFueraDeMeta === 0 ? 'bueno' : 'alerta'}
+              />
+            ) : (
+              <Indicador
+                etiqueta="Total entregas"
+                valor={formatNumber(resumen.entregas)}
+                nota="En el periodo analizado"
+                tono="neutro"
+              />
+            )}
           </div>
 
           <p className="mt-4 text-scale-xs text-text-muted">

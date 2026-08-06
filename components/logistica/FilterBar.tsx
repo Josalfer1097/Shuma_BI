@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Select } from '../ui/Select'
 import { ReporteRow } from '@/lib/types'
 import { X, Filter } from 'lucide-react'
+import { useEmpresa } from '@/lib/empresaContext'
 
 interface FilterBarProps {
   rawData: ReporteRow[];
@@ -22,6 +23,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
   // cualquier ruta y los filtros deben quedarse dentro de ella.
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { usaZonas } = useEmpresa()
 
   const zoneParam = searchParams.get('zona')
   const anioParam = searchParams.get('anio')
@@ -120,12 +122,11 @@ export function FilterBar({ rawData }: FilterBarProps) {
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
-  const hasFilters = zoneParam || anioParam || mesParam
 
-  const activeFiltersChipsMobile = []
+  const activeFiltersChips = []
   let activeCount = 0
-  if (zoneParam) {
-    activeFiltersChipsMobile.push(
+  if (usaZonas && zoneParam) {
+    activeFiltersChips.push(
       <button key="zona" onClick={removeZone} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
         {zoneParam}
         <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
@@ -139,7 +140,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
     else if (anioParam) label = anioParam
     else if (mesParam) label = MONTHS_ES[mesParam]
 
-    activeFiltersChipsMobile.push(
+    activeFiltersChips.push(
       <button key="periodo" onClick={removePeriod} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
         {label}
         <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
@@ -148,7 +149,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
     activeCount++
   }
   if (activeCount >= 2) {
-    activeFiltersChipsMobile.push(
+    activeFiltersChips.push(
       <button key="clear-all" onClick={clearFilters} className="flex-shrink-0 flex items-center gap-1.5 bg-danger/10 text-danger hover:bg-danger/20 transition-colors border border-danger/30 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
         Limpiar todo
         <X className="w-4 h-4" />
@@ -158,18 +159,20 @@ export function FilterBar({ rawData }: FilterBarProps) {
 
   const selectsContent = (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-scale-sm whitespace-nowrap">Zona:</span>
-        <Select
-          className="w-full sm:w-48"
-          value={zoneParam || 'Todas'}
-          onChange={handleZoneChange}
-          options={[
-            { label: 'Todas', value: 'Todas' },
-            ...uniqueZones.map(z => ({ label: z, value: z }))
-          ]}
-        />
-      </div>
+      {usaZonas && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <span className="text-text-muted text-scale-sm whitespace-nowrap">Zona:</span>
+          <Select
+            className="w-full sm:w-48"
+            value={zoneParam || 'Todas'}
+            onChange={handleZoneChange}
+            options={[
+              { label: 'Todas', value: 'Todas' },
+              ...uniqueZones.map(z => ({ label: z, value: z }))
+            ]}
+          />
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
         <span className="text-text-muted text-scale-sm whitespace-nowrap">Año:</span>
         <Select
@@ -194,15 +197,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
           ]}
         />
       </div>
-      {hasFilters && (
-        <button
-          onClick={clearFilters}
-          className="mt-4 sm:mt-0 sm:ml-auto text-scale-sm text-text-muted hover:text-text-primary transition-colors flex items-center gap-1 min-h-[44px] sm:min-h-0"
-        >
-          <X className="w-4 h-4" />
-          Limpiar filtros
-        </button>
-      )}
+      {/* On mobile, clear filters is shown as a chip if multiple are active */}
     </>
   )
 
@@ -218,7 +213,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
             <Filter className="w-4 h-4" />
             Filtros
           </button>
-          {activeFiltersChipsMobile}
+          {activeFiltersChips}
         </div>
 
         {mobileMenuOpen && (
@@ -229,8 +224,13 @@ export function FilterBar({ rawData }: FilterBarProps) {
       </div>
 
       {/* Desktop view */}
-      <div className="hidden sm:flex flex-row items-center gap-4">
+      <div className="hidden sm:flex flex-row items-center gap-4 w-full">
         {selectsContent}
+        {activeCount > 0 && (
+          <div className="flex items-center gap-2 ml-auto">
+            {activeFiltersChips}
+          </div>
+        )}
       </div>
     </div>
   )

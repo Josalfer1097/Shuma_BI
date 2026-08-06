@@ -1,5 +1,5 @@
 import type { PasoTour } from '@/components/Tour'
-import { META_DIAS } from './config'
+import type { Empresa } from './empresas'
 
 /**
  * Contenido de los recorridos guiados.
@@ -24,7 +24,7 @@ export const TOUR_PORTADA: PasoTour[] = [
   {
     ancla: 'panel-logistica',
     titulo: 'El tiempo típico, no el promedio',
-    cuerpo: `Este número es la mediana: el caso típico. Se usa en lugar del promedio porque un puñado de entregas muy lentas lo distorsiona hacia arriba y da la impresión de que la operación incumple cuando no es así. La meta comprometida es de ${META_DIAS} días.`,
+    cuerpo: `Este número es la mediana: el caso típico. Se usa en lugar del promedio porque un puñado de entregas muy lentas lo distorsiona hacia arriba y da la impresión de que la operación incumple cuando no es así. Cada empresa tiene su propia meta de días acordada con la dirección.`,
   },
   {
     ancla: 'etapa-lenta',
@@ -40,29 +40,43 @@ export const TOUR_PORTADA: PasoTour[] = [
   },
 ]
 
-export const TOUR_LOGISTICA: PasoTour[] = [
-  {
-    ancla: 'kpis',
-    titulo: 'Mediana y promedio dicen cosas distintas',
-    cuerpo:
-      'La mediana describe el caso típico; el promedio se mueve con los casos extremos. Cuando los dos se separan mucho, no significa que la operación empeoró: significa que hubo un grupo pequeño de entregas muy lentas. El tablero lo marca solo cuando ocurre.',
-  },
-  {
-    ancla: 'etapas',
-    titulo: 'El ciclo, etapa por etapa',
-    cuerpo:
-      'Aquí se ve en qué parte del proceso se consume el tiempo. La etapa de surtido aparece casi siempre en cero: no es un error del tablero, es que el sistema registra la recepción y el surtido en el mismo momento, así que no hay nada que medir entre ambos.',
-  },
-  {
-    ancla: 'tendencia',
-    titulo: 'El mes en curso va incompleto',
-    cuerpo:
-      'Los datos cierran al día anterior, así que el último mes de la gráfica lleva solo unos días de operación y se marca como incompleto. Su caída de volumen es esperada: no indica que la operación se haya detenido.',
-  },
-  {
-    ancla: 'filtros',
-    titulo: 'Filtra y comparte la vista',
-    cuerpo:
-      'Puedes acotar por zona, año y mes. Los filtros quedan guardados en la dirección del navegador, así que si copias el enlace y lo mandas, quien lo abra verá exactamente la misma vista que tú.',
-  },
-]
+export const getTourLogistica = (empresa: Empresa): PasoTour[] => {
+  const pasos = [
+    {
+      ancla: 'kpis',
+      titulo: 'Mediana y promedio dicen cosas distintas',
+      cuerpo:
+        'La mediana describe el caso típico; el promedio se mueve con los casos extremos. Cuando los dos se separan mucho, no significa que la operación empeoró: significa que hubo un grupo pequeño de entregas muy lentas. El tablero lo marca solo cuando ocurre.',
+    },
+    {
+      ancla: 'etapas',
+      titulo: 'El ciclo, etapa por etapa',
+      cuerpo:
+        'Aquí se ve en qué parte del proceso se consume el tiempo. La etapa de surtido aparece casi siempre en cero: no es un error del tablero, es que el sistema registra la recepción y el surtido en el mismo momento, así que no hay nada que medir entre ambos.',
+    },
+    {
+      ancla: 'tendencia',
+      titulo: 'El mes en curso va incompleto',
+      cuerpo:
+        'Los datos cierran al día anterior, así que el último mes de la gráfica lleva solo unos días de operación y se marca como incompleto. Su caída de volumen es esperada: no indica que la operación se haya detenido.',
+    }
+  ]
+
+  if (empresa.usaZonas) {
+    pasos.push({
+      ancla: 'filtros',
+      titulo: 'Filtra y comparte la vista',
+      cuerpo:
+        'Puedes acotar por zona, año y mes. Los filtros quedan guardados en la dirección del navegador, así que si copias el enlace y lo mandas, quien lo abra verá exactamente la misma vista que tú.',
+    })
+  } else {
+    pasos.push({
+      ancla: 'filtros',
+      titulo: 'Filtra y comparte la vista',
+      cuerpo:
+        'Puedes acotar por año y mes. Los filtros quedan guardados en la dirección del navegador, así que si copias el enlace y lo mandas, quien lo abra verá exactamente la misma vista que tú.',
+    })
+  }
+
+  return pasos
+}

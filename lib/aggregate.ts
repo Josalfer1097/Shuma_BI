@@ -1,7 +1,6 @@
 import { ReporteRow, DashboardMetrics } from './types'
-import { META_DIAS } from './config'
 
-export function aggregate(rows: ReporteRow[]): DashboardMetrics | null {
+export function aggregate(rows: ReporteRow[], metaDias: number): DashboardMetrics | null {
   if (rows.length === 0) return null
 
   const total = rows.reduce((s, r) => s + r.total, 0)
@@ -10,7 +9,7 @@ export function aggregate(rows: ReporteRow[]): DashboardMetrics | null {
   let zonas_mes_cumplen_meta = 0
   let entregas_cumplen_meta = 0
   for (const row of rows) {
-    if (row.mediana_dias <= META_DIAS) {
+    if (row.mediana_dias <= metaDias) {
       zonas_mes_cumplen_meta++
       entregas_cumplen_meta += row.total
     }
@@ -90,8 +89,8 @@ const ETAPAS_CICLO: { clave: keyof DashboardMetrics; nombre: string }[] = [
   { clave: 'med_entrega_validacion', nombre: 'Validación' },
 ]
 
-export function resumenLogistica(rows: ReporteRow[]): ResumenLogistica | null {
-  const m = aggregate(rows)
+export function resumenLogistica(rows: ReporteRow[], metaDias: number): ResumenLogistica | null {
+  const m = aggregate(rows, metaDias)
   if (!m) return null
 
   // Meses dentro de meta: se evalua la mediana ponderada de cada mes
@@ -105,8 +104,8 @@ export function resumenLogistica(rows: ReporteRow[]): ResumenLogistica | null {
 
   let mesesEnMeta = 0
   porMes.forEach((filas) => {
-    const resumen = aggregate(filas)
-    if (resumen && resumen.mediana_dias <= META_DIAS) mesesEnMeta++
+    const resumen = aggregate(filas, metaDias)
+    if (resumen && resumen.mediana_dias <= metaDias) mesesEnMeta++
   })
 
   // Zonas fuera de meta: misma logica, agrupando por zona.
@@ -119,8 +118,8 @@ export function resumenLogistica(rows: ReporteRow[]): ResumenLogistica | null {
 
   let zonasFueraDeMeta = 0
   porZona.forEach((filas) => {
-    const resumen = aggregate(filas)
-    if (resumen && resumen.mediana_dias > META_DIAS) zonasFueraDeMeta++
+    const resumen = aggregate(filas, metaDias)
+    if (resumen && resumen.mediana_dias > metaDias) zonasFueraDeMeta++
   })
 
   // Etapa mas lenta como porcentaje del ciclo. El denominador es la suma de
@@ -135,7 +134,7 @@ export function resumenLogistica(rows: ReporteRow[]): ResumenLogistica | null {
 
   return {
     medianaDias: m.mediana_dias,
-    cumpleMeta: m.mediana_dias <= META_DIAS,
+    cumpleMeta: m.mediana_dias <= metaDias,
     mesesEnMeta,
     mesesTotales: porMes.size,
     etapaMasLentaNombre: masLenta.nombre,

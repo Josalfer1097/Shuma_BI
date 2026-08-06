@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { formatDecimal } from '@/lib/format'
 import { Tooltip as CustomUITooltip } from '../ui/Tooltip'
-import { META_DIAS } from '@/lib/config'
+import { useEmpresa } from '@/lib/empresaContext'
 import { useFontScale } from '@/lib/fontScaleContext'
 
 export interface StagesEvolutionData {
@@ -45,7 +45,7 @@ const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
     
     // Sum total to show total days
     const totalDays = reversedPayload.reduce((sum, entry) => sum + (entry.value as number), 0);
-    const meetsMeta = totalDays <= META_DIAS;
+    const meetsMeta = totalDays <= payload[0].payload.metaDias;
     const isPartial = partialMonth === label;
 
     return (
@@ -97,6 +97,9 @@ const blueShades = [
 
 export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChartProps) {
   const { scale } = useFontScale()
+  const { metaDias } = useEmpresa()
+
+  const dataWithMeta = data.map(d => ({ ...d, metaDias }))
 
   if (data.length === 0) {
     return (
@@ -133,7 +136,7 @@ export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChar
           rejilla ya le da altura definida al contenedor padre. */}
       <div className="w-full" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+          <AreaChart data={dataWithMeta} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
             <XAxis 
               dataKey="anio_mes" 
@@ -160,7 +163,7 @@ export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChar
               cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} 
             />
             
-            <ReferenceLine y={META_DIAS} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${META_DIAS}d`, position: 'right', fill: 'var(--danger)', fontSize: Math.round(11 * scale) }} />
+            <ReferenceLine y={metaDias} stroke="var(--danger)" strokeDasharray="3 3" strokeOpacity={0.5} strokeWidth={1} label={{ value: `Meta: ${metaDias}d`, position: 'right', fill: 'var(--danger)', fontSize: Math.round(11 * scale) }} />
 
             {partialMonth && (
               <ReferenceLine x={partialMonth} stroke="var(--warning)" strokeDasharray="3 3" />
