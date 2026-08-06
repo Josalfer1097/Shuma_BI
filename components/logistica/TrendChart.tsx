@@ -312,7 +312,10 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
       
       {comparisonNode}
 
-      <div className="w-full flex-1" style={{ minHeight: Math.max(240, 320 * scale) }}>
+      {/* Altura definida, no min-height: ResponsiveContainer usa height="100%"
+          y un porcentaje no resuelve contra una altura automatica. Con
+          min-height el area de dibujo colapsaba a cero. */}
+      <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />

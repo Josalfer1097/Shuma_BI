@@ -1,0 +1,187 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 03acbcb..9872b7c 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,15 @@
+ # Changelog
+ 
++## v0.18.1 — 2026-08-06
++
++- Se corrige la grafica de evolucion por etapa, que aparecia vacia. El area de
++  dibujo se quedaba sin altura por un cambio hecho al agregar el control de
++  tamano de texto.
++- Se corrigen los colores de las etapas del proceso. Los tonos mas claros
++  desaparecian sobre fondo blanco en modo claro, y el porcentaje escrito sobre
++  la etapa mas lenta era ilegible. Ahora los seis tonos y sus textos tienen
++  contraste suficiente en modo claro y en modo oscuro.
++
+ ## v0.18.0 — 2026-08-06
+ 
+ - La actualizacion automatica ahora puede alimentar el tablero con la
+diff --git a/app/globals.css b/app/globals.css
+index 6f66408..aa42d45 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -33,6 +33,26 @@
+   --success:        #34D399;   /*  9.43:1 */
+   --warning:        #FBBF24;   /* 10.86:1 */
+   --danger:         #F87171;   /*  6.55:1 */
++
++  /* Etapas del proceso. Van de mas oscuro a mas claro para que la barra
++     apilada se lea como una progresion. Las seis superan 3:1 contra su
++     fondo, minimo para elementos graficos no textuales. */
++  --etapa-1:        #2E67C2;   /* 3.31:1 */
++  --etapa-2:        #457FDE;   /* 4.61:1 */
++  --etapa-3:        #5F97F2;   /* 6.21:1 */
++  --etapa-4:        #84AEF0;   /* 8.02:1 */
++  --etapa-5:        #A8C2EB;   /* 10.00:1 */
++  --etapa-6:        #C2D5F4;   /* 12.19:1 */
++
++  /* Texto encima de cada etapa. Los tonos claros del final de la escala
++     necesitan texto oscuro; el blanco desaparecia sobre ellos. */
++  --sobre-etapa-1:  #FFFFFF;
++  --sobre-etapa-2:  #FFFFFF;
++  --sobre-etapa-3:  #08152B;
++  --sobre-etapa-4:  #08152B;
++  --sobre-etapa-5:  #08152B;
++  --sobre-etapa-6:  #08152B;
++  --sobre-alerta:   #3B2A02;   /* 8.29:1 sobre el ambar; el blanco daba 1.67:1 */
+ }
+ 
+ /* ---------- MODO CLARO ---------- */
+@@ -52,6 +72,24 @@
+   --success:        #047857;   /*  5.48:1 */
+   --warning:        #B45309;   /*  5.02:1 */
+   --danger:         #B91C1C;   /*  6.47:1 */
++
++  /* En modo claro los tonos claros desaparecen sobre fondo blanco: el ultimo
++     tono de la paleta anterior daba 1.42:1 contra #FFFFFF, invisible. La
++     escala se invierte y se recalcula. */
++  --etapa-1:        #4A8CF7;   /* 3.29:1 */
++  --etapa-2:        #1E71F6;   /* 4.42:1 */
++  --etapa-3:        #1A62D5;   /* 5.60:1 */
++  --etapa-4:        #2757A5;   /* 7.02:1 */
++  --etapa-5:        #214A8C;   /* 8.67:1 */
++  --etapa-6:        #163E7E;   /* 10.37:1 */
++
++  --sobre-etapa-1:  #08152B;
++  --sobre-etapa-2:  #FFFFFF;
++  --sobre-etapa-3:  #FFFFFF;
++  --sobre-etapa-4:  #FFFFFF;
++  --sobre-etapa-5:  #FFFFFF;
++  --sobre-etapa-6:  #FFFFFF;
++  --sobre-alerta:   #3B2A02;
+ }
+ 
+ body {
+diff --git a/components/logistica/StagesChart.tsx b/components/logistica/StagesChart.tsx
+index e0333df..43f5fbc 100644
+--- a/components/logistica/StagesChart.tsx
++++ b/components/logistica/StagesChart.tsx
+@@ -45,13 +45,13 @@ export function StagesChart({ metrics }: StagesChartProps) {
+   // Colors array from darkest to lightest blue (assuming 6 stages)
+   // Accent in dark mode is #4DA9F7. Let's use opacity steps or specific colors.
+   const blueShades = [
+-    '#1E4E8C', // accent-deep equivalent
+-    '#2563EB',
+-    '#3B82F6',
+-    '#60A5FA',
+-    '#93C5FD',
+-    '#BFDBFE'
+-  ]
++  'var(--etapa-1)',
++  'var(--etapa-2)',
++  'var(--etapa-3)',
++  'var(--etapa-4)',
++  'var(--etapa-5)',
++  'var(--etapa-6)',
++]
+ 
+   return (
+     <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-6 mb-8 flex flex-col">
+@@ -69,6 +69,10 @@ export function StagesChart({ metrics }: StagesChartProps) {
+           const width = (stage.value / totalCycle) * 100
+           const isSlowest = stage.key === slowestStage.key
+           const bgColor = isSlowest ? 'var(--warning)' : blueShades[i % blueShades.length]
++          // El texto blanco desaparece sobre los tonos claros de la escala y
++          // sobre el ambar de la etapa mas lenta. Cada etapa lleva su color
++          // de texto, calculado contra su propio fondo.
++          const textColor = isSlowest ? 'var(--sobre-alerta)' : `var(--sobre-etapa-${(i % 6) + 1})`
+           
+           return (
+             <div 
+@@ -78,7 +82,10 @@ export function StagesChart({ metrics }: StagesChartProps) {
+               title={`${stage.label}: ${formatDecimal(stage.value)}d (${formatPercent(stage.value, totalCycle)})`}
+             >
+               {width > 8 && (
+-                <span className="text-[10px] sm:text-scale-xs font-semibold text-white truncate px-1 opacity-90 drop-shadow-md">
++                <span
++                  style={{ color: textColor }}
++                  className="text-[10px] sm:text-scale-xs font-semibold truncate px-1"
++                >
+                   {formatPercent(stage.value, totalCycle)}
+                 </span>
+               )}
+diff --git a/components/logistica/StagesEvolutionChart.tsx b/components/logistica/StagesEvolutionChart.tsx
+index 0e2acb2..fe8a18b 100644
+--- a/components/logistica/StagesEvolutionChart.tsx
++++ b/components/logistica/StagesEvolutionChart.tsx
+@@ -87,12 +87,12 @@ const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
+ }
+ 
+ const blueShades = [
+-  '#1E4E8C', // Autorizacion
+-  '#2563EB', // A recepcion
+-  '#3B82F6', // Surtido
+-  '#60A5FA', // A ruta
+-  '#93C5FD', // Entrega
+-  '#BFDBFE'  // Validacion
++  'var(--etapa-1)',
++  'var(--etapa-2)',
++  'var(--etapa-3)',
++  'var(--etapa-4)',
++  'var(--etapa-5)',
++  'var(--etapa-6)',
+ ]
+ 
+ export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChartProps) {
+@@ -123,7 +123,10 @@ export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChar
+         <CustomUITooltip text="Muestra cómo evoluciona cada etapa del proceso mes a mes. Si el tiempo total baja, aquí se ve cuál etapa fue la que mejoró. Sirve para saber si una mejora vino de autorización, de almacén o de rutas." />
+       </div>
+ 
+-      <div className="w-full flex-1" style={{ minHeight: Math.max(240, 320 * scale) }}>
++      {/* Altura definida, no min-height: ResponsiveContainer usa height="100%"
++          y un porcentaje no resuelve contra una altura automatica. Con
++          min-height el area de dibujo colapsaba a cero. */}
++      <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
+         <ResponsiveContainer width="100%" height="100%">
+           <AreaChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+diff --git a/components/logistica/TrendChart.tsx b/components/logistica/TrendChart.tsx
+index 1c9bf66..0550292 100644
+--- a/components/logistica/TrendChart.tsx
++++ b/components/logistica/TrendChart.tsx
+@@ -312,7 +312,10 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
+       
+       {comparisonNode}
+ 
+-      <div className="w-full flex-1" style={{ minHeight: Math.max(240, 320 * scale) }}>
++      {/* Altura definida, no min-height: ResponsiveContainer usa height="100%"
++          y un porcentaje no resuelve contra una altura automatica. Con
++          min-height el area de dibujo colapsaba a cero. */}
++      <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
+         <ResponsiveContainer width="100%" height="100%">
+           <LineChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+diff --git a/package.json b/package.json
+index 9cb446f..ce5c5a3 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "shuma-bi-temp",
+-  "version": "0.18.0",
++  "version": "0.18.1",
+   "private": true,
+   "scripts": {
+     "dev": "next dev",

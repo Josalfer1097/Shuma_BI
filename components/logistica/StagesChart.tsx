@@ -45,13 +45,13 @@ export function StagesChart({ metrics }: StagesChartProps) {
   // Colors array from darkest to lightest blue (assuming 6 stages)
   // Accent in dark mode is #4DA9F7. Let's use opacity steps or specific colors.
   const blueShades = [
-    '#1E4E8C', // accent-deep equivalent
-    '#2563EB',
-    '#3B82F6',
-    '#60A5FA',
-    '#93C5FD',
-    '#BFDBFE'
-  ]
+  'var(--etapa-1)',
+  'var(--etapa-2)',
+  'var(--etapa-3)',
+  'var(--etapa-4)',
+  'var(--etapa-5)',
+  'var(--etapa-6)',
+]
 
   return (
     <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-6 mb-8 flex flex-col">
@@ -69,6 +69,10 @@ export function StagesChart({ metrics }: StagesChartProps) {
           const width = (stage.value / totalCycle) * 100
           const isSlowest = stage.key === slowestStage.key
           const bgColor = isSlowest ? 'var(--warning)' : blueShades[i % blueShades.length]
+          // El texto blanco desaparece sobre los tonos claros de la escala y
+          // sobre el ambar de la etapa mas lenta. Cada etapa lleva su color
+          // de texto, calculado contra su propio fondo.
+          const textColor = isSlowest ? 'var(--sobre-alerta)' : `var(--sobre-etapa-${(i % 6) + 1})`
           
           return (
             <div 
@@ -78,7 +82,10 @@ export function StagesChart({ metrics }: StagesChartProps) {
               title={`${stage.label}: ${formatDecimal(stage.value)}d (${formatPercent(stage.value, totalCycle)})`}
             >
               {width > 8 && (
-                <span className="text-[10px] sm:text-scale-xs font-semibold text-white truncate px-1 opacity-90 drop-shadow-md">
+                <span
+                  style={{ color: textColor }}
+                  className="text-[10px] sm:text-scale-xs font-semibold truncate px-1"
+                >
                   {formatPercent(stage.value, totalCycle)}
                 </span>
               )}

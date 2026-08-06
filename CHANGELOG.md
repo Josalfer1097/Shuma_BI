@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.18.1 — 2026-08-06
+
+- Se corrige la grafica de evolucion por etapa, que aparecia vacia. El area de
+  dibujo se quedaba sin altura por un cambio hecho al agregar el control de
+  tamano de texto.
+- Se corrigen los colores de las etapas del proceso. Los tonos mas claros
+  desaparecian sobre fondo blanco en modo claro, y el porcentaje escrito sobre
+  la etapa mas lenta era ilegible. Ahora los seis tonos y sus textos tienen
+  contraste suficiente en modo claro y en modo oscuro.
+
 ## v0.18.0 — 2026-08-06
 
 - La actualizacion automatica ahora puede alimentar el tablero con la

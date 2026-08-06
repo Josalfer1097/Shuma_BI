@@ -87,12 +87,12 @@ const CustomTooltip = ({ active, payload, label, partialMonth }: any) => {
 }
 
 const blueShades = [
-  '#1E4E8C', // Autorizacion
-  '#2563EB', // A recepcion
-  '#3B82F6', // Surtido
-  '#60A5FA', // A ruta
-  '#93C5FD', // Entrega
-  '#BFDBFE'  // Validacion
+  'var(--etapa-1)',
+  'var(--etapa-2)',
+  'var(--etapa-3)',
+  'var(--etapa-4)',
+  'var(--etapa-5)',
+  'var(--etapa-6)',
 ]
 
 export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChartProps) {
@@ -123,7 +123,10 @@ export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChar
         <CustomUITooltip text="Muestra cómo evoluciona cada etapa del proceso mes a mes. Si el tiempo total baja, aquí se ve cuál etapa fue la que mejoró. Sirve para saber si una mejora vino de autorización, de almacén o de rutas." />
       </div>
 
-      <div className="w-full flex-1" style={{ minHeight: Math.max(240, 320 * scale) }}>
+      {/* Altura definida, no min-height: ResponsiveContainer usa height="100%"
+          y un porcentaje no resuelve contra una altura automatica. Con
+          min-height el area de dibujo colapsaba a cero. */}
+      <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
