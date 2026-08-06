@@ -12,9 +12,17 @@ import { notFound } from 'next/navigation'
 
 export const revalidate = 0
 
-export const metadata: Metadata = {
-  title: 'Logística | Tablero Operativo Shuma',
-  description: 'Tiempos de entrega de la operación logística de Grupo Shuma',
+export async function generateMetadata({
+  params,
+}: {
+  params: { empresa: string }
+}): Promise<Metadata> {
+  const empresa = buscarEmpresa(params.empresa)
+  return {
+    title: empresa
+      ? `Logística ${empresa.nombreCorto} | Tablero Operativo Shuma`
+      : 'Logística | Tablero Operativo Shuma',
+  }
 }
 
 function DashboardSkeleton() {
@@ -46,10 +54,14 @@ export default async function Page({ params }: { params: { empresa: string } }) 
 
   const [reporteRes, etlRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresaId),
-    supabase.from('etl_status').select('*').eq('id', empresaId).single()
+    // maybeSingle y no single: una empresa sin corridas registradas devuelve
+    // cero filas, y con single eso seria un error.
+    supabase.from('etl_status').select('*').eq('empresa', empresaId).maybeSingle()
   ])
 
-  if (reporteRes.error || etlRes.error || !reporteRes.data || !etlRes.data) {
+  // Solo el reporte es indispensable. Que falte el estado de la actualizacion
+  // es informacion secundaria y no debe impedir ver los datos.
+  if (reporteRes.error || !reporteRes.data) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-base p-6">
         <div className="max-w-md w-full bg-bg-surface border border-border rounded-lg p-8 text-center shadow-xl">
@@ -63,7 +75,7 @@ export default async function Page({ params }: { params: { empresa: string } }) 
             Hubo un problema al conectar con la base de datos de Grupo Shuma. Por favor intenta de nuevo en unos minutos.
           </p>
           <a 
-            href="/logistica"
+            href={`/${empresaId}/logistica`}
             className="block w-full bg-accent hover:bg-accent-deep text-white font-medium py-2 px-4 rounded transition-colors"
           >
             Reintentar
@@ -77,10 +89,11 @@ export default async function Page({ params }: { params: { empresa: string } }) 
     <EmpresaProvider empresa={empresaObj}>
       <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <Header
-          etlStatus={etlRes.data}
+          etlStatus={etlRes.error ? null : etlRes.data}
           titulo="Tiempos de Entrega"
           subtitulo={`${empresaObj.nombre} — Grupo Shuma`}
-          volverA="/"
+          volverA={`/${empresaId}`}
+          volverTexto={empresaObj.nombreCorto}
         />
         <Suspense fallback={<DashboardSkeleton />}>
           <Dashboard initialData={reporteRes.data} />

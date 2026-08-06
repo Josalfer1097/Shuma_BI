@@ -13,6 +13,7 @@ import type { Empresa } from './empresas'
  */
 
 export const LLAVE_TOUR_PORTADA = 'shuma-bi-tour-portada'
+export const LLAVE_TOUR_EMPRESA = 'shuma-bi-tour-empresa'
 export const LLAVE_TOUR_LOGISTICA = 'shuma-bi-tour-logistica'
 
 export const TOUR_PORTADA: PasoTour[] = [
@@ -78,5 +79,35 @@ export const getTourLogistica = (empresa: Empresa): PasoTour[] => {
     })
   }
 
+  return pasos
+}
+
+
+/**
+ * Recorrido del nivel de empresa.
+ *
+ * Aqui si se puede citar la meta con su numero: ya hay una sola empresa en
+ * contexto. En la portada no, porque cada empresa tiene la suya y un solo
+ * numero seria falso para la otra.
+ */
+export const getTourEmpresa = (empresa: Empresa): PasoTour[] => {
+  const pasos: PasoTour[] = [
+    {
+      titulo: `Indicadores de ${empresa.nombreCorto}`,
+      cuerpo:
+        'Esta pantalla reune las areas de la empresa. Los datos salen directo del sistema administrativo, sin captura manual de por medio. Este recorrido toma menos de un minuto.',
+    },
+    {
+      ancla: 'panel-logistica',
+      titulo: 'El tiempo tipico, no el promedio',
+      cuerpo: `Este numero es la mediana: el caso tipico. Se usa en lugar del promedio porque un punado de entregas muy lentas lo distorsiona hacia arriba y da la impresion de que la operacion incumple cuando no es asi. La meta comprometida de ${empresa.nombreCorto} es de ${empresa.metaDias} dias.`,
+    },
+    {
+      ancla: 'areas-pendientes',
+      titulo: 'Las areas que faltan',
+      cuerpo:
+        'Cada area se integra cuando sus indicadores quedan definidos con su responsable. Las tarjetas sin cifras todavia no tienen datos conectados: aparecen vacias a proposito, para no mostrar numeros que nadie ha validado.',
+    },
+  ]
   return pasos
 }

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.20.0 — 2026-08-06
+
+- La pagina de inicio ahora sirve para elegir empresa. Muestra a cada una con
+  su color, su tiempo tipico de entrega y su meta, sin mezclar cifras entre
+  ellas.
+- Al entrar a una empresa se abre su pantalla de areas, con logistica al
+  frente y las demas areas pendientes de integrar. Antes todo competia en una
+  sola pantalla.
+- Se corrige que el detalle de una empresa sin datos cargados mostrara un
+  error de conexion en lugar de indicar que aun no tiene informacion.
+- El boton de reintentar y el enlace de regreso ahora respetan la empresa en
+  la que se esta navegando.
+
 ## v0.19.0 — 2026-08-06
 
 - Arquitectura multiempresa: se separa la operación de Comercializadora (CFS) y Acabados.
