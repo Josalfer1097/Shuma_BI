@@ -176,15 +176,23 @@ export function Dashboard({ initialData }: DashboardProps) {
 
   return (
     <div>
-      <FilterBar rawData={initialData} />
+      <div data-tour="filtros">
+        <FilterBar rawData={initialData} />
+      </div>
       <div className="mb-4">
         <span className="text-scale-sm text-text-muted">{periodoLabel}</span>
       </div>
-      <KpiRow metrics={metrics} />
-      
-      <StagesChart metrics={metrics} />
+      <div data-tour="kpis">
+        <KpiRow metrics={metrics} />
+      </div>
+
+      <div data-tour="etapas">
+        <StagesChart metrics={metrics} />
+      </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+        <div data-tour="tendencia">
         <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} partialMonth={partialMonth} />
+        </div>
         <ZoneRanking data={zoneData} />
       </div>
       

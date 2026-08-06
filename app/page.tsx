@@ -4,6 +4,8 @@ import { AreaCard } from '@/components/AreaCard'
 import { PanelLogistica } from '@/components/PanelLogistica'
 import { resumenLogistica } from '@/lib/aggregate'
 import { AREAS_PENDIENTES } from '@/lib/areas'
+import { Tour } from '@/components/Tour'
+import { TOUR_PORTADA, LLAVE_TOUR_PORTADA } from '@/lib/tours'
 import type { ReporteRow, EtlStatus } from '@/lib/types'
 
 export const revalidate = 0
@@ -40,7 +42,7 @@ export default async function Portada() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div data-tour="areas-pendientes" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {AREAS_PENDIENTES.map((area) => (
             <AreaCard key={area.id} area={area} />
           ))}
@@ -51,6 +53,8 @@ export default async function Portada() {
           correspondiente. Las tarjetas sin cifras todavía no tienen datos conectados.
         </p>
       </section>
+
+      <Tour pasos={TOUR_PORTADA} llaveStorage={LLAVE_TOUR_PORTADA} />
     </main>
   )
 }

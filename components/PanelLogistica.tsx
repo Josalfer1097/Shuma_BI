@@ -10,17 +10,19 @@ function Indicador({
   valor,
   nota,
   tono = 'neutro',
+  ancla,
 }: {
   etiqueta: string
   valor: string
   nota: string
   tono?: 'neutro' | 'bueno' | 'alerta'
+  ancla?: string
 }) {
   const colorValor =
     tono === 'bueno' ? 'text-success' : tono === 'alerta' ? 'text-danger' : 'text-text-primary'
 
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-border bg-bg-base/40 p-4">
+    <div data-tour={ancla} className="flex flex-col gap-1 rounded-md border border-border bg-bg-base/40 p-4">
       <span className="text-scale-xs uppercase tracking-wide text-text-muted">{etiqueta}</span>
       <span className={`text-scale-2xl font-semibold font-exo ${colorValor}`}>{valor}</span>
       <span className="text-scale-xs text-text-muted">{nota}</span>
@@ -30,7 +32,7 @@ function Indicador({
 
 export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }) {
   return (
-    <section className="mb-10 rounded-lg border border-border bg-bg-surface p-5 sm:p-6">
+    <section data-tour="panel-logistica" className="mb-10 rounded-lg border border-border bg-bg-surface p-5 sm:p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent/15 text-accent">
@@ -79,6 +81,7 @@ export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }
               etiqueta="Etapa más lenta"
               valor={`${formatDecimal(resumen.etapaMasLentaPorcentaje)}%`}
               nota={`${resumen.etapaMasLentaNombre} — del ciclo total`}
+              ancla="etapa-lenta"
             />
             <Indicador
               etiqueta="Zonas fuera de meta"

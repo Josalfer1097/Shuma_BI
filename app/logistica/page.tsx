@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/Header'
 import { Dashboard } from '@/components/logistica/Dashboard'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { Tour } from '@/components/Tour'
+import { TOUR_LOGISTICA, LLAVE_TOUR_LOGISTICA } from '@/lib/tours'
 
 export const revalidate = 0
 
@@ -72,6 +74,8 @@ export default async function Page() {
       <Suspense fallback={<DashboardSkeleton />}>
         <Dashboard initialData={reporteRes.data} />
       </Suspense>
+
+      <Tour pasos={TOUR_LOGISTICA} llaveStorage={LLAVE_TOUR_LOGISTICA} />
     </main>
   )
 }

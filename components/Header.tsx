@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { EtlStatus } from '@/lib/types'
 import { ThemeToggle } from './ThemeToggle'
 import { FontScaleButton } from './FontScaleButton'
+import { TourButton } from './TourButton'
 
 interface HeaderProps {
   /** Opcional: la portada no depende del estado de la actualizacion. */
@@ -79,6 +80,7 @@ export function Header({
         </div>
         )}
         <div className="flex items-center gap-2">
+          <TourButton />
           <FontScaleButton />
           <ThemeToggle />
         </div>

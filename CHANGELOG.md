@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.17.0 — 2026-08-06
+
+- Se agrega un recorrido de bienvenida que explica como leer el tablero. Se
+  muestra la primera vez que alguien entra y se puede volver a ver cuando se
+  quiera, con el boton de ayuda del encabezado.
+- El recorrido aclara los puntos que mas se prestan a confusion: por que se
+  usa el tiempo tipico y no el promedio, por que el mes en curso aparece
+  incompleto y por que una de las etapas del proceso siempre sale en cero.
+- Hay un recorrido distinto para la pagina de inicio y otro para el detalle
+  de logistica.
+
 ## v0.16.0 — 2026-08-06
 
 - Se agrega una pagina de inicio que reune las areas de la empresa en un solo
