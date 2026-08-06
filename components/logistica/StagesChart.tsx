@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { DashboardMetrics } from '@/lib/types'
 import { formatDecimal, formatPercent } from '@/lib/format'
 import { Clock } from 'lucide-react'
@@ -10,7 +11,73 @@ interface StagesChartProps {
   metrics: DashboardMetrics | null;
 }
 
+
+/**
+ * Detalle de una etapa al pasar el cursor o al tocarla.
+ *
+ * Va con createPortal a document.body porque la barra apilada tiene
+ * overflow-hidden para conservar sus esquinas redondeadas, y cualquier hijo
+ * posicionado se recortaria. Es el mismo patron de ui/Tooltip.
+ */
+function DetalleEtapa({
+  etiqueta,
+  dias,
+  porcentaje,
+  esMasLenta,
+  x,
+  y,
+}: {
+  etiqueta: string
+  dias: string
+  porcentaje: string
+  esMasLenta: boolean
+  x: number
+  y: number
+}) {
+  if (typeof document === 'undefined') return null
+
+  const ancho = 190
+  const izquierda = Math.min(Math.max(8, x - ancho / 2), window.innerWidth - ancho - 8)
+
+  return createPortal(
+    <div
+      role="tooltip"
+      className="pointer-events-none fixed z-[9999] rounded-md border border-border bg-bg-elevated p-3 shadow-xl"
+      style={{ left: izquierda, top: Math.max(8, y - 104), width: ancho }}
+    >
+      <p className="text-scale-sm font-semibold text-text-primary">{etiqueta}</p>
+      <div className="mt-2 flex items-baseline justify-between gap-3">
+        <span className="text-scale-xs text-text-muted">Tiempo mediano</span>
+        <span className="text-scale-sm font-medium text-text-primary">{dias} d</span>
+      </div>
+      <div className="mt-1 flex items-baseline justify-between gap-3">
+        <span className="text-scale-xs text-text-muted">Del ciclo total</span>
+        <span className="text-scale-sm font-medium text-text-primary">{porcentaje}</span>
+      </div>
+      {esMasLenta && (
+        <p className="mt-2 border-t border-border pt-2 text-scale-xs text-warning">
+          Es la etapa mas lenta del proceso
+        </p>
+      )}
+    </div>,
+    document.body
+  )
+}
+
 export function StagesChart({ metrics }: StagesChartProps) {
+  // Etapa con el detalle abierto y su posicion en pantalla. Se guarda la
+  // posicion al abrir en vez de seguir el cursor: en pantalla tactil no hay
+  // cursor que seguir.
+  const [activa, setActiva] = useState<number | null>(null)
+  const [posicion, setPosicion] = useState({ x: 0, y: 0 })
+
+  const mostrar = (indice: number, el: HTMLElement) => {
+    const r = el.getBoundingClientRect()
+    setPosicion({ x: r.left + r.width / 2, y: r.top })
+    setActiva(indice)
+  }
+  const ocultar = () => setActiva(null)
+
   const emptyState = (
     <div className="bg-bg-surface border border-border rounded-lg p-6 flex flex-col items-center justify-center mb-8 gap-3">
       <Clock className="w-5 h-5 text-text-muted" />
@@ -55,6 +122,16 @@ export function StagesChart({ metrics }: StagesChartProps) {
 
   return (
     <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-6 mb-8 flex flex-col">
+      {activa !== null && (
+        <DetalleEtapa
+          etiqueta={stages[activa].label}
+          dias={formatDecimal(stages[activa].value)}
+          porcentaje={formatPercent(stages[activa].value, totalCycle)}
+          esMasLenta={stages[activa].key === slowestStage.key}
+          x={posicion.x}
+          y={posicion.y}
+        />
+      )}
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-text-primary font-medium">Desglose por etapa</h3>
@@ -75,11 +152,17 @@ export function StagesChart({ metrics }: StagesChartProps) {
           const textColor = isSlowest ? 'var(--sobre-alerta)' : `var(--sobre-etapa-${(i % 6) + 1})`
           
           return (
-            <div 
+            <button
+              type="button"
               key={stage.key}
               style={{ width: `${width}%`, backgroundColor: bgColor }}
-              className="h-full flex items-center justify-center transition-all duration-300 border-r border-bg-surface last:border-r-0 group relative"
-              title={`${stage.label}: ${formatDecimal(stage.value)}d (${formatPercent(stage.value, totalCycle)})`}
+              className="h-full flex items-center justify-center transition-all duration-300 border-r border-bg-surface last:border-r-0 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text-primary"
+              aria-label={`${stage.label}: ${formatDecimal(stage.value)} dias, ${formatPercent(stage.value, totalCycle)} del ciclo`}
+              onMouseEnter={(e) => mostrar(i, e.currentTarget)}
+              onMouseLeave={ocultar}
+              onFocus={(e) => mostrar(i, e.currentTarget)}
+              onBlur={ocultar}
+              onClick={(e) => (activa === i ? ocultar() : mostrar(i, e.currentTarget))}
             >
               {width > 8 && (
                 <span
@@ -89,7 +172,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
                   {formatPercent(stage.value, totalCycle)}
                 </span>
               )}
-            </div>
+            </button>
           )
         })}
       </div>

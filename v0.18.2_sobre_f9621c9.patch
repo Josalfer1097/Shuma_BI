@@ -1,0 +1,271 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9872b7c..278b03e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,17 @@
+ # Changelog
+ 
++## v0.18.2 — 2026-08-06
++
++- Se corrige de raiz la grafica de evolucion por etapa, que seguia sin
++  dibujarse. El area del grafico se quedaba sin altura por un conflicto entre
++  dos reglas de acomodo.
++- Se rehacen los colores de las etapas del proceso. Antes iban de un tono muy
++  oscuro a uno casi blanco, y los ultimos tramos de la barra se veian como
++  espacios vacios. Ahora los seis tienen la misma intensidad y se distinguen
++  por color, no por claridad.
++- Al pasar el cursor o tocar un tramo de la barra de etapas se muestra su
++  detalle: tiempo mediano, porcentaje del ciclo y si es la etapa mas lenta.
++
+ ## v0.18.1 — 2026-08-06
+ 
+ - Se corrige la grafica de evolucion por etapa, que aparecia vacia. El area de
+diff --git a/app/globals.css b/app/globals.css
+index aa42d45..76d5488 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -34,24 +34,27 @@
+   --warning:        #FBBF24;   /* 10.86:1 */
+   --danger:         #F87171;   /*  6.55:1 */
+ 
+-  /* Etapas del proceso. Van de mas oscuro a mas claro para que la barra
+-     apilada se lea como una progresion. Las seis superan 3:1 contra su
+-     fondo, minimo para elementos graficos no textuales. */
+-  --etapa-1:        #2E67C2;   /* 3.31:1 */
+-  --etapa-2:        #457FDE;   /* 4.61:1 */
+-  --etapa-3:        #5F97F2;   /* 6.21:1 */
+-  --etapa-4:        #84AEF0;   /* 8.02:1 */
+-  --etapa-5:        #A8C2EB;   /* 10.00:1 */
+-  --etapa-6:        #C2D5F4;   /* 12.19:1 */
++  /* Etapas del proceso.
++     No es una escala de claro a oscuro: con seis pasos de luminosidad, los
++     dos ultimos quedaban casi blancos y se leian como espacios vacios en la
++     barra. Ahora las seis comparten luminosidad (todas a 6.4:1 contra el
++     fondo) y se distinguen por matiz, del cian al violeta. Se evita el rango
++     del ambar y del rojo, reservados para alerta y error. */
++  --etapa-1:        #43A4D0;   /* 6.4:1 */
++  --etapa-2:        #689DD9;   /* 6.4:1 */
++  --etapa-3:        #7C97DE;   /* 6.4:1 */
++  --etapa-4:        #9093DA;   /* 6.4:1 */
++  --etapa-5:        #9F89F5;   /* 6.4:1 */
++  --etapa-6:        #B284EB;   /* 6.4:1 */
+ 
+   /* Texto encima de cada etapa. Los tonos claros del final de la escala
+      necesitan texto oscuro; el blanco desaparecia sobre ellos. */
+-  --sobre-etapa-1:  #FFFFFF;
+-  --sobre-etapa-2:  #FFFFFF;
+-  --sobre-etapa-3:  #08152B;
+-  --sobre-etapa-4:  #08152B;
+-  --sobre-etapa-5:  #08152B;
+-  --sobre-etapa-6:  #08152B;
++  --sobre-etapa-1:  #08152B;   /* 6.47:1 */
++  --sobre-etapa-2:  #08152B;   /* 6.43:1 */
++  --sobre-etapa-3:  #08152B;   /* 6.37:1 */
++  --sobre-etapa-4:  #08152B;   /* 6.40:1 */
++  --sobre-etapa-5:  #08152B;   /* 6.40:1 */
++  --sobre-etapa-6:  #08152B;   /* 6.42:1 */
+   --sobre-alerta:   #3B2A02;   /* 8.29:1 sobre el ambar; el blanco daba 1.67:1 */
+ }
+ 
+@@ -73,22 +76,21 @@
+   --warning:        #B45309;   /*  5.02:1 */
+   --danger:         #B91C1C;   /*  6.47:1 */
+ 
+-  /* En modo claro los tonos claros desaparecen sobre fondo blanco: el ultimo
+-     tono de la paleta anterior daba 1.42:1 contra #FFFFFF, invisible. La
+-     escala se invierte y se recalcula. */
+-  --etapa-1:        #4A8CF7;   /* 3.29:1 */
+-  --etapa-2:        #1E71F6;   /* 4.42:1 */
+-  --etapa-3:        #1A62D5;   /* 5.60:1 */
+-  --etapa-4:        #2757A5;   /* 7.02:1 */
+-  --etapa-5:        #214A8C;   /* 8.67:1 */
+-  --etapa-6:        #163E7E;   /* 10.37:1 */
+-
+-  --sobre-etapa-1:  #08152B;
+-  --sobre-etapa-2:  #FFFFFF;
+-  --sobre-etapa-3:  #FFFFFF;
+-  --sobre-etapa-4:  #FFFFFF;
+-  --sobre-etapa-5:  #FFFFFF;
+-  --sobre-etapa-6:  #FFFFFF;
++  /* Mismo criterio en modo claro: luminosidad pareja (5.6:1 contra el blanco)
++     y separacion por matiz. Sobre estos tonos el texto blanco si funciona. */
++  --etapa-1:        #1F6F93;   /* 5.6:1 */
++  --etapa-2:        #0564D1;   /* 5.6:1 */
++  --etapa-3:        #1A56F9;   /* 5.6:1 */
++  --etapa-4:        #5257DA;   /* 5.6:1 */
++  --etapa-5:        #6A4EDA;   /* 5.6:1 */
++  --etapa-6:        #863BE3;   /* 5.6:1 */
++
++  --sobre-etapa-1:  #FFFFFF;   /* 5.59:1 */
++  --sobre-etapa-2:  #FFFFFF;   /* 5.60:1 */
++  --sobre-etapa-3:  #FFFFFF;   /* 5.61:1 */
++  --sobre-etapa-4:  #FFFFFF;   /* 5.62:1 */
++  --sobre-etapa-5:  #FFFFFF;   /* 5.65:1 */
++  --sobre-etapa-6:  #FFFFFF;   /* 5.60:1 */
+   --sobre-alerta:   #3B2A02;
+ }
+ 
+diff --git a/components/logistica/StagesChart.tsx b/components/logistica/StagesChart.tsx
+index 43f5fbc..9cc8d4b 100644
+--- a/components/logistica/StagesChart.tsx
++++ b/components/logistica/StagesChart.tsx
+@@ -1,6 +1,7 @@
+ 'use client'
+ 
+-import React from 'react'
++import React, { useState } from 'react'
++import { createPortal } from 'react-dom'
+ import { DashboardMetrics } from '@/lib/types'
+ import { formatDecimal, formatPercent } from '@/lib/format'
+ import { Clock } from 'lucide-react'
+@@ -10,7 +11,73 @@ interface StagesChartProps {
+   metrics: DashboardMetrics | null;
+ }
+ 
++
++/**
++ * Detalle de una etapa al pasar el cursor o al tocarla.
++ *
++ * Va con createPortal a document.body porque la barra apilada tiene
++ * overflow-hidden para conservar sus esquinas redondeadas, y cualquier hijo
++ * posicionado se recortaria. Es el mismo patron de ui/Tooltip.
++ */
++function DetalleEtapa({
++  etiqueta,
++  dias,
++  porcentaje,
++  esMasLenta,
++  x,
++  y,
++}: {
++  etiqueta: string
++  dias: string
++  porcentaje: string
++  esMasLenta: boolean
++  x: number
++  y: number
++}) {
++  if (typeof document === 'undefined') return null
++
++  const ancho = 190
++  const izquierda = Math.min(Math.max(8, x - ancho / 2), window.innerWidth - ancho - 8)
++
++  return createPortal(
++    <div
++      role="tooltip"
++      className="pointer-events-none fixed z-[9999] rounded-md border border-border bg-bg-elevated p-3 shadow-xl"
++      style={{ left: izquierda, top: Math.max(8, y - 104), width: ancho }}
++    >
++      <p className="text-scale-sm font-semibold text-text-primary">{etiqueta}</p>
++      <div className="mt-2 flex items-baseline justify-between gap-3">
++        <span className="text-scale-xs text-text-muted">Tiempo mediano</span>
++        <span className="text-scale-sm font-medium text-text-primary">{dias} d</span>
++      </div>
++      <div className="mt-1 flex items-baseline justify-between gap-3">
++        <span className="text-scale-xs text-text-muted">Del ciclo total</span>
++        <span className="text-scale-sm font-medium text-text-primary">{porcentaje}</span>
++      </div>
++      {esMasLenta && (
++        <p className="mt-2 border-t border-border pt-2 text-scale-xs text-warning">
++          Es la etapa mas lenta del proceso
++        </p>
++      )}
++    </div>,
++    document.body
++  )
++}
++
+ export function StagesChart({ metrics }: StagesChartProps) {
++  // Etapa con el detalle abierto y su posicion en pantalla. Se guarda la
++  // posicion al abrir en vez de seguir el cursor: en pantalla tactil no hay
++  // cursor que seguir.
++  const [activa, setActiva] = useState<number | null>(null)
++  const [posicion, setPosicion] = useState({ x: 0, y: 0 })
++
++  const mostrar = (indice: number, el: HTMLElement) => {
++    const r = el.getBoundingClientRect()
++    setPosicion({ x: r.left + r.width / 2, y: r.top })
++    setActiva(indice)
++  }
++  const ocultar = () => setActiva(null)
++
+   const emptyState = (
+     <div className="bg-bg-surface border border-border rounded-lg p-6 flex flex-col items-center justify-center mb-8 gap-3">
+       <Clock className="w-5 h-5 text-text-muted" />
+@@ -55,6 +122,16 @@ export function StagesChart({ metrics }: StagesChartProps) {
+ 
+   return (
+     <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-6 mb-8 flex flex-col">
++      {activa !== null && (
++        <DetalleEtapa
++          etiqueta={stages[activa].label}
++          dias={formatDecimal(stages[activa].value)}
++          porcentaje={formatPercent(stages[activa].value, totalCycle)}
++          esMasLenta={stages[activa].key === slowestStage.key}
++          x={posicion.x}
++          y={posicion.y}
++        />
++      )}
+       <div className="flex items-start justify-between mb-4">
+         <div>
+           <h3 className="text-text-primary font-medium">Desglose por etapa</h3>
+@@ -75,11 +152,17 @@ export function StagesChart({ metrics }: StagesChartProps) {
+           const textColor = isSlowest ? 'var(--sobre-alerta)' : `var(--sobre-etapa-${(i % 6) + 1})`
+           
+           return (
+-            <div 
++            <button
++              type="button"
+               key={stage.key}
+               style={{ width: `${width}%`, backgroundColor: bgColor }}
+-              className="h-full flex items-center justify-center transition-all duration-300 border-r border-bg-surface last:border-r-0 group relative"
+-              title={`${stage.label}: ${formatDecimal(stage.value)}d (${formatPercent(stage.value, totalCycle)})`}
++              className="h-full flex items-center justify-center transition-all duration-300 border-r border-bg-surface last:border-r-0 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text-primary"
++              aria-label={`${stage.label}: ${formatDecimal(stage.value)} dias, ${formatPercent(stage.value, totalCycle)} del ciclo`}
++              onMouseEnter={(e) => mostrar(i, e.currentTarget)}
++              onMouseLeave={ocultar}
++              onFocus={(e) => mostrar(i, e.currentTarget)}
++              onBlur={ocultar}
++              onClick={(e) => (activa === i ? ocultar() : mostrar(i, e.currentTarget))}
+             >
+               {width > 8 && (
+                 <span
+@@ -89,7 +172,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
+                   {formatPercent(stage.value, totalCycle)}
+                 </span>
+               )}
+-            </div>
++            </button>
+           )
+         })}
+       </div>
+diff --git a/components/logistica/StagesEvolutionChart.tsx b/components/logistica/StagesEvolutionChart.tsx
+index fe8a18b..782ff50 100644
+--- a/components/logistica/StagesEvolutionChart.tsx
++++ b/components/logistica/StagesEvolutionChart.tsx
+@@ -126,7 +126,12 @@ export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChar
+       {/* Altura definida, no min-height: ResponsiveContainer usa height="100%"
+           y un porcentaje no resuelve contra una altura automatica. Con
+           min-height el area de dibujo colapsaba a cero. */}
+-      <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
++      {/* Sin flex-1 a proposito. flex: 1 1 0% pone flex-basis en 0%, y en un
++          contenedor de columna el flex-basis REEMPLAZA a la propiedad height:
++          la altura explicita se ignora y el area de dibujo colapsa.
++          TrendChart si conserva flex-1 porque es celda de un grid, y ahi la
++          rejilla ya le da altura definida al contenedor padre. */}
++      <div className="w-full" style={{ height: Math.max(240, 320 * scale) }}>
+         <ResponsiveContainer width="100%" height="100%">
+           <AreaChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+diff --git a/package.json b/package.json
+index ce5c5a3..b2a3500 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "shuma-bi-temp",
+-  "version": "0.18.1",
++  "version": "0.18.2",
+   "private": true,
+   "scripts": {
+     "dev": "next dev",

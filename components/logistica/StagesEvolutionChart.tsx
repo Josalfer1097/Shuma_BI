@@ -126,7 +126,12 @@ export function StagesEvolutionChart({ data, partialMonth }: StagesEvolutionChar
       {/* Altura definida, no min-height: ResponsiveContainer usa height="100%"
           y un porcentaje no resuelve contra una altura automatica. Con
           min-height el area de dibujo colapsaba a cero. */}
-      <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
+      {/* Sin flex-1 a proposito. flex: 1 1 0% pone flex-basis en 0%, y en un
+          contenedor de columna el flex-basis REEMPLAZA a la propiedad height:
+          la altura explicita se ignora y el area de dibujo colapsa.
+          TrendChart si conserva flex-1 porque es celda de un grid, y ahi la
+          rejilla ya le da altura definida al contenedor padre. */}
+      <div className="w-full" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />

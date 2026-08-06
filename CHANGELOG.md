@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.18.2 — 2026-08-06
+
+- Se corrige de raiz la grafica de evolucion por etapa, que seguia sin
+  dibujarse. El area del grafico se quedaba sin altura por un conflicto entre
+  dos reglas de acomodo.
+- Se rehacen los colores de las etapas del proceso. Antes iban de un tono muy
+  oscuro a uno casi blanco, y los ultimos tramos de la barra se veian como
+  espacios vacios. Ahora los seis tienen la misma intensidad y se distinguen
+  por color, no por claridad.
+- Al pasar el cursor o tocar un tramo de la barra de etapas se muestra su
+  detalle: tiempo mediano, porcentaje del ciclo y si es la etapa mas lenta.
+
 ## v0.18.1 — 2026-08-06
 
 - Se corrige la grafica de evolucion por etapa, que aparecia vacia. El area de
