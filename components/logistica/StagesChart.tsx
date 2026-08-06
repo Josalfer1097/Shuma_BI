@@ -98,7 +98,13 @@ export function StagesChart({ metrics }: StagesChartProps) {
     { key: 'med_surtido_ruta', label: 'A ruta', value: metrics.med_surtido_ruta },
     { key: 'med_ruta_entrega', label: 'Entrega', value: metrics.med_ruta_entrega },
     { key: 'med_entrega_validacion', label: 'Validacion', value: metrics.med_entrega_validacion },
-  ].filter(s => s.value !== null && s.value > 0) as { key: string; label: string; value: number }[]
+  ]
+    // El orden se fija ANTES de filtrar. Con el indice del arreglo filtrado
+    // bastaba con que una etapa saliera en cero un mes para que todos los
+    // colores siguientes se recorrieran y dejaran de coincidir con la lista.
+    .map((s, orden) => ({ ...s, orden }))
+    .filter(s => s.value !== null && s.value > 0) as
+      { key: string; label: string; value: number; orden: number }[]
 
   if (stages.length === 0) {
     return emptyState;
@@ -140,23 +146,28 @@ export function StagesChart({ metrics }: StagesChartProps) {
         <Tooltip text="Divide el tiempo total de entrega en las seis etapas del proceso. La barra completa representa el 100% del ciclo y la etapa mas lenta se resalta. Sirve para saber donde atacar primero: reducir la etapa mas grande tiene mucho mas impacto que optimizar las pequeñas." />
       </div>
       
-      {/* 100% Stacked Bar */}
+      {/* Barra apilada al 100%.
+          Los tramos usan self-stretch y NO h-full: el contenedor solo tiene
+          min-height, asi que un height:100% se resolveria contra una altura
+          automatica y daria cero. Con h-full solo se veian los tramos que
+          llevan etiqueta, los mayores a 8%, porque su texto les daba altura;
+          los demas quedaban invisibles y parecian huecos en la barra. */}
       <div className="w-full min-h-[2rem] sm:min-h-[2.5rem] flex rounded overflow-hidden mb-6">
         {stages.map((stage, i) => {
           const width = (stage.value / totalCycle) * 100
           const isSlowest = stage.key === slowestStage.key
-          const bgColor = isSlowest ? 'var(--warning)' : blueShades[i % blueShades.length]
+          const bgColor = isSlowest ? 'var(--warning)' : blueShades[stage.orden % blueShades.length]
           // El texto blanco desaparece sobre los tonos claros de la escala y
           // sobre el ambar de la etapa mas lenta. Cada etapa lleva su color
           // de texto, calculado contra su propio fondo.
-          const textColor = isSlowest ? 'var(--sobre-alerta)' : `var(--sobre-etapa-${(i % 6) + 1})`
+          const textColor = isSlowest ? 'var(--sobre-alerta)' : `var(--sobre-etapa-${(stage.orden % 6) + 1})`
           
           return (
             <button
               type="button"
               key={stage.key}
               style={{ width: `${width}%`, backgroundColor: bgColor }}
-              className="h-full flex items-center justify-center transition-all duration-300 border-r border-bg-surface last:border-r-0 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text-primary"
+              className="self-stretch flex items-center justify-center transition-all duration-300 border-r border-bg-surface last:border-r-0 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-text-primary"
               aria-label={`${stage.label}: ${formatDecimal(stage.value)} dias, ${formatPercent(stage.value, totalCycle)} del ciclo`}
               onMouseEnter={(e) => mostrar(i, e.currentTarget)}
               onMouseLeave={ocultar}
@@ -179,9 +190,9 @@ export function StagesChart({ metrics }: StagesChartProps) {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-x-6 gap-y-4 mb-6">
-        {stages.map((stage, i) => {
+        {stages.map((stage) => {
           const isSlowest = stage.key === slowestStage.key
-          const bgColor = isSlowest ? 'var(--warning)' : blueShades[i % blueShades.length]
+          const bgColor = isSlowest ? 'var(--warning)' : blueShades[stage.orden % blueShades.length]
           
           return (
             <div key={stage.key} className="flex flex-col">

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.18.3 — 2026-08-06
+
+- Se corrigen los tramos que no se dibujaban en la barra de etapas y dejaban
+  huecos. Las etapas mas cortas, las que no alcanzan a mostrar su porcentaje
+  encima, quedaban sin altura y desaparecian de la barra.
+- Se corrige el color de las etapas cuando alguna no tiene tiempo registrado
+  en el periodo consultado: los colores se recorrian y dejaban de coincidir
+  con los de la lista de abajo.
+
 ## v0.18.2 — 2026-08-06
 
 - Se corrige de raiz la grafica de evolucion por etapa, que seguia sin
