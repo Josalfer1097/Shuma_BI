@@ -13,8 +13,8 @@ import {
   ReferenceLine
 } from 'recharts'
 import { formatNumber, formatDecimal } from '@/lib/format'
-import { Tooltip as CustomUITooltip } from './ui/Tooltip'
-import { Select } from './ui/Select'
+import { Tooltip as CustomUITooltip } from '../ui/Tooltip'
+import { Select } from '../ui/Select'
 import { DashboardMetrics } from '@/lib/types'
 import { META_DIAS } from '@/lib/config'
 import { useFontScale } from '@/lib/fontScaleContext'

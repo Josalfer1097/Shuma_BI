@@ -1,13 +1,33 @@
 import React from 'react'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { EtlStatus } from '@/lib/types'
 import { ThemeToggle } from './ThemeToggle'
 import { FontScaleButton } from './FontScaleButton'
 
-export function Header({ etlStatus }: { etlStatus: EtlStatus }) {
+interface HeaderProps {
+  /** Opcional: la portada no depende del estado de la actualizacion. */
+  etlStatus?: EtlStatus | null
+  titulo?: string
+  subtitulo?: string
+  /** Ruta de regreso. Si no se pasa, no se dibuja el enlace. */
+  volverA?: string
+  volverTexto?: string
+}
+
+export function Header({
+  etlStatus,
+  titulo = 'Tiempos de Entrega',
+  subtitulo = 'Operación logística — Grupo Shuma',
+  volverA,
+  volverTexto = 'Inicio',
+}: HeaderProps) {
   let statusText = ''
   let statusColor = ''
 
-  if (etlStatus.estado === 'SEED_DESARROLLO') {
+  if (!etlStatus) {
+    statusText = ''
+  } else if (etlStatus.estado === 'SEED_DESARROLLO') {
     statusText = 'Datos de desarrollo'
     statusColor = 'text-warning'
   } else if (etlStatus.estado === 'ERROR') {
@@ -30,16 +50,26 @@ export function Header({ etlStatus }: { etlStatus: EtlStatus }) {
     }
   }
 
-  const dateStr = etlStatus.fecha_corte ? new Date(etlStatus.fecha_corte).toLocaleDateString('es-MX', { timeZone: 'UTC', day: 'numeric', month: 'short' }) : ''
-  const subText = etlStatus.estado === 'ERROR' && dateStr ? `(datos hasta el ${dateStr})` : dateStr ? `(hasta el ${dateStr})` : ''
+  const dateStr = etlStatus?.fecha_corte ? new Date(etlStatus.fecha_corte).toLocaleDateString('es-MX', { timeZone: 'UTC', day: 'numeric', month: 'short' }) : ''
+  const subText = etlStatus?.estado === 'ERROR' && dateStr ? `(datos hasta el ${dateStr})` : dateStr ? `(hasta el ${dateStr})` : ''
 
   return (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 sm:pb-6 mb-6 border-b border-border gap-3">
       <div>
-        <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">Tiempos de Entrega</h1>
-        <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">Operación logística — Grupo Shuma</p>
+        {volverA && (
+          <Link
+            href={volverA}
+            className="inline-flex min-h-[44px] items-center gap-1.5 text-scale-sm text-text-muted transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            {volverTexto}
+          </Link>
+        )}
+        <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">{titulo}</h1>
+        <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
       </div>
       <div className="flex items-center gap-3 self-end sm:self-auto">
+        {statusText && (
         <div className="flex items-center space-x-2 bg-bg-surface px-3 min-h-[44px] rounded-full border border-border w-fit">
           <div className={`w-2 h-2 rounded-full ${statusColor === 'text-success' ? 'bg-success' : statusColor === 'text-danger' ? 'bg-danger' : 'bg-warning'}`} />
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -47,6 +77,7 @@ export function Header({ etlStatus }: { etlStatus: EtlStatus }) {
             {subText && <span className="text-scale-xs sm:text-scale-sm text-text-muted">{subText}</span>}
           </div>
         </div>
+        )}
         <div className="flex items-center gap-2">
           <FontScaleButton />
           <ThemeToggle />

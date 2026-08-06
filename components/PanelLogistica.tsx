@@ -1,0 +1,99 @@
+import React from 'react'
+import Link from 'next/link'
+import { Truck, ArrowRight } from 'lucide-react'
+import { META_DIAS } from '@/lib/config'
+import { formatDecimal, formatNumber } from '@/lib/format'
+import type { ResumenLogistica } from '@/lib/aggregate'
+
+function Indicador({
+  etiqueta,
+  valor,
+  nota,
+  tono = 'neutro',
+}: {
+  etiqueta: string
+  valor: string
+  nota: string
+  tono?: 'neutro' | 'bueno' | 'alerta'
+}) {
+  const colorValor =
+    tono === 'bueno' ? 'text-success' : tono === 'alerta' ? 'text-danger' : 'text-text-primary'
+
+  return (
+    <div className="flex flex-col gap-1 rounded-md border border-border bg-bg-base/40 p-4">
+      <span className="text-scale-xs uppercase tracking-wide text-text-muted">{etiqueta}</span>
+      <span className={`text-scale-2xl font-semibold font-exo ${colorValor}`}>{valor}</span>
+      <span className="text-scale-xs text-text-muted">{nota}</span>
+    </div>
+  )
+}
+
+export function PanelLogistica({ resumen }: { resumen: ResumenLogistica | null }) {
+  return (
+    <section className="mb-10 rounded-lg border border-border bg-bg-surface p-5 sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent/15 text-accent">
+            <Truck className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="text-scale-xl font-semibold font-exo text-text-primary">Logística</h2>
+            <p className="text-scale-sm text-text-muted">
+              Tiempos de entrega desde la cotización hasta la validación
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/logistica"
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-border bg-bg-elevated px-4 text-scale-sm font-medium text-text-primary transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          Ver el módulo completo
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </div>
+
+      {resumen === null ? (
+        <div className="rounded-md border border-dashed border-border p-6 text-center">
+          <p className="text-scale-sm text-text-muted">
+            No hay datos de entregas para mostrar. Revisa el estado de la actualización automática
+            en el módulo de logística.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Indicador
+              etiqueta="Tiempo típico de entrega"
+              valor={`${formatDecimal(resumen.medianaDias)} d`}
+              nota={`Meta: ${META_DIAS} días`}
+              tono={resumen.cumpleMeta ? 'bueno' : 'alerta'}
+            />
+            <Indicador
+              etiqueta="Meses dentro de meta"
+              valor={`${resumen.mesesEnMeta} de ${resumen.mesesTotales}`}
+              nota="Medido sobre la mediana de cada mes"
+              tono={resumen.mesesEnMeta === resumen.mesesTotales ? 'bueno' : 'neutro'}
+            />
+            <Indicador
+              etiqueta="Etapa más lenta"
+              valor={`${formatDecimal(resumen.etapaMasLentaPorcentaje)}%`}
+              nota={`${resumen.etapaMasLentaNombre} — del ciclo total`}
+            />
+            <Indicador
+              etiqueta="Zonas fuera de meta"
+              valor={`${resumen.zonasFueraDeMeta} de ${resumen.zonasTotales}`}
+              nota="Zonas con mediana arriba de la meta"
+              tono={resumen.zonasFueraDeMeta === 0 ? 'bueno' : 'alerta'}
+            />
+          </div>
+
+          <p className="mt-4 text-scale-xs text-text-muted">
+            Calculado sobre {formatNumber(resumen.entregas)} entregas validadas. El tiempo típico es
+            la mediana ponderada por volumen, no el promedio.
+          </p>
+        </>
+      )}
+    </section>
+  )
+}

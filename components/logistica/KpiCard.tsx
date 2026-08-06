@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { cn, Tooltip } from './ui/Tooltip'
+import { cn, Tooltip } from '../ui/Tooltip'
 
 interface KpiCardProps {
   title: string;

@@ -4,7 +4,7 @@ import React from 'react'
 import { DashboardMetrics } from '@/lib/types'
 import { formatDecimal, formatPercent } from '@/lib/format'
 import { Clock } from 'lucide-react'
-import { Tooltip } from './ui/Tooltip'
+import { Tooltip } from '../ui/Tooltip'
 
 interface StagesChartProps {
   metrics: DashboardMetrics | null;

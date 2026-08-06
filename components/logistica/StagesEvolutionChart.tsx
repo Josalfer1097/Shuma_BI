@@ -12,7 +12,7 @@ import {
   ReferenceLine
 } from 'recharts'
 import { formatDecimal } from '@/lib/format'
-import { Tooltip as CustomUITooltip } from './ui/Tooltip'
+import { Tooltip as CustomUITooltip } from '../ui/Tooltip'
 import { META_DIAS } from '@/lib/config'
 import { useFontScale } from '@/lib/fontScaleContext'
 

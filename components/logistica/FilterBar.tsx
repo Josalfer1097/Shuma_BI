@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Select } from './ui/Select'
+import { Select } from '../ui/Select'
 import { ReporteRow } from '@/lib/types'
 import { X, Filter } from 'lucide-react'
 

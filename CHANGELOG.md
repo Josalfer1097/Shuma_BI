@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.16.0 — 2026-08-06
+
+- Se agrega una pagina de inicio que reune las areas de la empresa en un solo
+  lugar, con los indicadores principales de logistica a la vista.
+- El tablero de tiempos de entrega pasa a ser el modulo de logistica y ahora
+  vive en su propia seccion, con la misma informacion de siempre.
+- Se dejan preparadas las secciones de las demas areas, marcadas como
+  pendientes hasta que se integren sus datos.
+
 ## v0.15.0 — 2026-08-05
 
 - Se agrega un control para aumentar el tamaño del texto de todo el tablero,

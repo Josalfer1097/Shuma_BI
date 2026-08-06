@@ -4,9 +4,9 @@ import React, { useState } from 'react'
 import { ReporteRow } from '@/lib/types'
 import { formatNumber, formatDecimal } from '@/lib/format'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
-import { cn } from './ui/Tooltip'
-import { Select } from './ui/Select'
-import { Tooltip } from './ui/Tooltip'
+import { cn } from '../ui/Tooltip'
+import { Select } from '../ui/Select'
+import { Tooltip } from '../ui/Tooltip'
 
 interface DetailTableProps {
   data: ReporteRow[];

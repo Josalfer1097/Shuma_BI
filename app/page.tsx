@@ -1,66 +1,56 @@
-import { Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/Header'
-import { Dashboard } from '@/components/Dashboard'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { AreaCard } from '@/components/AreaCard'
+import { PanelLogistica } from '@/components/PanelLogistica'
+import { resumenLogistica } from '@/lib/aggregate'
+import { AREAS_PENDIENTES } from '@/lib/areas'
+import type { ReporteRow, EtlStatus } from '@/lib/types'
 
 export const revalidate = 0
 
-function DashboardSkeleton() {
-  return (
-    <div className="animate-pulse">
-      <Skeleton className="h-16 w-full mb-8" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Skeleton className="h-[116px] w-full" />
-        <Skeleton className="h-[116px] w-full" />
-        <Skeleton className="h-[116px] w-full" />
-        <Skeleton className="h-[116px] w-full" />
-      </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-        <Skeleton className="h-96 w-full" />
-        <Skeleton className="h-[400px] w-full" />
-      </div>
-      <Skeleton className="h-64 w-full" />
-    </div>
-  )
-}
-
-export default async function Page() {
+export default async function Portada() {
+  // Misma consulta que ya usaba el tablero. No se agregan tablas ni
+  // consultas nuevas: la portada deriva sus cifras de estos datos.
   const [reporteRes, etlRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*'),
-    supabase.from('etl_status').select('*').eq('id', 1).single()
+    supabase.from('etl_status').select('*').eq('id', 1).single(),
   ])
 
-  if (reporteRes.error || etlRes.error || !reporteRes.data || !etlRes.data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-base p-6">
-        <div className="max-w-md w-full bg-bg-surface border border-border rounded-lg p-8 text-center shadow-xl">
-          <div className="w-12 h-12 rounded-full bg-danger/20 text-danger flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h2 className="text-scale-xl font-semibold text-text-primary mb-2">No se pudieron cargar los datos</h2>
-          <p className="text-text-muted mb-6 text-scale-sm">
-            Hubo un problema al conectar con la base de datos de Grupo Shuma. Por favor intenta de nuevo en unos minutos.
-          </p>
-          <a 
-            href="/"
-            className="block w-full bg-accent hover:bg-accent-deep text-white font-medium py-2 px-4 rounded transition-colors"
-          >
-            Reintentar
-          </a>
-        </div>
-      </div>
-    )
-  }
+  // Un fallo de datos degrada solo el panel de logistica. La portada nunca
+  // se queda en blanco: las demas areas no dependen de esta consulta.
+  const filas = (reporteRes.error ? null : (reporteRes.data as ReporteRow[])) ?? []
+  const resumen = filas.length > 0 ? resumenLogistica(filas) : null
+  const etlStatus = (etlRes.error ? null : (etlRes.data as EtlStatus)) ?? null
 
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <Header etlStatus={etlRes.data} />
-      <Suspense fallback={<DashboardSkeleton />}>
-        <Dashboard initialData={reporteRes.data} />
-      </Suspense>
+      <Header
+        etlStatus={etlStatus}
+        titulo="Tablero Operativo"
+        subtitulo="Indicadores por área — Grupo Shuma"
+      />
+
+      <PanelLogistica resumen={resumen} />
+
+      <section>
+        <div className="mb-4 flex items-baseline justify-between gap-3">
+          <h2 className="text-scale-lg font-semibold text-text-primary">Otras áreas</h2>
+          <span className="text-scale-xs text-text-muted">
+            {AREAS_PENDIENTES.length} pendientes de integrar
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {AREAS_PENDIENTES.map((area) => (
+            <AreaCard key={area.id} area={area} />
+          ))}
+        </div>
+
+        <p className="mt-6 text-scale-sm text-text-muted">
+          Cada área se integra cuando sus indicadores están definidos con el responsable
+          correspondiente. Las tarjetas sin cifras todavía no tienen datos conectados.
+        </p>
+      </section>
     </main>
   )
 }

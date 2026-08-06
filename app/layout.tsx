@@ -14,8 +14,8 @@ const exo2 = Exo_2({
 });
 
 export const metadata: Metadata = {
-  title: "Tiempos de Entrega | Grupo Shuma",
-  description: "Dashboard de operación logística de Grupo Shuma",
+  title: "Tablero Operativo | Grupo Shuma",
+  description: "Indicadores operativos por área de Grupo Shuma",
 };
 
 export default function RootLayout({
