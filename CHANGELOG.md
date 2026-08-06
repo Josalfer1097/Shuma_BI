@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.20.1 — 2026-08-06
+
+- Se redisenan las tarjetas de empresa de la pagina de inicio. Ahora el color
+  de cada empresa es el elemento principal y se distingue de un vistazo cual
+  es cual antes de leer el nombre.
+- Se quita el selector de empresa de la pagina de inicio: la pagina completa
+  ya cumple esa funcion.
+- Se corrige el color distintivo de Acabados, que aparecia en morado en lugar
+  de rojo.
+
 ## v0.20.0 — 2026-08-06
 
 - La pagina de inicio ahora sirve para elegir empresa. Muestra a cada una con

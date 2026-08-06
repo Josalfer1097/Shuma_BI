@@ -15,6 +15,8 @@ interface HeaderProps {
   /** Ruta de regreso. Si no se pasa, no se dibuja el enlace. */
   volverA?: string
   volverTexto?: string
+  /** La portada entera es el selector de empresa, ahi sobra el desplegable. */
+  conSelectorEmpresa?: boolean
 }
 
 export function Header({
@@ -23,6 +25,7 @@ export function Header({
   subtitulo = 'Operación logística — Grupo Shuma',
   volverA,
   volverTexto = 'Inicio',
+  conSelectorEmpresa = true,
 }: HeaderProps) {
   let statusText = ''
   let statusColor = ''
@@ -81,7 +84,7 @@ export function Header({
         </div>
         )}
         <div className="flex items-center gap-2">
-          <EmpresaSelector />
+          {conSelectorEmpresa && <EmpresaSelector />}
           <TourButton />
           <FontScaleButton />
           <ThemeToggle />

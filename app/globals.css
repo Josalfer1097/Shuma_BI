@@ -58,8 +58,13 @@
   --sobre-alerta:   #3B2A02;   /* 8.29:1 sobre el ambar; el blanco daba 1.67:1 */
 
   /* Colores de identidad por empresa */
-  --empresa-cfs:      #4DA9F7;
-  --empresa-acabados: #9F89F5;
+  /* Color distintivo de cada empresa. Solo para identidad: franja de la
+     tarjeta, punto del selector, icono. Nunca sobre los datos, o una etapa
+     lenta se confundiria con un error.
+     El escarlata de marca #C0152A da 2.92:1 sobre este fondo, insuficiente;
+     se aclara conservando el matiz y se separa del rojo de error. */
+  --empresa-cfs:      #4DA9F7;   /* 6.96:1 */
+  --empresa-acabados: #E8534E;   /* 4.99:1 */
 }
 
 /* ---------- MODO CLARO ---------- */
@@ -98,8 +103,8 @@
   --sobre-alerta:   #3B2A02;
 
   /* Colores de identidad por empresa */
-  --empresa-cfs:      #0B5FBF;
-  --empresa-acabados: #6A4EDA;
+  --empresa-cfs:      #0B5FBF;   /* 6.17:1 */
+  --empresa-acabados: #B01326;   /* 7.08:1 */
 }
 
 body {
