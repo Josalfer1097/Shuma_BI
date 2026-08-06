@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.18.4 — 2026-08-06
+
+- Se corrige definitivamente el hueco en la barra de etapas. Las etapas mas
+  cortas se dibujaban con su ancho correcto pero sin altura, asi que no se
+  veian. La barra ahora se completa de extremo a extremo.
+
 ## v0.18.3 — 2026-08-06
 
 - Se corrigen los tramos que no se dibujaban en la barra de etapas y dejaban

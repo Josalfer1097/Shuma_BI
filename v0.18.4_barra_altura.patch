@@ -1,0 +1,50 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 91e8111..a771297 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,11 @@
+ # Changelog
+ 
++## v0.18.4 — 2026-08-06
++
++- Se corrige definitivamente el hueco en la barra de etapas. Las etapas mas
++  cortas se dibujaban con su ancho correcto pero sin altura, asi que no se
++  veian. La barra ahora se completa de extremo a extremo.
++
+ ## v0.18.3 — 2026-08-06
+ 
+ - Se corrigen los tramos que no se dibujaban en la barra de etapas y dejaban
+diff --git a/components/logistica/StagesChart.tsx b/components/logistica/StagesChart.tsx
+index 188f0b7..465ef92 100644
+--- a/components/logistica/StagesChart.tsx
++++ b/components/logistica/StagesChart.tsx
+@@ -148,11 +148,12 @@ export function StagesChart({ metrics }: StagesChartProps) {
+       
+       {/* Barra apilada al 100%.
+           Los tramos usan self-stretch y NO h-full: el contenedor solo tiene
+-          min-height, asi que un height:100% se resolveria contra una altura
+-          automatica y daria cero. Con h-full solo se veian los tramos que
+-          llevan etiqueta, los mayores a 8%, porque su texto les daba altura;
+-          los demas quedaban invisibles y parecian huecos en la barra. */}
+-      <div className="w-full min-h-[2rem] sm:min-h-[2.5rem] flex rounded overflow-hidden mb-6">
++          altura FIJA (h-8), no min-height. Con min-height la altura real la
++          definia el contenido, y los tramos sin etiqueta (los menores a 8% de
++          ancho) no aportaban ninguna: median 24px de ancho por 0 de alto y se
++          veian como huecos, aunque su color estuviera bien aplicado.
++          self-stretch los llena sin depender de lo que contengan. */}
++      <div className="w-full h-8 sm:h-10 flex rounded overflow-hidden mb-6">
+         {stages.map((stage, i) => {
+           const width = (stage.value / totalCycle) * 100
+           const isSlowest = stage.key === slowestStage.key
+diff --git a/package.json b/package.json
+index f371ea8..201975f 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "shuma-bi-temp",
+-  "version": "0.18.3",
++  "version": "0.18.4",
+   "private": true,
+   "scripts": {
+     "dev": "next dev",

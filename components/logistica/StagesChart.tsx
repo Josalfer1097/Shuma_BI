@@ -148,11 +148,12 @@ export function StagesChart({ metrics }: StagesChartProps) {
       
       {/* Barra apilada al 100%.
           Los tramos usan self-stretch y NO h-full: el contenedor solo tiene
-          min-height, asi que un height:100% se resolveria contra una altura
-          automatica y daria cero. Con h-full solo se veian los tramos que
-          llevan etiqueta, los mayores a 8%, porque su texto les daba altura;
-          los demas quedaban invisibles y parecian huecos en la barra. */}
-      <div className="w-full min-h-[2rem] sm:min-h-[2.5rem] flex rounded overflow-hidden mb-6">
+          altura FIJA (h-8), no min-height. Con min-height la altura real la
+          definia el contenido, y los tramos sin etiqueta (los menores a 8% de
+          ancho) no aportaban ninguna: median 24px de ancho por 0 de alto y se
+          veian como huecos, aunque su color estuviera bien aplicado.
+          self-stretch los llena sin depender de lo que contengan. */}
+      <div className="w-full h-8 sm:h-10 flex rounded overflow-hidden mb-6">
         {stages.map((stage, i) => {
           const width = (stage.value / totalCycle) * 100
           const isSlowest = stage.key === slowestStage.key
