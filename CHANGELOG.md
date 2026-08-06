@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.18.0 — 2026-08-06
+
+- La actualizacion automatica ahora puede alimentar el tablero con la
+  informacion de varias empresas del grupo, cada una con su propia conexion y
+  su propio horario. Si una falla, las demas siguen actualizando.
+- Se dejan fuera del calculo las cotizaciones que tardaron mas de un mes en
+  salir a ruta. Ese tiempo es de decision del cliente y no de la operacion, y
+  distorsionaba los promedios: en algunos meses los multiplicaba por seis.
+- El tablero ahora guarda cuantos registros se dejaron fuera por ese motivo,
+  para poder explicar en cualquier momento como se llego a cada cifra.
+
 ## v0.17.1 — 2026-08-06
 
 - Se corrige que al aplicar un filtro el tablero regresaba a la pagina de

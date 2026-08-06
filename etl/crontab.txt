@@ -1,6 +1,9 @@
+ORACLE_CLIENT_DIR=/opt/oracle/instantclient_19_28
+
 # minuto hora dia mes dia-semana  comando
-# Corre todos los dias a las 5:00 AM hora CDMX -- para ese momento
+# Corre todos los dias a las 5:00 AM y 5:15 AM hora CDMX -- para ese momento
 # la operacion de logistica de "ayer" ya suele estar cerrada.
-0 5 * * * cd /app && /usr/local/bin/python /app/etl.py >> /var/log/etl.log 2>&1
+0  5 * * * cd /app && /usr/local/bin/python /app/etl.py --empresa cfs >> /var/log/etl.log 2>&1
+15 5 * * * cd /app && /usr/local/bin/python /app/etl.py --empresa acabados >> /var/log/etl.log 2>&1
 
 # Linea en blanco al final requerida por cron

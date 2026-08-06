@@ -1,16 +1,23 @@
 # ETL — Delivery Times Pipeline
 
-Moves aggregated delivery time metrics from Oracle (`SGE_CFS_PROD`) into
-Supabase every night. The frontend only ever reads from Supabase, so Oracle
-is never exposed to the internet.
+Moves aggregated delivery time metrics from Oracle into Supabase every night.
+The frontend only ever reads from Supabase, so Oracle is never exposed to
+the internet.
+
+It supports multiple companies running the same ERP schema on different
+databases (e.g. CFS and Acabados). Each company runs in its own process and
+writes its own rows.
 
 ## How it works
 
 1. Connects to Oracle with a **read-only** user.
-2. Runs the zone-by-month aggregation query (`../sql/03_query_zona_mes.sql`).
-3. **Upserts** the results into `reporte_tiempos_zona_mes`.
-4. Removes rows that no longer exist in the source.
-5. Records the run outcome in `etl_status`.
+2. Runs the zone-by-month aggregation query.
+3. Excludes "dormant" quotes (those that took more than a set amount of days
+   to leave the warehouse, usually 30). This prevents forgotten quotes from
+   skewing the operational metrics.
+4. **Upserts** the results into `reporte_tiempos_zona_mes`.
+5. Removes rows that no longer exist in the source for that specific company.
+6. Records the run outcome in `etl_status`.
 
 Data always covers up to **yesterday** (D-1). The query cuts at
 `FECHA_RUTA < TRUNC(SYSDATE)`, so a partially-complete current day never
@@ -30,12 +37,13 @@ each night is both simpler and more correct than appending yesterday's rows.
 | Minimum row threshold (`ETL_MIN_FILAS`) | If Oracle returns suspiciously few rows, the run aborts without touching Supabase. Yesterday's data beats broken data. |
 | Read-only Oracle user | The ETL cannot write to production, by design. |
 | Connection and query timeouts | A hung connection can't leave the job running for hours. |
+| Paginated delete | Deleting obsolete rows fetches IDs in chunks to avoid silent Supabase limits (1,000 rows). |
 
 ## Setup
 
 ### 1. Create the read-only Oracle user
 
-Run `../sql/01_oracle_readonly_user.sql` as DBA. Change the password first.
+Run `../sql/01_oracle_readonly_user.sql` as DBA on each company's database. Change the password first.
 
 ### 2. Create the Supabase tables
 
@@ -67,7 +75,8 @@ Si al correr aparece `DPY-3010`, es que falta este paso.
 cp .env.example .env
 ```
 
-Fill in the Oracle and Supabase values.
+Fill in the Oracle and Supabase values. Add your companies to `ETL_EMPRESAS`.
+Prefix each Oracle variable with the company name, e.g. `ORACLE_CFS_USER`.
 
 ### 4. Run it
 
@@ -75,9 +84,14 @@ Fill in the Oracle and Supabase values.
 docker compose up -d --build
 ```
 
-This builds the image, runs the ETL **once immediately** so you can verify
-the connection works, then schedules it nightly at **5:00 AM Mexico City
-time**.
+This builds the image and schedules it nightly. Check `crontab.txt` for the
+exact times (e.g. 5:00 AM for CFS, 5:15 AM for Acabados).
+
+To run manually for testing:
+```bash
+python etl.py --empresa cfs --dry-run
+python etl.py --empresa cfs --check
+```
 
 ### 5. Verify
 
@@ -88,22 +102,16 @@ docker logs -f etl-tiempos-entrega
 Or query `etl_status` in Supabase. It should read `estado = 'OK'` with a
 recent `ultima_corrida`.
 
-## Changing the schedule
-
-Edit `crontab.txt` (standard cron format), then rebuild:
-
-```bash
-docker compose up -d --build
-```
-
 ## Environment variables
 
 | Variable | Purpose |
 |---|---|
-| `ORACLE_USER` | Read-only user created in step 1 |
-| `ORACLE_PASSWORD` | Its password |
-| `ORACLE_DSN` | `host:port/service_name` |
+| `ETL_EMPRESAS` | Comma-separated list of companies (e.g. `cfs,acabados`) |
+| `ORACLE_<EMP>_USER` | Read-only user for a specific company |
+| `ORACLE_<EMP>_PASSWORD` | Its password |
+| `ORACLE_<EMP>_DSN` | `host:port/service_name` |
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_SERVICE_KEY` | Service role key — write access |
 | `ETL_FECHA_INICIO` | Start of the analysis window. Default `2025-01-01` |
 | `ETL_MIN_FILAS` | Abort threshold. Default `10` |
+| `ETL_DIAS_DORMANCIA` | Threshold to exclude dormant quotes. Default `30` |
