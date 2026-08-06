@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.17.1 — 2026-08-06
+
+- Se corrige que al aplicar un filtro el tablero regresaba a la pagina de
+  inicio en lugar de quedarse en el detalle de logistica. Pasaba lo mismo al
+  hacer clic en una zona del ranking o en un mes de la grafica de tendencia.
+- Se corrige la grafica de tendencia mensual, que podia quedarse sin dibujar
+  por un cambio de acomodo introducido con el recorrido guiado.
+- Se corrige la posicion del recorrido guiado en telefono: cuando el elemento
+  resaltado era mas alto que la pantalla, el mensaje quedaba fuera de la
+  vista.
+
 ## v0.17.0 — 2026-08-06
 
 - Se agrega un recorrido de bienvenida que explica como leer el tablero. Se

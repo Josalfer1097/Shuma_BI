@@ -190,9 +190,7 @@ export function Dashboard({ initialData }: DashboardProps) {
         <StagesChart metrics={metrics} />
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
-        <div data-tour="tendencia">
-        <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} partialMonth={partialMonth} />
-        </div>
+        <TrendChart data={trendData} selectedMonth={activeAnio && activeMes ? `${activeAnio}-${activeMes}` : null} partialMonth={partialMonth} anclaTour="tendencia" />
         <ZoneRanking data={zoneData} />
       </div>
       

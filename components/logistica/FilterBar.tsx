@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Select } from '../ui/Select'
 import { ReporteRow } from '@/lib/types'
 import { X, Filter } from 'lucide-react'
@@ -18,6 +18,9 @@ const MONTHS_ES: Record<string, string> = {
 
 export function FilterBar({ rawData }: FilterBarProps) {
   const router = useRouter()
+  // Ruta actual en vez de '/' escrito a mano: el modulo puede vivir en
+  // cualquier ruta y los filtros deben quedarse dentro de ella.
+  const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const zoneParam = searchParams.get('zona')
@@ -59,7 +62,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
     } else {
       params.set('zona', val)
     }
-    router.push(`/?${params.toString()}`, { scroll: false })
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
     setMobileMenuOpen(false)
   }
 
@@ -83,7 +86,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
       }
     }
 
-    router.push(`/?${params.toString()}`, { scroll: false })
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
     setMobileMenuOpen(false)
   }
 
@@ -95,26 +98,26 @@ export function FilterBar({ rawData }: FilterBarProps) {
     } else {
       params.set('mes', val)
     }
-    router.push(`/?${params.toString()}`, { scroll: false })
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
     setMobileMenuOpen(false)
   }
 
   const clearFilters = () => {
-    router.push('/', { scroll: false })
+    router.push(pathname, { scroll: false })
     setMobileMenuOpen(false)
   }
 
   const removeZone = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('zona')
-    router.push(`/?${params.toString()}`, { scroll: false })
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   const removePeriod = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('anio')
     params.delete('mes')
-    router.push(`/?${params.toString()}`, { scroll: false })
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   const hasFilters = zoneParam || anioParam || mesParam

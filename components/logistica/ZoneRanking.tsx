@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
   BarChart,
   Bar,
@@ -87,6 +87,9 @@ const CustomYAxisTick = ({ x, y, payload }: any) => {
 
 export function ZoneRanking({ data }: ZoneRankingProps) {
   const router = useRouter()
+  // Ruta actual en vez de '/' escrito a mano: el modulo puede vivir en
+  // cualquier ruta y los filtros deben quedarse dentro de ella.
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const selectedZone = searchParams.get('zona')
   const { scale } = useFontScale()
@@ -106,7 +109,7 @@ export function ZoneRanking({ data }: ZoneRankingProps) {
     } else {
       params.set('zona', zone)
     }
-    router.push(`/?${params.toString()}`, { scroll: false })
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   const slowestZoneValue = Math.max(...data.map(d => d.mediana_dias))

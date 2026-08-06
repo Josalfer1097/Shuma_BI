@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
   LineChart,
   Line,
@@ -27,6 +27,8 @@ interface TrendChartProps {
     total: number;
     metrics?: DashboardMetrics | null;
   }[];
+  /** Valor de data-tour para el recorrido guiado. */
+  anclaTour?: string;
   selectedMonth?: string | null;
   partialMonth?: string | null;
 }
@@ -117,8 +119,11 @@ const PromedioDot = (props: any) => {
   return null;
 }
 
-export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProps) {
+export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: TrendChartProps) {
   const router = useRouter()
+  // Ruta actual en vez de '/' escrito a mano: el modulo puede vivir en
+  // cualquier ruta y los filtros deben quedarse dentro de ella.
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const compMode = searchParams.get('comp') || 'anterior'
   const { scale } = useFontScale()
@@ -278,12 +283,12 @@ export function TrendChart({ data, selectedMonth, partialMonth }: TrendChartProp
   const handleCompChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('comp', e.target.value)
-    router.push(`/?${params.toString()}`, { scroll: false })
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 mb-8 flex flex-col">
-      <div className="flex items-start justify-between mb-4 sm:mb-6">
+    <div data-tour={anclaTour} className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 mb-8 flex flex-col">
+      <div className="mb-4 flex items-start justify-between gap-4 sm:mb-6">
         <div>
           <h3 className="text-text-primary font-medium">{chartTitle}</h3>
           {!selectedMonth && <p className="text-text-muted text-scale-sm mt-0.5">¿Estamos mejorando o empeorando mes a mes?</p>}

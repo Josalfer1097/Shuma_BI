@@ -23,6 +23,8 @@ export interface PasoTour {
 
 const MARGEN = 12
 const ANCHO_GLOBO = 360
+/** Alto de referencia antes de que el globo se mida a si mismo. */
+const ALTO_ESTIMADO = 260
 
 /** Evento para relanzar el recorrido desde cualquier boton de la pagina. */
 export const EVENTO_ABRIR_TOUR = 'shuma-tour:abrir'
@@ -134,23 +136,46 @@ export function Tour({ pasos, llaveStorage }: { pasos: PasoTour[]; llaveStorage:
     if (abierto) globoRef.current?.focus()
   }, [abierto, indice])
 
+  // El alto real del globo solo se conoce despues de pintarlo. Este pase
+  // extra reposiciona con la medida real en vez de la estimada.
+  const [remedido, setRemedido] = useState(0)
+  useLayoutEffect(() => {
+    if (abierto) setRemedido((n) => n + 1)
+  }, [abierto, indice, recuadro?.top, recuadro?.height])
+  void remedido
+
   if (!montado || !abierto || !paso) return null
 
   const vw = window.innerWidth
   const vh = window.innerHeight
   const ancho = Math.min(ANCHO_GLOBO, vw - MARGEN * 2)
 
-  // Debajo del elemento si cabe; si no, arriba. Sin ancla, centrado.
+  // Debajo del elemento si cabe, si no arriba, y en ultimo caso centrado.
+  //
+  // El tercer caso importa en telefono: un elemento mas alto que la pantalla,
+  // como los indicadores apilados, no deja hueco ni arriba ni abajo, y sin
+  // este ajuste el globo terminaba fuera de la vista.
   let estiloGlobo: React.CSSProperties
   if (recuadro) {
-    const cabeAbajo = recuadro.top + recuadro.height + 200 < vh
-    const top = cabeAbajo ? recuadro.top + recuadro.height + MARGEN : undefined
-    const bottom = cabeAbajo ? undefined : vh - recuadro.top + MARGEN
+    const alto = globoRef.current?.offsetHeight ?? ALTO_ESTIMADO
+    const espacioAbajo = vh - (recuadro.top + recuadro.height)
+    const espacioArriba = recuadro.top
+
+    let top: number
+    if (espacioAbajo >= alto + MARGEN * 2) {
+      top = recuadro.top + recuadro.height + MARGEN
+    } else if (espacioArriba >= alto + MARGEN * 2) {
+      top = recuadro.top - alto - MARGEN
+    } else {
+      top = (vh - alto) / 2
+    }
+    top = Math.min(Math.max(MARGEN, top), Math.max(MARGEN, vh - alto - MARGEN))
+
     const left = Math.min(
       Math.max(MARGEN, recuadro.left + recuadro.width / 2 - ancho / 2),
-      vw - ancho - MARGEN
+      Math.max(MARGEN, vw - ancho - MARGEN)
     )
-    estiloGlobo = { top, bottom, left, width: ancho }
+    estiloGlobo = { top, left, width: ancho }
   } else {
     estiloGlobo = {
       top: '50%',
