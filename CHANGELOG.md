@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.20.2 — 2026-08-06
+
+- Las tarjetas de la pagina de inicio dejan de mostrar cifras. Un tiempo de
+  entrega sin su meta y su volumen al lado no dice nada a quien apenas entra,
+  y esos datos ya aparecen completos al abrir cada empresa.
+- En su lugar cada tarjeta muestra si la empresa esta dentro de meta, fuera de
+  meta o sin datos cargados, con un indicador de color acompanado de su texto.
+
 ## v0.20.1 — 2026-08-06
 
 - Se redisenan las tarjetas de empresa de la pagina de inicio. Ahora el color
