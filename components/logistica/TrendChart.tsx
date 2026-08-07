@@ -319,7 +319,11 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
       {/* Altura definida, no min-height: ResponsiveContainer usa height="100%"
           y un porcentaje no resuelve contra una altura automatica. Con
           min-height el area de dibujo colapsaba a cero. */}
-      <div className="w-full flex-1" style={{ height: Math.max(240, 320 * scale) }}>
+      {/* Sin flex-1: flex-basis 0% reemplaza a height en un contenedor de
+          columna y el area de dibujo colapsa. Con flex-1 la grafica solo se
+          veia cuando la rejilla le daba altura desde afuera, asi que dejaba
+          de dibujarse en cuanto quedaba sola en su fila. */}
+      <div className="w-full" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={dataWithMeta} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />

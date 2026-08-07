@@ -115,9 +115,14 @@ export function FilterBar({ rawData }: FilterBarProps) {
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
-  const removePeriod = () => {
+  const removeYear = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('anio')
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
+  const removeMonth = () => {
+    const params = new URLSearchParams(searchParams.toString())
     params.delete('mes')
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
@@ -134,15 +139,26 @@ export function FilterBar({ rawData }: FilterBarProps) {
     )
     activeCount++
   }
-  if (anioParam || mesParam) {
-    let label = ''
-    if (anioParam && mesParam) label = `${MONTHS_ES[mesParam]} ${anioParam}`
-    else if (anioParam) label = anioParam
-    else if (mesParam) label = MONTHS_ES[mesParam]
+  // Ano y mes van en etiquetas separadas, no fusionadas en una sola.
+  // Fusionadas, quitar el mes obligaba a quitar tambien el ano y volver a
+  // elegirlo. Son dos filtros independientes en la URL y deben poder
+  // quitarse por separado.
+  const chipClases =
+    'flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium'
 
+  if (anioParam) {
     activeFiltersChips.push(
-      <button key="periodo" onClick={removePeriod} className="flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
-        {label}
+      <button key="anio" onClick={removeYear} aria-label={`Quitar el filtro de ano ${anioParam}`} className={chipClases}>
+        {anioParam}
+        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
+      </button>
+    )
+    activeCount++
+  }
+  if (mesParam) {
+    activeFiltersChips.push(
+      <button key="mes" onClick={removeMonth} aria-label={`Quitar el filtro de mes ${MONTHS_ES[mesParam]}`} className={chipClases}>
+        {MONTHS_ES[mesParam]}
         <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
       </button>
     )

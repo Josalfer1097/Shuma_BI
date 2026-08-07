@@ -66,10 +66,6 @@
   --empresa-cfs:      #4DA9F7;   /* 6.96:1 */
   --empresa-acabados: #E8534E;   /* 4.99:1 */
 
-  /* Texto sobre el bloque solido de color. Los dos tonos son claros, asi que
-     el texto va oscuro en ambos casos. */
-  --sobre-empresa-cfs:      #062038;
-  --sobre-empresa-acabados: #340B0A;
 }
 
 /* ---------- MODO CLARO ---------- */
@@ -111,8 +107,6 @@
   --empresa-cfs:      #0B5FBF;   /* 6.17:1 */
   --empresa-acabados: #B01326;   /* 7.08:1 */
 
-  --sobre-empresa-cfs:      #FFFFFF;
-  --sobre-empresa-acabados: #FFFFFF;
 }
 
 body {

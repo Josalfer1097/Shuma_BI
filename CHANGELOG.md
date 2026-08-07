@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.21.2 — 2026-08-07
+
+- Se corrige la grafica de tendencia mensual, que dejaba de dibujarse en las
+  empresas que no manejan zonas de reparto. El area del grafico se quedaba sin
+  altura al ocupar la fila completa.
+- Los filtros de ano y mes ahora se pueden quitar por separado. Antes se
+  mostraban juntos en una sola etiqueta, asi que para cambiar de mes habia que
+  quitar tambien el ano y volver a elegirlo.
+- Se rehacen las tarjetas de la pagina de inicio: las siglas de cada empresa
+  ahora aparecen caladas sobre el bloque de color, con acabado de vidrio y un
+  reflejo que recorre la tarjeta al pasar el cursor.
+
 ## v0.21.1 — 2026-08-07
 
 - Se rehacen las tarjetas de la pagina de inicio con las siglas reales de cada
