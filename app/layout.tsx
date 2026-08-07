@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Exo_2 } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FontScaleProvider } from "@/lib/fontScaleContext";
@@ -11,6 +12,20 @@ const dmSans = DM_Sans({
 const exo2 = Exo_2({ 
   subsets: ["latin"], 
   variable: "--font-exo" 
+});
+
+// Neuropol es la tipografia de identidad de Grupo Shuma. Licencia CC0, sin
+// derechos reservados, asi que puede auto-hospedarse. Se convirtio de OTF a
+// WOFF2 y bajo de 51 KB a 30 KB.
+//
+// Se reserva para la portada y los rotulos de identidad. En texto corrido no
+// funciona: es una display geometrica de mayusculas dominantes, con poca
+// diferencia entre caracteres.
+const neuropol = localFont({
+  src: "../public/fonts/Neuropol-Regular.woff2",
+  variable: "--font-neuropol",
+  display: "swap",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +47,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${dmSans.variable} ${exo2.variable} font-sans min-h-screen`}>
+      <body className={`${dmSans.variable} ${exo2.variable} ${neuropol.variable} font-sans min-h-screen`}>
         <ThemeProvider
           attribute="data-theme"
           defaultTheme="dark"

@@ -1,6 +1,5 @@
 import React from 'react'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
 import type { Empresa } from '@/lib/empresas'
 
 /**
@@ -10,92 +9,93 @@ import type { Empresa } from '@/lib/empresas'
  * credito y cobranza, ventas y compras por entrar, un dato de logistica aqui
  * estaria hablando por todas.
  *
- * Las siglas van CALADAS sobre el bloque de color: el texto no esta pintado
- * encima, es un hueco por el que se ve el fondo de la tarjeta. Por eso no
- * necesita un color de texto por tema ni contraste calculado, se resuelve
- * solo en claro y en oscuro. Se logra con background-clip en el texto sobre
- * un pseudo-fondo del color de la pagina.
+ * El lenguaje visual es tecnico y no decorativo: marcos de esquina, reticula
+ * fina, anotaciones monoespaciadas y un resplandor contenido en el color de
+ * la empresa.
  *
- * Encima van tres capas de profundidad, ninguna con imagenes:
- *   1. Degradado diagonal, que da volumen al plano
- *   2. Reflejo curvo en la mitad superior, el brillo del vidrio
- *   3. Barrido de luz que cruza el bloque al pasar el cursor
+ * La portada es un menu, no una pantalla de datos, asi que aqui si cabe
+ * cargar la identidad. Los modulos se quedan sobrios a proposito: este mismo
+ * tratamiento sobre una grafica de entregas estorbaria la lectura.
  *
- * El barrido se desactiva con prefers-reduced-motion; el degradado y el
- * reflejo son estaticos y se quedan.
+ * Las siglas van en Neuropol, la tipografia de identidad del grupo.
  */
-export function EmpresaCard({ empresa }: { empresa: Empresa }) {
+export function EmpresaCard({ empresa, indice }: { empresa: Empresa; indice: number }) {
   const color = `var(--empresa-${empresa.id})`
 
   return (
     <Link
       href={`/${empresa.id}`}
       aria-label={`Ver indicadores de ${empresa.nombre}`}
-      style={{ ['--color-empresa' as string]: color }}
-      className="group relative flex min-h-[12rem] overflow-hidden rounded-2xl border border-border bg-bg-surface transition-[border-color,box-shadow,transform] duration-500 hover:-translate-y-1 hover:border-[color:var(--color-empresa)] hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-empresa)] focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      style={{ ['--co' as string]: color }}
+      className="group relative isolate flex min-h-[17rem] flex-col justify-between overflow-hidden rounded-lg border border-border bg-bg-surface p-7 transition-[border-color,transform] duration-500 hover:-translate-y-1 hover:border-[color:var(--co)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--co)] focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
+      {/* Reticula tecnica de fondo. Muy tenue: da superficie sin competir. */}
       <div
-        className="relative isolate flex w-28 shrink-0 items-center justify-center overflow-hidden transition-[width] duration-500 sm:w-36 sm:group-hover:w-40"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.05] transition-opacity duration-500 group-hover:opacity-[0.1]"
+        style={{
+          backgroundImage:
+            'linear-gradient(var(--co) 1px, transparent 1px), linear-gradient(90deg, var(--co) 1px, transparent 1px)',
+          backgroundSize: '26px 26px',
+        }}
+      />
+
+      {/* Resplandor bajo las siglas. Es el unico efecto de luz y esta
+          contenido a una esquina, no repartido por toda la tarjeta. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-24 -left-16 -z-10 h-64 w-64 rounded-full opacity-[0.16] blur-3xl transition-opacity duration-500 group-hover:opacity-[0.34]"
         style={{ backgroundColor: color }}
-      >
-        {/* Capa 1. Degradado diagonal: convierte un plano liso en volumen. */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(150deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0) 46%, rgba(0,0,0,0.26) 100%)',
-          }}
-        />
+      />
 
-        {/* Capa 2. Reflejo curvo en la mitad superior. Es lo que lo hace leer
-            como vidrio y no como una plasta de color. */}
+      {/* Marcos de esquina. Crecen al pasar el cursor: es el gesto que
+          confirma que la tarjeta responde, sin animar nada mas. */}
+      {[
+        'left-3 top-3 border-l border-t',
+        'right-3 top-3 border-r border-t',
+        'left-3 bottom-3 border-b border-l',
+        'right-3 bottom-3 border-b border-r',
+      ].map((pos) => (
         <span
+          key={pos}
           aria-hidden="true"
-          className="pointer-events-none absolute -left-1/4 -top-1/2 h-full w-[150%] rounded-[100%] opacity-40 transition-opacity duration-500 group-hover:opacity-60"
-          style={{ background: 'rgba(255,255,255,0.3)' }}
+          className={`pointer-events-none absolute h-4 w-4 transition-all duration-500 group-hover:h-7 group-hover:w-7 ${pos}`}
+          style={{ borderColor: color }}
         />
+      ))}
 
-        {/* Capa 3. Barrido de luz al pasar el cursor. Cruza una sola vez en
-            lugar de repetirse: llama la atencion sin distraer. */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 -left-full w-1/2 -skew-x-12 transition-[left] duration-[900ms] ease-out group-hover:left-[150%] motion-reduce:hidden"
-          style={{
-            background:
-              'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%)',
-          }}
-        />
+      <div className="flex items-start justify-between gap-4">
+        <p className="font-mono text-scale-xs uppercase tracking-[0.18em] text-text-muted">
+          <span style={{ color }}>{'//'}</span> empresa {String(indice + 1).padStart(2, '0')}
+        </p>
+        <p className="font-mono text-scale-xs tracking-[0.18em]" style={{ color }}>
+          {empresa.usaZonas ? 'multizona' : 'zona unica'}
+        </p>
+      </div>
 
-        {/* Las siglas caladas. El texto toma como relleno el color de fondo de
-            la pagina y se recorta a la forma de las letras, asi que parecen
-            un hueco en el bloque. */}
-        <span
-          className="relative z-10 font-exo text-scale-3xl font-bold tracking-wider transition-transform duration-500 group-hover:scale-105 motion-reduce:group-hover:scale-100"
-          style={{
-            backgroundColor: 'var(--bg-base)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-          }}
+      <div>
+        <p
+          className="font-neuropol leading-none tracking-[0.06em] transition-transform duration-500 group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0"
+          style={{ color, fontSize: 'calc(var(--font-4xl) * 1.5)' }}
         >
           {empresa.siglas}
-        </span>
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col justify-between p-6 sm:p-7">
-        <h2 className="font-exo text-scale-xl font-semibold leading-tight text-text-primary">
+        </p>
+        <span
+          aria-hidden="true"
+          className="mb-4 mt-4 block h-px w-full"
+          style={{ background: `linear-gradient(90deg, ${color}, transparent)` }}
+        />
+        <h2 className="font-exo text-scale-lg font-semibold leading-tight text-text-primary">
           {empresa.nombre}
         </h2>
-
-        <span className="mt-6 inline-flex items-center gap-1.5 text-scale-sm text-text-muted transition-colors group-hover:text-[color:var(--color-empresa)]">
-          Ver indicadores
-          <ArrowRight
-            className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-1"
-            aria-hidden="true"
-          />
-        </span>
       </div>
+
+      <p className="font-mono text-scale-xs tracking-[0.14em] text-text-muted transition-colors group-hover:text-[color:var(--co)]">
+        ver indicadores{' '}
+        <span className="inline-block transition-transform duration-500 group-hover:translate-x-1">
+          &rarr;
+        </span>
+      </p>
     </Link>
   )
 }

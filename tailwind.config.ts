@@ -40,6 +40,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-dm-sans)"],
         exo: ["var(--font-exo)"],
+        neuropol: ["var(--font-neuropol)", "var(--font-exo)", "sans-serif"],
       },
     },
   },

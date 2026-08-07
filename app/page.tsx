@@ -24,8 +24,8 @@ export default function Portada() {
       </p>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {EMPRESAS.map((empresa) => {
-          return <EmpresaCard key={empresa.id} empresa={empresa} />
+        {EMPRESAS.map((empresa, i) => {
+          return <EmpresaCard key={empresa.id} empresa={empresa} indice={i} />
         })}
       </div>
 

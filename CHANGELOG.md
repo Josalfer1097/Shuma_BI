@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.22.0 — 2026-08-07
+
+- Se incorpora Neuropol, la tipografia de identidad del grupo, para los
+  rotulos de las empresas en la pagina de inicio.
+- Se rehace la pagina de inicio con un tratamiento visual propio: marcos de
+  esquina, reticula tecnica y el color de cada empresa como elemento
+  principal. Las pantallas de indicadores se mantienen sobrias a proposito,
+  para no restarle legibilidad a las cifras.
+
 ## v0.21.2 — 2026-08-07
 
 - Se corrige la grafica de tendencia mensual, que dejaba de dibujarse en las
