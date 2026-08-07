@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.22.1 — 2026-08-07
+
+- Las tarjetas de la pagina de inicio ahora muestran la plaza de cada empresa,
+  Ciudad de Mexico y Puebla, en lugar de un detalle de reparto. La tarjeta
+  representa a la empresa completa, y ese dato pertenecia solo a logistica.
+- Se retira la linea de descripcion de las tarjetas. Las empresas del grupo
+  comparten giro y se distinguen por razon social y plaza, asi que cualquier
+  texto ahi repetia el nombre.
+
 ## v0.22.0 — 2026-08-07
 
 - Se incorpora Neuropol, la tipografia de identidad del grupo, para los

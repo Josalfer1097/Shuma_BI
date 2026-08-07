@@ -68,8 +68,11 @@ export function EmpresaCard({ empresa, indice }: { empresa: Empresa; indice: num
         <p className="font-mono text-scale-xs uppercase tracking-[0.18em] text-text-muted">
           <span style={{ color }}>{'//'}</span> empresa {String(indice + 1).padStart(2, '0')}
         </p>
+        {/* La plaza y no un detalle de logistica: la tarjeta representa a la
+            empresa completa, y cuando entren credito y cobranza o ventas, una
+            etiqueta de reparto estaria hablando por todas. */}
         <p className="font-mono text-scale-xs tracking-[0.18em]" style={{ color }}>
-          {empresa.usaZonas ? 'multizona' : 'zona unica'}
+          {empresa.plaza}
         </p>
       </div>
 

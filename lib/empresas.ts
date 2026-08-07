@@ -17,7 +17,16 @@ export interface Empresa {
   nombreCorto: string
   /** Siglas reales de la empresa, no un recorte del nombre. */
   siglas: string
-  descripcion: string
+  /**
+   * Plaza donde opera.
+   *
+   * Las empresas del grupo comparten giro y se distinguen por razon social y
+   * por plaza, asi que no hay una descripcion que agregar: cualquier texto
+   * ahi repetiria el nombre o seria inventado. La plaza es lo unico que
+   * aporta, y de paso explica por que una maneja zonas de reparto y la otra
+   * no.
+   */
+  plaza: string
   /**
    * Meta de dias comprometida, de la cotizacion a la validacion de entrega.
    * Es distinta por empresa: son operaciones y compromisos distintos.
@@ -40,7 +49,7 @@ export const EMPRESAS: Empresa[] = [
     nombre: 'Comercializadora y Ferretería Shuma',
     nombreCorto: 'Comercializadora',
     siglas: 'CFS',
-    descripcion: 'Operación logística con reparto por zonas',
+    plaza: 'Ciudad de México',
     metaDias: 5,
     usaZonas: true,
   },
@@ -49,7 +58,7 @@ export const EMPRESAS: Empresa[] = [
     nombre: 'Acabados Shuma',
     nombreCorto: 'Acabados',
     siglas: 'ASH',
-    descripcion: 'Operación logística en Puebla',
+    plaza: 'Puebla',
     metaDias: 3,
     usaZonas: false,
   },
