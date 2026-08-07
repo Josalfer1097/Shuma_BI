@@ -15,6 +15,8 @@ export interface Empresa {
   nombre: string
   /** Nombre corto, para el selector y las etiquetas. */
   nombreCorto: string
+  /** Siglas reales de la empresa, no un recorte del nombre. */
+  siglas: string
   descripcion: string
   /**
    * Meta de dias comprometida, de la cotizacion a la validacion de entrega.
@@ -37,6 +39,7 @@ export const EMPRESAS: Empresa[] = [
     id: 'cfs',
     nombre: 'Comercializadora y Ferretería Shuma',
     nombreCorto: 'Comercializadora',
+    siglas: 'CFS',
     descripcion: 'Operación logística con reparto por zonas',
     metaDias: 5,
     usaZonas: true,
@@ -45,6 +48,7 @@ export const EMPRESAS: Empresa[] = [
     id: 'acabados',
     nombre: 'Acabados Shuma',
     nombreCorto: 'Acabados',
+    siglas: 'ASH',
     descripcion: 'Operación logística en Puebla',
     metaDias: 3,
     usaZonas: false,

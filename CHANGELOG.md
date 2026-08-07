@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.21.1 — 2026-08-07
+
+- Se rehacen las tarjetas de la pagina de inicio con las siglas reales de cada
+  empresa, CFS y ASH, sobre un bloque de color solido. Antes mostraban las dos
+  primeras letras del nombre, que no significaban nada.
+- Los tiempos de mas de dos dias tambien muestran su equivalencia. Un valor
+  como 3.2 dias ahora aclara que son 3 dias con 5 horas.
+
 ## v0.21.0 — 2026-08-07
 
 - Los tiempos por etapa ahora muestran su equivalencia en horas. Un valor
