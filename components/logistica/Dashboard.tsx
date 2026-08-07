@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { ReporteRow } from '@/lib/types'
 import { aggregate } from '@/lib/aggregate'
 import { FilterBar } from './FilterBar'
+import { PanelHallazgos } from './PanelHallazgos'
+import { calcularHallazgos } from '@/lib/hallazgos'
 import { KpiRow } from './KpiRow'
 import { TrendChart } from './TrendChart'
 import { ZoneRanking } from './ZoneRanking'
@@ -133,6 +135,7 @@ export function Dashboard({ initialData }: DashboardProps) {
   }, [initialData, activeZone, activeAnio, activeMes])
 
   // Aggregate zone ranking data (group by zona)
+
   const zoneData = useMemo(() => {
     // Zone ranking ALWAYS uses the initial data filtered ONLY by months/years, not by zone.
     const baseData = initialData.filter(row => {
@@ -176,10 +179,20 @@ export function Dashboard({ initialData }: DashboardProps) {
   const maxAnioMes = initialData.reduce((max, row) => row.anio_mes > max ? row.anio_mes : max, '')
   const partialMonth = maxAnioMes === currentYearMonth ? maxAnioMes : null
 
+  // Los hallazgos se calculan sobre los datos ya filtrados: si el tablero
+  // esta filtrado por una zona, hablan de esa zona.
+  const hallazgos = useMemo(
+    () => calcularHallazgos(filteredData, metaDias, usaZonas, partialMonth),
+    [filteredData, metaDias, usaZonas, partialMonth]
+  )
+
   return (
     <div>
-      <div data-tour="filtros">
-        <FilterBar rawData={initialData} />
+      <div data-tour="filtros" className="mb-8 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <FilterBar rawData={initialData} />
+        </div>
+        <PanelHallazgos hallazgos={hallazgos} />
       </div>
       <div className="mb-4">
         <span className="text-scale-sm text-text-muted">{periodoLabel}</span>

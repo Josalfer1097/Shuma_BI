@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.21.0 — 2026-08-07
+
+- Los tiempos por etapa ahora muestran su equivalencia en horas. Un valor
+  como 1.2 dias se leia como "un dia y algo" cuando en realidad son casi 29
+  horas, y eso hacia parecer menor un problema que no lo es.
+- Se agrega el panel "Que esta pasando", junto a los filtros. Reune en un solo
+  lugar que cambio contra el mes anterior y contra el mismo mes del ano
+  pasado, que se sale de lo normal en el periodo, y que conviene saber al leer
+  las cifras.
+- El panel respeta los filtros aplicados: si se esta viendo una zona, habla de
+  esa zona. Solo presenta hechos calculados sobre los mismos datos que estan
+  en pantalla, no recomendaciones de operacion.
+
 ## v0.20.3 — 2026-08-07
 
 - Las tarjetas de la pagina de inicio dejan de mostrar informacion de

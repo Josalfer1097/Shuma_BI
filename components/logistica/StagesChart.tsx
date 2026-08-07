@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { DashboardMetrics } from '@/lib/types'
-import { formatDecimal, formatPercent } from '@/lib/format'
+import { formatDecimal, formatPercent, equivalenciaHoras } from '@/lib/format'
 import { Clock } from 'lucide-react'
 import { Tooltip } from '../ui/Tooltip'
 
@@ -22,6 +22,7 @@ interface StagesChartProps {
 function DetalleEtapa({
   etiqueta,
   dias,
+  horas,
   porcentaje,
   esMasLenta,
   x,
@@ -29,6 +30,7 @@ function DetalleEtapa({
 }: {
   etiqueta: string
   dias: string
+  horas: string | null
   porcentaje: string
   esMasLenta: boolean
   x: number
@@ -50,6 +52,12 @@ function DetalleEtapa({
         <span className="text-scale-xs text-text-muted">Tiempo mediano</span>
         <span className="text-scale-sm font-medium text-text-primary">{dias} d</span>
       </div>
+      {horas && (
+        <div className="mt-0.5 flex items-baseline justify-between gap-3">
+          <span className="text-scale-xs text-text-muted">Equivale a</span>
+          <span className="text-scale-xs text-text-secondary">{horas}</span>
+        </div>
+      )}
       <div className="mt-1 flex items-baseline justify-between gap-3">
         <span className="text-scale-xs text-text-muted">Del ciclo total</span>
         <span className="text-scale-sm font-medium text-text-primary">{porcentaje}</span>
@@ -132,6 +140,7 @@ export function StagesChart({ metrics }: StagesChartProps) {
         <DetalleEtapa
           etiqueta={stages[activa].label}
           dias={formatDecimal(stages[activa].value)}
+          horas={equivalenciaHoras(stages[activa].value)}
           porcentaje={formatPercent(stages[activa].value, totalCycle)}
           esMasLenta={stages[activa].key === slowestStage.key}
           x={posicion.x}
@@ -204,6 +213,13 @@ export function StagesChart({ metrics }: StagesChartProps) {
               <span className="text-scale-sm font-semibold text-text-primary">
                 {formatDecimal(stage.value)}d
               </span>
+              {/* Equivalencia en horas: 0.7 d se lee como "menos de un dia"
+                  cuando en realidad son casi 17 horas. */}
+              {equivalenciaHoras(stage.value) && (
+                <span className="block text-scale-xs text-text-muted">
+                  {equivalenciaHoras(stage.value)}
+                </span>
+              )}
             </div>
           )
         })}
@@ -213,7 +229,9 @@ export function StagesChart({ metrics }: StagesChartProps) {
       <div className="pt-4 border-t border-border">
         <p className="text-scale-sm text-text-primary mb-2">
           La etapa mas lenta es <strong className="font-semibold">{slowestStage.label}</strong>, 
-          con {formatDecimal(slowestStage.value)} dias ({formatPercent(slowestStage.value, totalCycle)} del ciclo).
+          con {formatDecimal(slowestStage.value)} dias
+          {equivalenciaHoras(slowestStage.value) && ` (${equivalenciaHoras(slowestStage.value)})`}
+          , el {formatPercent(slowestStage.value, totalCycle)} del ciclo.
         </p>
         <p className="text-scale-xs text-text-muted leading-relaxed">
           La etapa &quot;Surtido&quot; aparece en cero porque en el sistema la recepcion y el surtido se registran casi al mismo tiempo, no como dos momentos separados.

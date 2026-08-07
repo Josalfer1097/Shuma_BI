@@ -21,6 +21,9 @@ export interface ReporteRow {
   con_autoriz_cxc: number;
   con_autoriz_descuentos: number;
 
+  /** Entregas descartadas por cotizacion dormida. Ver el ETL. */
+  excluidas_dormancia: number;
+
   actualizado_en: string;
 }
 
