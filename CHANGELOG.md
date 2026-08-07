@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.20.3 — 2026-08-07
+
+- Las tarjetas de la pagina de inicio dejan de mostrar informacion de
+  logistica. Cada tarjeta representa a la empresa completa, y cuando entren
+  las demas areas un dato de logistica estaria hablando por todas.
+- Se redisenan las tarjetas para que la identidad de cada empresa sea lo
+  unico que comuniquen: color, monograma y nombre.
+
 ## v0.20.2 — 2026-08-06
 
 - Las tarjetas de la pagina de inicio dejan de mostrar cifras. Un tiempo de
