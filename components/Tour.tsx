@@ -104,7 +104,14 @@ export function Tour({ pasos, llaveStorage }: { pasos: PasoTour[]; llaveStorage:
 
     if (el) {
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' })
+      // Centrar un elemento alto lo deja sin hueco arriba ni abajo, y el globo
+      // acaba encimado sobre lo que explica. Alinearlo al borde superior libera
+      // la mitad inferior de la pantalla.
+      const esAlto = el.getBoundingClientRect().height > window.innerHeight * 0.5
+      el.scrollIntoView({
+        behavior: reduce ? 'auto' : 'smooth',
+        block: esAlto ? 'start' : 'center',
+      })
     }
 
     medir()
@@ -137,13 +144,19 @@ export function Tour({ pasos, llaveStorage }: { pasos: PasoTour[]; llaveStorage:
     if (abierto) globoRef.current?.focus()
   }, [abierto, indice])
 
-  // El alto real del globo solo se conoce despues de pintarlo. Este pase
-  // extra reposiciona con la medida real en vez de la estimada.
-  const [remedido, setRemedido] = useState(0)
+  // El alto real del globo solo se conoce despues de pintarlo, y ademas cambia
+  // cuando el usuario sube la escala de texto desde el boton del propio globo.
+  // El observador reposiciona con la medida real en vez de la estimada.
+  const [altoGlobo, setAltoGlobo] = useState(ALTO_ESTIMADO)
   useLayoutEffect(() => {
-    if (abierto) setRemedido((n) => n + 1)
-  }, [abierto, indice, recuadro?.top, recuadro?.height])
-  void remedido
+    const el = globoRef.current
+    if (!abierto || !el) return
+    const aplicar = () => setAltoGlobo(el.offsetHeight)
+    aplicar()
+    const observador = new ResizeObserver(aplicar)
+    observador.observe(el)
+    return () => observador.disconnect()
+  }, [abierto, indice])
 
   if (!montado || !abierto || !paso) return null
 
@@ -151,32 +164,52 @@ export function Tour({ pasos, llaveStorage }: { pasos: PasoTour[]; llaveStorage:
   const vh = window.innerHeight
   const ancho = Math.min(ANCHO_GLOBO, vw - MARGEN * 2)
 
-  // Debajo del elemento si cabe, si no arriba, y en ultimo caso centrado.
+  // Orden de preferencia: debajo, arriba, a la derecha, a la izquierda.
   //
-  // El tercer caso importa en telefono: un elemento mas alto que la pantalla,
-  // como los indicadores apilados, no deja hueco ni arriba ni abajo, y sin
-  // este ajuste el globo terminaba fuera de la vista.
+  // Antes el ultimo caso centraba el globo en la pantalla, y como el elemento
+  // tambien queda centrado por el scroll, el globo aterrizaba justo encima de
+  // lo que explicaba. Ahora se ancla al borde con mas espacio: se encima lo
+  // menos posible y el encabezado del elemento sigue visible.
   let estiloGlobo: React.CSSProperties
   if (recuadro) {
-    const alto = globoRef.current?.offsetHeight ?? ALTO_ESTIMADO
+    const alto = altoGlobo
     const espacioAbajo = vh - (recuadro.top + recuadro.height)
     const espacioArriba = recuadro.top
+    const espacioDerecha = vw - (recuadro.left + recuadro.width)
+    const espacioIzquierda = recuadro.left
 
-    let top: number
-    if (espacioAbajo >= alto + MARGEN * 2) {
-      top = recuadro.top + recuadro.height + MARGEN
-    } else if (espacioArriba >= alto + MARGEN * 2) {
-      top = recuadro.top - alto - MARGEN
-    } else {
-      top = (vh - alto) / 2
-    }
-    top = Math.min(Math.max(MARGEN, top), Math.max(MARGEN, vh - alto - MARGEN))
-
-    const left = Math.min(
+    const centradoEnX = Math.min(
       Math.max(MARGEN, recuadro.left + recuadro.width / 2 - ancho / 2),
       Math.max(MARGEN, vw - ancho - MARGEN)
     )
-    estiloGlobo = { top, left, width: ancho }
+    const centradoEnY = Math.min(
+      Math.max(MARGEN, recuadro.top + recuadro.height / 2 - alto / 2),
+      Math.max(MARGEN, vh - alto - MARGEN)
+    )
+
+    if (espacioAbajo >= alto + MARGEN * 2) {
+      estiloGlobo = {
+        top: recuadro.top + recuadro.height + MARGEN,
+        left: centradoEnX,
+        width: ancho,
+      }
+    } else if (espacioArriba >= alto + MARGEN * 2) {
+      estiloGlobo = { top: recuadro.top - alto - MARGEN, left: centradoEnX, width: ancho }
+    } else if (espacioDerecha >= ancho + MARGEN * 2) {
+      estiloGlobo = {
+        top: centradoEnY,
+        left: recuadro.left + recuadro.width + MARGEN,
+        width: ancho,
+      }
+    } else if (espacioIzquierda >= ancho + MARGEN * 2) {
+      estiloGlobo = { top: centradoEnY, left: recuadro.left - ancho - MARGEN, width: ancho }
+    } else {
+      estiloGlobo = {
+        top: espacioAbajo >= espacioArriba ? Math.max(MARGEN, vh - alto - MARGEN) : MARGEN,
+        left: centradoEnX,
+        width: ancho,
+      }
+    }
   } else {
     estiloGlobo = {
       top: '50%',

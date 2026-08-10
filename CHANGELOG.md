@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.22.2 — 2026-08-09
+
+- Se corrige el globo del recorrido guiado, que se colocaba encima del
+  elemento que estaba explicando cuando ese elemento ocupaba buena parte de la
+  pantalla. Ahora busca hueco abajo, arriba y a los lados, y si no lo hay se
+  recarga contra el borde para dejar visible lo que senala.
+- El globo tambien se reacomoda al cambiar el tamano de texto desde su propio
+  boton. Antes conservaba la posicion calculada con el tamano anterior.
+- Se corrigen los acentos y la enes faltantes en los textos del recorrido de
+  empresa, y se redactan de nuevo para que se lean mas naturales.
+
 ## v0.22.1 — 2026-08-07
 
 - Las tarjetas de la pagina de inicio ahora muestran la plaza de cada empresa,

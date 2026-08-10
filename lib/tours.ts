@@ -47,7 +47,7 @@ export const getTourLogistica = (empresa: Empresa): PasoTour[] => {
       ancla: 'kpis',
       titulo: 'Mediana y promedio dicen cosas distintas',
       cuerpo:
-        'La mediana describe el caso típico; el promedio se mueve con los casos extremos. Cuando los dos se separan mucho, no significa que la operación empeoró: significa que hubo un grupo pequeño de entregas muy lentas. El tablero lo marca solo cuando ocurre.',
+        'La mediana describe el caso típico; el promedio se mueve con los casos extremos. Que los dos se separen mucho no quiere decir que la operación empeoró: quiere decir que hubo un grupo pequeño de entregas muy lentas arrastrando el promedio.',
     },
     {
       ancla: 'etapas',
@@ -63,21 +63,14 @@ export const getTourLogistica = (empresa: Empresa): PasoTour[] => {
     }
   ]
 
-  if (empresa.usaZonas) {
-    pasos.push({
-      ancla: 'filtros',
-      titulo: 'Filtra y comparte la vista',
-      cuerpo:
-        'Puedes acotar por zona, año y mes. Los filtros quedan guardados en la dirección del navegador, así que si copias el enlace y lo mandas, quien lo abra verá exactamente la misma vista que tú.',
-    })
-  } else {
-    pasos.push({
-      ancla: 'filtros',
-      titulo: 'Filtra y comparte la vista',
-      cuerpo:
-        'Puedes acotar por año y mes. Los filtros quedan guardados en la dirección del navegador, así que si copias el enlace y lo mandas, quien lo abra verá exactamente la misma vista que tú.',
-    })
-  }
+  // Los dos pasos solo diferian en los ejes de filtrado. Tenerlos duplicados
+  // obligaba a corregir cualquier ajuste de redaccion en dos lugares.
+  const ejes = empresa.usaZonas ? 'zona, año y mes' : 'año y mes'
+  pasos.push({
+    ancla: 'filtros',
+    titulo: 'Filtra y comparte la vista',
+    cuerpo: `Puedes acotar por ${ejes}. El filtro se guarda en la dirección del navegador: si copias el enlace y lo mandas, quien lo abra ve exactamente lo mismo que tú.`,
+  })
 
   return pasos
 }
@@ -95,18 +88,18 @@ export const getTourEmpresa = (empresa: Empresa): PasoTour[] => {
     {
       titulo: `Indicadores de ${empresa.nombreCorto}`,
       cuerpo:
-        'Esta pantalla reune las areas de la empresa. Los datos salen directo del sistema administrativo, sin captura manual de por medio. Este recorrido toma menos de un minuto.',
+        'Aquí están las áreas de la empresa. Las cifras vienen directo del sistema administrativo: nadie las captura a mano. El recorrido toma menos de un minuto.',
     },
     {
       ancla: 'panel-logistica',
-      titulo: 'El tiempo tipico, no el promedio',
-      cuerpo: `Este numero es la mediana: el caso tipico. Se usa en lugar del promedio porque un punado de entregas muy lentas lo distorsiona hacia arriba y da la impresion de que la operacion incumple cuando no es asi. La meta comprometida de ${empresa.nombreCorto} es de ${empresa.metaDias} dias.`,
+      titulo: 'El tiempo típico, no el promedio',
+      cuerpo: `Este número es la mediana, o sea el caso típico. No es el promedio: unas cuantas entregas muy lentas lo jalan hacia arriba y harían ver a la operación fuera de meta sin estarlo. La meta de ${empresa.nombreCorto} es de ${empresa.metaDias} días.`,
     },
     {
       ancla: 'areas-pendientes',
-      titulo: 'Las areas que faltan',
+      titulo: 'Las áreas que faltan',
       cuerpo:
-        'Cada area se integra cuando sus indicadores quedan definidos con su responsable. Las tarjetas sin cifras todavia no tienen datos conectados: aparecen vacias a proposito, para no mostrar numeros que nadie ha validado.',
+        'Cada área entra al tablero cuando su responsable define qué se va a medir. Las tarjetas sin cifras están vacías a propósito: preferimos un espacio en blanco antes que un número que nadie ha validado.',
     },
   ]
   return pasos
