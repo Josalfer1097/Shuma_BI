@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { supabase } from '@/lib/supabase'
+import { crearClienteServidor } from '@/lib/supabase-server'
+import { obtenerSesion } from '@/lib/auth'
 import { Header } from '@/components/Header'
 import { AreaCard } from '@/components/AreaCard'
 import { PanelLogistica } from '@/components/PanelLogistica'
@@ -39,6 +40,9 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
   const empresa = buscarEmpresa(params.empresa)
   if (!empresa) notFound()
 
+  const supabase = crearClienteServidor()
+  const sesion = await obtenerSesion()
+
   const [reporteRes, etlRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresa.id),
     // maybeSingle y no single: una empresa sin corridas registradas devuelve
@@ -55,6 +59,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <Header
+        nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
         etlStatus={etlStatus}
         titulo={empresa.nombreCorto}
         subtitulo={`${empresa.nombre} — Indicadores por área`}

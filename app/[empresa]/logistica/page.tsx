@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-import { supabase } from '@/lib/supabase'
+import { crearClienteServidor } from '@/lib/supabase-server'
+import { obtenerSesion } from '@/lib/auth'
 import { Header } from '@/components/Header'
 import { Dashboard } from '@/components/logistica/Dashboard'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -52,6 +53,9 @@ export default async function Page({ params }: { params: { empresa: string } }) 
     notFound()
   }
 
+  const supabase = crearClienteServidor()
+  const sesion = await obtenerSesion()
+
   const [reporteRes, etlRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresaId),
     // maybeSingle y no single: una empresa sin corridas registradas devuelve
@@ -89,6 +93,7 @@ export default async function Page({ params }: { params: { empresa: string } }) 
     <EmpresaProvider empresa={empresaObj}>
       <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <Header
+          nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
           etlStatus={etlRes.error ? null : etlRes.data}
           titulo="Tiempos de Entrega"
           subtitulo={`${empresaObj.nombre} — Grupo Shuma`}

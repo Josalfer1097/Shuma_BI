@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header'
 import { EmpresaCard } from '@/components/EmpresaCard'
 import { EMPRESAS } from '@/lib/empresas'
+import { obtenerSesion } from '@/lib/auth'
 
 export const revalidate = 0
 
@@ -14,10 +15,19 @@ export const revalidate = 0
  * Una cifra de logistica aqui envejeceria mal: cuando entren las demas areas
  * estaria representando a la empresa completa con el dato de una sola.
  */
-export default function Portada() {
+export default async function Portada() {
+  // La portada sigue sin consultar cifras. Lo unico que pide es la sesion,
+  // para saber si dibuja "Entrar" o el nombre de quien ya entro.
+  const sesion = await obtenerSesion()
+
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-      <Header titulo="Tablero Operativo" subtitulo="Grupo Shuma" conSelectorEmpresa={false} />
+      <Header
+        titulo="Tablero Operativo"
+        subtitulo="Grupo Shuma"
+        conSelectorEmpresa={false}
+        nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
+      />
 
       <p className="mb-8 text-scale-base text-text-secondary">
         Elige una empresa para ver sus indicadores de operación.

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.23.0 — 2026-08-11
+
+- Se agrega la pantalla de acceso. Se puede entrar con un enlace enviado al
+  correo o con contrasena, a eleccion de cada persona.
+- El encabezado muestra quien inicio sesion y permite salir.
+- Por ahora el tablero sigue abierto para todos: esta entrega solo habilita
+  el acceso, todavia no restringe nada.
+
 ## v0.22.2 — 2026-08-09
 
 - Se corrige el globo del recorrido guiado, que se colocaba encima del
