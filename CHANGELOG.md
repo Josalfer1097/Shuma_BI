@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.24.0 — 2026-08-11
+
+- Ahora hay que iniciar sesion para entrar al tablero. Antes cualquiera con la
+  direccion podia ver los indicadores.
+- La pantalla de acceso se rediseno con fondo animado, marcos de esquina y
+  transiciones. El fondo es geometria abstracta: no muestra ninguna cifra.
+- La pantalla de inicio solo muestra las empresas asignadas a cada persona.
+- Quien entra a un area que no le corresponde ve una pantalla que se lo
+  explica, en vez de una pagina vacia.
+
+## v0.23.0 — 2026-08-11
+
+- Se agrega la pantalla de acceso. Se puede entrar con un enlace enviado al
+  correo o con contrasena, a eleccion de cada persona.
+- El encabezado muestra quien inicio sesion y permite salir.
+- Por ahora el tablero sigue abierto para todos: esta entrega solo habilita
+  el acceso, todavia no restringe nada.
+
 ## v0.22.2 — 2026-08-09
 
 - Se corrige el globo del recorrido guiado, que se colocaba encima del

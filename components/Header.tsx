@@ -6,6 +6,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { FontScaleButton } from './FontScaleButton'
 import { TourButton } from './TourButton'
 import { EmpresaSelector } from './EmpresaSelector'
+import { BotonSesion } from './BotonSesion'
 
 interface HeaderProps {
   /** Opcional: la portada no depende del estado de la actualizacion. */
@@ -17,6 +18,8 @@ interface HeaderProps {
   volverTexto?: string
   /** La portada entera es el selector de empresa, ahi sobra el desplegable. */
   conSelectorEmpresa?: boolean
+  /** Nombre de quien inicio sesion. Nulo dibuja el boton de entrar. */
+  nombreSesion?: string | null
 }
 
 export function Header({
@@ -26,6 +29,7 @@ export function Header({
   volverA,
   volverTexto = 'Inicio',
   conSelectorEmpresa = true,
+  nombreSesion = null,
 }: HeaderProps) {
   let statusText = ''
   let statusColor = ''
@@ -88,6 +92,7 @@ export function Header({
           <TourButton />
           <FontScaleButton />
           <ThemeToggle />
+          <BotonSesion nombre={nombreSesion} />
         </div>
       </div>
     </header>

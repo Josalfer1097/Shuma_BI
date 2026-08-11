@@ -141,3 +141,74 @@ body {
     transition: none;
   }
 }
+
+/* ============================================================
+   Animaciones de la pantalla de acceso.
+   Viven aqui y no en el componente porque son keyframes: Tailwind
+   sin plugin no puede declararlos en linea.
+
+   Todas se apagan con prefers-reduced-motion al final del bloque.
+   ============================================================ */
+
+@keyframes shuma-entrada {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shuma-deriva {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(6%, -4%) scale(1.12); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* Silueta de barras del fondo. Alturas abstractas y aleatorias por
+   diseno: nunca datos reales, ni siquiera con forma de dato. */
+@keyframes shuma-barra {
+  0%   { transform: scaleY(0.35); }
+  50%  { transform: scaleY(1); }
+  100% { transform: scaleY(0.35); }
+}
+
+@keyframes shuma-barrido {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  35%  { opacity: 0.55; }
+  100% { transform: translateY(400%); opacity: 0; }
+}
+
+@keyframes shuma-marco {
+  from { opacity: 0; width: 0.5rem; height: 0.5rem; }
+  to   { opacity: 1; width: 1.25rem; height: 1.25rem; }
+}
+
+.animar-entrada {
+  animation: shuma-entrada 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animar-deriva {
+  animation: shuma-deriva 18s ease-in-out infinite;
+}
+
+.animar-barra {
+  transform-origin: bottom;
+  animation: shuma-barra 4.5s ease-in-out infinite;
+}
+
+.animar-barrido {
+  animation: shuma-barrido 7s linear infinite;
+}
+
+.animar-marco {
+  animation: shuma-marco 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-entrada,
+  .animar-deriva,
+  .animar-barra,
+  .animar-barrido,
+  .animar-marco {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
