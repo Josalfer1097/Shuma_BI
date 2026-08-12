@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.25.0 — 2026-08-12
+
+- Cada empresa tiene ahora su color propio: azul marino para Comercializadora
+  y rojo escarlata para Acabados. Antes las dos usaban practicamente el mismo
+  azul del sistema y no se distinguian.
+- La pantalla de acceso se rehizo con superficie de vidrio, profundidad y los
+  dos colores del grupo. Sigue sin mostrar ninguna cifra.
+- Las tarjetas de la pantalla de inicio se tinen con el color de su empresa.
+
 ## v0.24.0 — 2026-08-11
 
 - Ahora hay que iniciar sesion para entrar al tablero. Antes cualquiera con la

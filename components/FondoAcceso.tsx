@@ -5,59 +5,74 @@ import { useMemo } from 'react'
 /**
  * Fondo de la pantalla de acceso.
  *
- * Silueta de barras, retícula técnica y dos resplandores con los colores de
- * las dos empresas. Todo es geometría abstracta: ni un dígito, ni una
- * etiqueta, ni nada con forma de dato. Una cifra inventada aquí, aunque
- * fuera decorativa, es exactamente el error que no puede pasar en un
- * producto que se presenta a dirección.
+ * La pantalla de acceso es del GRUPO, no de una empresa: llega antes de que
+ * el usuario elija. Por eso sostiene los dos colores de identidad en tension
+ * -- marino a la izquierda, escarlata a la derecha -- en vez de comprometerse
+ * con uno. Es la unica pantalla del producto donde eso tiene sentido.
  *
- * Las alturas se calculan una vez con useMemo. Recalcularlas en cada render
- * haría saltar las barras al escribir en el formulario.
+ * Todo es geometria abstracta: ni un digito, ni una etiqueta, ni nada con
+ * forma de dato. Una cifra decorativa aqui, aunque fuera inventada a
+ * proposito, es el error mas caro posible en un tablero que se presenta a
+ * direccion.
  */
 export function FondoAcceso() {
+  // Calculado una vez: recalcularlo en cada render haria saltar las barras
+  // al escribir en el formulario.
   const barras = useMemo(
     () =>
-      Array.from({ length: 28 }, (_, i) => ({
-        alto: 18 + ((i * 37) % 62),
-        retraso: ((i * 13) % 45) / 10,
-        duracion: 3.8 + ((i * 7) % 30) / 10,
+      Array.from({ length: 34 }, (_, i) => ({
+        alto: 14 + ((i * 41) % 66),
+        retraso: ((i * 17) % 52) / 10,
+        duracion: 4.2 + ((i * 11) % 34) / 10,
       })),
     []
   )
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      {/* Retícula técnica, la misma del lenguaje de la portada. */}
+      {/* Cama de color. Marino y escarlata en extremos opuestos: el grupo
+          contiene a las dos empresas sin ser ninguna. */}
       <div
-        className="absolute inset-0 opacity-[0.055]"
+        className="absolute inset-0"
         style={{
-          backgroundImage:
-            'linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px)',
-          backgroundSize: '34px 34px',
+          background:
+            'radial-gradient(120% 90% at 12% 8%, color-mix(in srgb, var(--empresa-cfs-masa) 78%, transparent), transparent 62%),' +
+            'radial-gradient(110% 85% at 92% 96%, color-mix(in srgb, var(--empresa-acabados-masa) 46%, transparent), transparent 58%),' +
+            'var(--bg-base)',
         }}
       />
 
-      {/* Resplandores en los colores de las dos empresas. Identidad del
-          grupo, no dato: por eso están difusos y en las esquinas. */}
+      {/* Retícula técnica, el mismo lenguaje de la portada. */}
       <div
-        className="animar-deriva absolute -left-32 -top-24 h-[26rem] w-[26rem] rounded-full opacity-[0.20] blur-3xl"
+        className="absolute inset-0 opacity-[0.05]"
+        style={{
+          backgroundImage:
+            'linear-gradient(var(--text-primary) 1px, transparent 1px), linear-gradient(90deg, var(--text-primary) 1px, transparent 1px)',
+          backgroundSize: '38px 38px',
+        }}
+      />
+
+      {/* Resplandores a la deriva, uno por empresa. */}
+      <div
+        className="animar-deriva absolute -left-40 -top-32 h-[34rem] w-[34rem] rounded-full opacity-25 blur-[110px]"
         style={{ backgroundColor: 'var(--empresa-cfs)' }}
       />
       <div
-        className="animar-deriva absolute -bottom-32 -right-24 h-[24rem] w-[24rem] rounded-full opacity-[0.14] blur-3xl"
+        className="animar-deriva absolute -bottom-40 -right-32 h-[30rem] w-[30rem] rounded-full opacity-[0.18] blur-[110px]"
         style={{ backgroundColor: 'var(--empresa-acabados)', animationDelay: '-9s' }}
       />
 
-      {/* Silueta de barras al pie. Muy desenfocada a propósito: sugiere el
+      {/* Silueta de barras al pie. Muy desenfocada a proposito: sugiere el
           tablero sin poder leerse como uno. */}
-      <div className="absolute inset-x-0 bottom-0 flex h-1/2 items-end justify-center gap-[1.4%] px-[6%] opacity-[0.13] blur-[3px]">
+      <div className="animar-pulso absolute inset-x-0 bottom-0 flex h-[45%] items-end justify-center gap-[1.1%] px-[4%] blur-[4px]">
         {barras.map((b, i) => (
           <div
             key={i}
-            className="animar-barra flex-1 rounded-t-sm"
+            className="animar-barra flex-1 rounded-t"
             style={{
               height: `${b.alto}%`,
-              backgroundColor: 'var(--accent)',
+              background:
+                'linear-gradient(180deg, var(--text-primary), color-mix(in srgb, var(--text-primary) 10%, transparent))',
               animationDelay: `-${b.retraso}s`,
               animationDuration: `${b.duracion}s`,
             }}
@@ -65,13 +80,22 @@ export function FondoAcceso() {
         ))}
       </div>
 
-      {/* Barrido lento. Un solo elemento en movimiento lineal: es lo que da
-          sensación de sistema vivo sin distraer del formulario. */}
+      {/* Barrido lento. Un solo elemento en movimiento lineal: da sensacion
+          de sistema vivo sin competir con el formulario. */}
       <div
-        className="animar-barrido absolute inset-x-0 top-0 h-24"
+        className="animar-barrido absolute inset-x-0 top-0 h-28"
         style={{
           background:
-            'linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 22%, transparent), transparent)',
+            'linear-gradient(180deg, transparent, color-mix(in srgb, var(--text-primary) 14%, transparent), transparent)',
+        }}
+      />
+
+      {/* Vineta: apaga las esquinas para que el centro pese mas. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(72% 58% at 50% 45%, transparent, color-mix(in srgb, var(--bg-base) 88%, transparent) 100%)',
         }}
       />
     </div>

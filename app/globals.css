@@ -63,8 +63,15 @@
      lenta se confundiria con un error.
      El escarlata de marca #C0152A da 2.92:1 sobre este fondo, insuficiente;
      se aclara conservando el matiz y se separa del rojo de error. */
-  --empresa-cfs:      #4DA9F7;   /* 6.96:1 */
-  --empresa-acabados: #E8534E;   /* 4.99:1 */
+  /* Identidad de empresa, en dos tokens.
+     El marino puro da 1.74:1 sobre el fondo oscuro: es ilegible como linea.
+     Por eso se parte: 'masa' es el relleno (marino y escarlata de verdad,
+     con blanco encima), 'tinta' es la linea legible de la misma familia.
+     Asi el color de marca vive donde puede vivir: en superficie, no en trazo. */
+  --empresa-cfs:           #6BA5E8;   /* tinta  7.61:1 */
+  --empresa-cfs-masa:      #12326B;   /* marino, blanco encima 12.39:1 */
+  --empresa-acabados:      #F0605B;   /* tinta  6.08:1 */
+  --empresa-acabados-masa: #9E1B2F;   /* escarlata, blanco encima 7.92:1 */
 
 }
 
@@ -104,8 +111,12 @@
   --sobre-alerta:   #3B2A02;
 
   /* Colores de identidad por empresa */
-  --empresa-cfs:      #0B5FBF;   /* 6.17:1 */
-  --empresa-acabados: #B01326;   /* 7.08:1 */
+  /* En claro el marino y el escarlata si funcionan como linea: tinta y masa
+     coinciden. */
+  --empresa-cfs:           #12326B;   /* 11.55:1 */
+  --empresa-cfs-masa:      #12326B;
+  --empresa-acabados:      #9E1B2F;   /*  7.38:1 */
+  --empresa-acabados-masa: #9E1B2F;
 
 }
 
@@ -211,4 +222,103 @@ body {
     opacity: 1;
     transform: none;
   }
+}
+
+/* ============================================================
+   Superficie de vidrio de la pantalla de acceso.
+
+   El borde no es un 1px plano: es un degradado enmascarado que se
+   aclara arriba y se apaga abajo, como si la luz cayera desde
+   arriba. Es lo que separa una tarjeta plana de una que parece
+   tener grosor.
+   ============================================================ */
+
+.vidrio {
+  position: relative;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--bg-elevated) 62%, transparent),
+      color-mix(in srgb, var(--bg-surface) 78%, transparent)
+    );
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow:
+    0 24px 64px -20px rgb(0 0 0 / 0.55),
+    0 0 0 1px color-mix(in srgb, var(--border) 45%, transparent);
+}
+
+/* Filo de luz superior. Pseudo-elemento con mascara para que el
+   borde exista solo donde la luz lo tocaria. */
+.vidrio::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--text-primary) 30%, transparent),
+    transparent 55%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Campos: el foco enciende un halo en vez de solo cambiar el borde. */
+.campo-acceso {
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.35s ease,
+    background-color 0.25s ease;
+}
+.campo-acceso:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 0 22px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Boton principal: degradado propio y elevacion al pasar el cursor. */
+.boton-acceso {
+  background: linear-gradient(
+    135deg,
+    var(--accent-deep),
+    color-mix(in srgb, var(--accent-deep) 72%, var(--empresa-cfs-masa))
+  );
+  box-shadow: 0 10px 26px -12px color-mix(in srgb, var(--accent) 75%, transparent);
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    filter 0.25s ease;
+}
+.boton-acceso:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+  box-shadow: 0 16px 34px -14px color-mix(in srgb, var(--accent) 85%, transparent);
+}
+.boton-acceso:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+@keyframes shuma-pulso {
+  0%, 100% { opacity: 0.16; }
+  50%      { opacity: 0.30; }
+}
+.animar-pulso {
+  animation: shuma-pulso 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-pulso { animation: none; }
+  .boton-acceso { transition: none; }
+  .boton-acceso:hover:not(:disabled) { transform: none; }
 }

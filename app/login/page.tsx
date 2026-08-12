@@ -76,7 +76,7 @@ function FormularioAcceso() {
     modo === 'enlace' ? correo.includes('@') : correo.includes('@') && password.length > 0
 
   const claseCampo =
-    'w-full rounded-md border border-border bg-bg-base/70 px-3 py-2.5 text-scale-base text-text-primary backdrop-blur transition-colors duration-300 placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent'
+    'campo-acceso w-full rounded-lg border border-border/70 bg-bg-base/50 px-3.5 py-3 text-scale-base text-text-primary backdrop-blur placeholder:text-text-muted'
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-bg-base p-4">
@@ -90,14 +90,22 @@ function FormularioAcceso() {
           <p className="mb-3 font-mono text-scale-xs uppercase tracking-[0.3em] text-text-muted">
             <span className="text-accent">{'//'}</span> acceso
           </p>
-          <h1 className="font-neuropol text-scale-4xl tracking-[0.12em] text-text-primary">
+          <h1 className="font-neuropol text-scale-4xl tracking-[0.18em] text-text-primary drop-shadow-[0_2px_20px_var(--accent)]">
             SHUMA
           </h1>
-          <p className="mt-2 text-scale-sm text-text-secondary">Tablero operativo</p>
+          <div
+            aria-hidden="true"
+            className="mx-auto mt-3 h-px w-24"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, var(--empresa-cfs), var(--empresa-acabados), transparent)',
+            }}
+          />
+          <p className="mt-3 text-scale-sm text-text-secondary">Tablero operativo</p>
         </div>
 
         <div
-          className="animar-entrada relative rounded-lg border border-border bg-bg-surface/80 p-7 backdrop-blur-md"
+          className="vidrio animar-entrada relative rounded-2xl p-8"
           style={{ animationDelay: '0.18s' }}
         >
           {ESQUINAS.map((pos, i) => (
@@ -111,10 +119,10 @@ function FormularioAcceso() {
 
           {/* Selector de metodo. El indicador se desliza en vez de saltar:
               es la transicion que hace sentir la pantalla continua. */}
-          <div className="relative mb-7 grid grid-cols-2 rounded-md bg-bg-base/60 p-1">
+          <div className="relative mb-8 grid grid-cols-2 rounded-lg border border-border/50 bg-bg-base/45 p-1 backdrop-blur">
             <span
               aria-hidden="true"
-              className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded bg-accent-deep transition-transform duration-300 ease-out motion-reduce:transition-none"
+              className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-md bg-accent-deep shadow-[0_4px_14px_-6px_var(--accent)] transition-transform duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
               style={{ transform: modo === 'password' ? 'translateX(100%)' : 'translateX(0)' }}
             />
             <button
@@ -220,7 +228,7 @@ function FormularioAcceso() {
                 type="button"
                 onClick={enviar}
                 disabled={!listo || cargando || entrando}
-                className="animar-entrada group flex w-full items-center justify-center gap-2 rounded-md bg-accent-deep py-3 text-scale-base text-white transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                className="boton-acceso animar-entrada group mt-1 flex w-full items-center justify-center gap-2 rounded-lg py-3.5 text-scale-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 style={{ animationDelay: '0.4s' }}
               >
                 {cargando || entrando ? (

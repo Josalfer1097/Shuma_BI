@@ -20,14 +20,25 @@ import type { Empresa } from '@/lib/empresas'
  * Las siglas van en Neuropol, la tipografia de identidad del grupo.
  */
 export function EmpresaCard({ empresa, indice }: { empresa: Empresa; indice: number }) {
+  // Dos tokens, no uno. 'tinta' es la linea legible; 'masa' es el marino o
+  // el escarlata de verdad, que solo puede vivir como relleno: el marino puro
+  // da 1.74:1 sobre el fondo oscuro y como trazo seria invisible.
   const color = `var(--empresa-${empresa.id})`
+  const masa = `var(--empresa-${empresa.id}-masa)`
 
   return (
     <Link
       href={`/${empresa.id}`}
       aria-label={`Ver indicadores de ${empresa.nombre}`}
-      style={{ ['--co' as string]: color }}
-      className="group relative isolate flex min-h-[17rem] flex-col justify-between overflow-hidden rounded-lg border border-border bg-bg-surface p-7 transition-[border-color,transform] duration-500 hover:-translate-y-1 hover:border-[color:var(--co)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--co)] focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      style={{
+        ['--co' as string]: color,
+        ['--ma' as string]: masa,
+        // El cuerpo se tine con la masa de la empresa. Es aqui donde el
+        // marino y el escarlata se leen como marino y escarlata: en
+        // superficie, no en linea.
+        background: `linear-gradient(150deg, color-mix(in srgb, ${masa} 42%, var(--bg-surface)), var(--bg-surface) 72%)`,
+      }}
+      className="group relative isolate flex min-h-[17rem] flex-col justify-between overflow-hidden rounded-lg border border-border p-7 transition-[border-color,transform,box-shadow] duration-500 hover:-translate-y-1 hover:border-[color:var(--co)] hover:shadow-[0_22px_50px_-24px_var(--ma)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--co)] focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       {/* Reticula tecnica de fondo. Muy tenue: da superficie sin competir. */}
       <div
