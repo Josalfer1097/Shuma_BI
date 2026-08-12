@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { crearClienteServidor } from '@/lib/supabase-server'
 import { obtenerSesion, puedeVer } from '@/lib/auth'
+import { MarcoEmpresa } from '@/components/MarcoEmpresa'
 import { Header } from '@/components/Header'
 import { AreaCard } from '@/components/AreaCard'
 import { PanelLogistica } from '@/components/PanelLogistica'
@@ -62,6 +63,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
   const etlStatus = etlRes.error ? null : ((etlRes.data as EtlStatus | null) ?? null)
 
   return (
+    <MarcoEmpresa empresaId={empresa.id}>
     <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <Header
         nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
@@ -96,5 +98,6 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
 
       <Tour pasos={getTourEmpresa(empresa)} llaveStorage={`${LLAVE_TOUR_EMPRESA}-${empresa.id}`} />
     </main>
+    </MarcoEmpresa>
   )
 }

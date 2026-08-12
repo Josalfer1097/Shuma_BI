@@ -9,6 +9,7 @@ import { Tour } from '@/components/Tour'
 import { getTourLogistica, LLAVE_TOUR_LOGISTICA } from '@/lib/tours'
 import { buscarEmpresa } from '@/lib/empresas'
 import { EmpresaProvider } from '@/lib/empresaContext'
+import { MarcoEmpresa } from '@/components/MarcoEmpresa'
 import { notFound, redirect } from 'next/navigation'
 
 export const revalidate = 0
@@ -93,6 +94,7 @@ export default async function Page({ params }: { params: { empresa: string } }) 
 
   return (
     <EmpresaProvider empresa={empresaObj}>
+      <MarcoEmpresa empresaId={empresaId}>
       <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <Header
           nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
@@ -108,6 +110,7 @@ export default async function Page({ params }: { params: { empresa: string } }) 
 
         <Tour pasos={getTourLogistica(empresaObj)} llaveStorage={`${LLAVE_TOUR_LOGISTICA}_${empresaId}`} />
       </main>
+      </MarcoEmpresa>
     </EmpresaProvider>
   )
 }

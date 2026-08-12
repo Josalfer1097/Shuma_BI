@@ -19,7 +19,13 @@ export function KpiCard({ title, value, secondary, secondaryValue, secondaryLayo
 
   return (
     <div className={cn("bg-bg-surface border border-border rounded-lg flex flex-col h-full relative", className)}>
-      <div className="bg-accent-deep py-2 px-3 flex items-center justify-center gap-1.5 rounded-t-lg relative">
+      <div
+        // La masa de la empresa, con respaldo al acento si el componente se
+        // usa fuera de un MarcoEmpresa. Es cromo, no dato: el valor de abajo
+        // conserva sus colores semanticos.
+        style={{ background: 'var(--ma, var(--accent-deep))' }}
+        className="py-2 px-3 flex items-center justify-center gap-1.5 rounded-t-lg relative"
+      >
         <span className="text-scale-xs sm:text-scale-sm text-white font-medium leading-tight">{title}</span>
         {tooltip && (
           <Tooltip text={tooltip} className="text-white/70 hover:text-white p-1 -m-1" />

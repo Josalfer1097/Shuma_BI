@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.26.0 — 2026-08-12
+
+- El color de cada empresa ahora se ve dentro de sus tableros: filo superior,
+  ambiente de fondo y encabezados de indicadores. Ya se distingue de un
+  vistazo en que empresa se esta sin leer el titulo.
+- Los colores de las graficas NO cambian con la empresa: siguen siendo los
+  mismos para que una etapa lenta nunca se confunda con un error.
+- La grafica de tendencia mensual gana relleno degradado bajo la linea y una
+  rejilla mas tenue.
+
 ## v0.25.0 — 2026-08-12
 
 - Cada empresa tiene ahora su color propio: azul marino para Comercializadora
