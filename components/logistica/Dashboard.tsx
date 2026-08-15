@@ -174,9 +174,18 @@ export function Dashboard({ initialData }: DashboardProps) {
     periodoLabel = `${MONTHS_ES[activeMes]} (todos los años)`
   }
 
+  // El mes en curso se busca sobre los datos YA FILTRADOS.
+  //
+  // Antes se calculaba sobre initialData, y el aviso de "mes incompleto"
+  // seguia apareciendo aunque el filtro excluyera ese mes: con el tablero en
+  // julio, el panel hablaba de agosto. Coincidia por casualidad cuando el
+  // filtro si incluia el mes en curso, y por eso parecia intermitente.
   const now = new Date()
   const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const maxAnioMes = initialData.reduce((max, row) => row.anio_mes > max ? row.anio_mes : max, '')
+  const maxAnioMes = useMemo(
+    () => filteredData.reduce((max, row) => (row.anio_mes > max ? row.anio_mes : max), ''),
+    [filteredData]
+  )
   const partialMonth = maxAnioMes === currentYearMonth ? maxAnioMes : null
 
   // Los hallazgos se calculan sobre los datos ya filtrados: si el tablero

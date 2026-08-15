@@ -49,7 +49,10 @@ export function PanelHallazgos({ hallazgos }: { hallazgos: Hallazgo[] }) {
     return () => window.removeEventListener('keydown', cerrar)
   }, [abierto])
 
-  if (hallazgos.length === 0) return null
+  // Antes se devolvia null con cero hallazgos y el boton desaparecia de la
+  // barra sin explicacion. Al desmontarse, 'abierto' volvia a false, asi que
+  // el control se comportaba distinto segun el filtro. Ahora el boton
+  // siempre esta y el panel explica que no hay nada que senalar.
 
   // Los cambios y lo atipico son lo que amerita atencion; los datos de
   // contexto no deberian inflar el contador.
@@ -101,6 +104,13 @@ export function PanelHallazgos({ hallazgos }: { hallazgos: Hallazgo[] }) {
               </div>
 
               <div className="flex-1 overflow-y-auto p-5">
+                {hallazgos.length === 0 && (
+                  <p className="mt-2 text-scale-sm leading-relaxed text-text-secondary">
+                    Con los filtros que tienes aplicados no hay nada que señalar. Varios
+                    hallazgos comparan meses entre si, asi que al elegir un mes suelto dejan
+                    de poder calcularse.
+                  </p>
+                )}
                 {GRUPOS.map((grupo) => {
                   const items = hallazgos.filter((h) => h.tipo === grupo.tipo)
                   if (items.length === 0) return null
