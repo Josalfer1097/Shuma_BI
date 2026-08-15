@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.26.1 — 2026-08-13
+
+- El tablero ya tiene icono propio en la pestana del navegador. Antes salia
+  el icono generico y el navegador registraba un error al no encontrarlo.
+- Se limpian las advertencias de la consola del navegador. Aparecian decenas
+  por sesion al navegar entre pantallas y tapaban los mensajes que si
+  importan. No afectaban al funcionamiento.
+
 ## v0.26.0 — 2026-08-12
 
 - El color de cada empresa ahora se ve dentro de sus tableros: filo superior,
