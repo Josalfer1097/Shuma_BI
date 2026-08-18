@@ -32,9 +32,11 @@ export function LogoEmpresa({ empresaId, alto = 28, className }: Props) {
     <span
       role="img"
       aria-label={empresaId === 'cfs' ? 'Comercializadora y Ferretería Shuma' : 'Acabados Shuma'}
-      className={className}
+      // display sale del className y no del estilo en linea: un estilo en
+      // linea gana sobre la clase de Tailwind, y con inline-block el logo
+      // caia en el mismo renglon que el enlace de volver.
+      className={`block ${className ?? ''}`}
       style={{
-        display: 'inline-block',
         height: alto,
         // Proporcion real de cada archivo ya recortado, para que los dos
         // ocupen el mismo alto sin deformarse.

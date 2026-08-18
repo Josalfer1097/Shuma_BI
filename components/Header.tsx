@@ -78,18 +78,27 @@ export function Header({
             {volverTexto}
           </Link>
         )}
-        {/* El logotipo va ARRIBA del titulo, no al lado: es la respuesta al
-            problema de no saber en que empresa se esta sin leer el titulo.
-            En el flujo de lectura aparece primero. */}
-        {logoEmpresaId && (
-          <LogoEmpresa
-            empresaId={logoEmpresaId}
-            alto={26}
-            className="animar-entrada mb-2.5 block opacity-90"
-          />
-        )}
         <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">{titulo}</h1>
-        <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
+
+        {/* El logotipo ocupa el lugar de la razon social.
+            Antes el nombre de la empresa aparecia tres veces en el mismo
+            bloque: en el titulo, en el subtitulo y dentro del propio logo.
+            Ahora el logo dice quien es, y la linea de abajo dice que pantalla
+            es. Cada elemento hace un solo trabajo. */}
+        {logoEmpresaId ? (
+          <>
+            <LogoEmpresa
+              empresaId={logoEmpresaId}
+              alto={40}
+              className="animar-entrada mt-3"
+            />
+            {subtitulo && (
+              <p className="text-scale-sm text-text-muted mt-2">{subtitulo}</p>
+            )}
+          </>
+        ) : (
+          <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
+        )}
       </div>
       <div className="flex items-center gap-3 self-end sm:self-auto">
         {statusText && (

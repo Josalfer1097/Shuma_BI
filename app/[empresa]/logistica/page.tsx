@@ -101,7 +101,7 @@ export default async function Page({ params }: { params: { empresa: string } }) 
           logoEmpresaId={empresaId}
           etlStatus={etlRes.error ? null : etlRes.data}
           titulo="Tiempos de Entrega"
-          subtitulo={`${empresaObj.nombre} — Grupo Shuma`}
+          subtitulo="Tiempos desde la cotización hasta la validación"
           volverA={`/${empresaId}`}
           volverTexto={empresaObj.nombreCorto}
         />

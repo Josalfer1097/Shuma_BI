@@ -70,7 +70,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
           logoEmpresaId={empresa.id}
         etlStatus={etlStatus}
         titulo={empresa.nombreCorto}
-        subtitulo={`${empresa.nombre} — Indicadores por área`}
+        subtitulo="Indicadores por área"
         volverA="/"
         volverTexto="Empresas"
       />
