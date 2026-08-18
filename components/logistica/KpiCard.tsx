@@ -20,15 +20,25 @@ export function KpiCard({ title, value, secondary, secondaryValue, secondaryLayo
   return (
     <div className={cn("bg-bg-surface border border-border rounded-lg flex flex-col h-full relative", className)}>
       <div
-        // La masa de la empresa, con respaldo al acento si el componente se
-        // usa fuera de un MarcoEmpresa. Es cromo, no dato: el valor de abajo
-        // conserva sus colores semanticos.
-        style={{ background: 'var(--ma, var(--accent-deep))' }}
+        // Filo, no relleno.
+        //
+        // Antes el encabezado se rellenaba con la masa de la empresa. En
+        // Acabados eso daba seis bloques escarlata en fila, a 1.22:1 de
+        // --danger: nadie los leia como identidad, los leia como seis
+        // alarmas. Y justo en la empresa que mejor va (1.7 d contra meta
+        // de 3).
+        //
+        // Con el color reducido a una linea de 3 px arriba, la identidad se
+        // conserva y el rojo vuelve a significar una sola cosa: problema.
+        style={{
+          background: 'color-mix(in srgb, var(--ma, var(--accent-deep)) 22%, var(--bg-elevated))',
+          borderTop: '3px solid var(--co, var(--accent))',
+        }}
         className="py-2 px-3 flex items-center justify-center gap-1.5 rounded-t-lg relative"
       >
-        <span className="text-scale-xs sm:text-scale-sm text-white font-medium leading-tight">{title}</span>
+        <span className="text-scale-xs sm:text-scale-sm text-text-primary font-medium leading-tight">{title}</span>
         {tooltip && (
-          <Tooltip text={tooltip} className="text-white/70 hover:text-white p-1 -m-1" />
+          <Tooltip text={tooltip} className="text-text-muted hover:text-text-primary p-1 -m-1" />
         )}
       </div>
       <div className={cn(

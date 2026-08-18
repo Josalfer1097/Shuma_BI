@@ -223,7 +223,7 @@ def fetch_from_oracle(empresa: str) -> list[dict]:
         user=os.environ[f"ORACLE_{emp}_USER"],
         password=os.environ[f"ORACLE_{emp}_PASSWORD"],
         dsn=construir_dsn(empresa),
-        tcp_connect_timeout=30,
+        tcp_connect_timeout=30, 
     ) as conn:
         conn.call_timeout = 300_000  # ms
         with conn.cursor() as cur:
@@ -534,7 +534,7 @@ def main() -> int:
         eliminadas = limpiar_obsoletos(client, rows, empresa)
 
         duracion = time.time() - inicio
-        actualizar_status(client, len(rows), duracion, "OK", empresa)
+        actualizar_status(client, len(rows), duracion, "OK", empresa) 
         log.info(
             f"[{empresa}] ETL completado en {duracion:.1f}s. "
             f"Filas: {len(rows)}, obsoletas eliminadas: {eliminadas}"

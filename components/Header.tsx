@@ -7,6 +7,7 @@ import { FontScaleButton } from './FontScaleButton'
 import { TourButton } from './TourButton'
 import { EmpresaSelector } from './EmpresaSelector'
 import { BotonSesion } from './BotonSesion'
+import { LogoEmpresa } from './LogoEmpresa'
 
 interface HeaderProps {
   /** Opcional: la portada no depende del estado de la actualizacion. */
@@ -20,6 +21,8 @@ interface HeaderProps {
   conSelectorEmpresa?: boolean
   /** Nombre de quien inicio sesion. Nulo dibuja el boton de entrar. */
   nombreSesion?: string | null
+  /** Dibuja el logotipo sobre el titulo. Nulo en la portada, que es del grupo. */
+  logoEmpresaId?: string | null
 }
 
 export function Header({
@@ -30,6 +33,7 @@ export function Header({
   volverTexto = 'Inicio',
   conSelectorEmpresa = true,
   nombreSesion = null,
+  logoEmpresaId = null,
 }: HeaderProps) {
   let statusText = ''
   let statusColor = ''
@@ -73,6 +77,16 @@ export function Header({
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {volverTexto}
           </Link>
+        )}
+        {/* El logotipo va ARRIBA del titulo, no al lado: es la respuesta al
+            problema de no saber en que empresa se esta sin leer el titulo.
+            En el flujo de lectura aparece primero. */}
+        {logoEmpresaId && (
+          <LogoEmpresa
+            empresaId={logoEmpresaId}
+            alto={26}
+            className="animar-entrada mb-2.5 block opacity-90"
+          />
         )}
         <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">{titulo}</h1>
         <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
