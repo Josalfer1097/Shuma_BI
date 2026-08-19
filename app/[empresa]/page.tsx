@@ -68,6 +68,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
       <Header
         nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
           logoEmpresaId={empresa.id}
+        logoEsTitulo
         etlStatus={etlStatus}
         titulo={empresa.nombreCorto}
         subtitulo="Indicadores por área"

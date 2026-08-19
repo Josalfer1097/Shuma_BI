@@ -23,6 +23,15 @@ interface HeaderProps {
   nombreSesion?: string | null
   /** Dibuja el logotipo sobre el titulo. Nulo en la portada, que es del grupo. */
   logoEmpresaId?: string | null
+  /**
+   * El logotipo SUSTITUYE al titulo visible.
+   *
+   * Sirve para la pantalla de areas, donde el titulo era el nombre de la
+   * empresa y repetia lo que el logotipo ya dice. El h1 sigue existiendo para
+   * lectores de pantalla y para el arbol de encabezados: se oculta a la
+   * vista, no se elimina.
+   */
+  logoEsTitulo?: boolean
 }
 
 export function Header({
@@ -34,6 +43,7 @@ export function Header({
   conSelectorEmpresa = true,
   nombreSesion = null,
   logoEmpresaId = null,
+  logoEsTitulo = false,
 }: HeaderProps) {
   let statusText = ''
   let statusColor = ''
@@ -78,26 +88,51 @@ export function Header({
             {volverTexto}
           </Link>
         )}
-        <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">{titulo}</h1>
-
-        {/* El logotipo ocupa el lugar de la razon social.
-            Antes el nombre de la empresa aparecia tres veces en el mismo
-            bloque: en el titulo, en el subtitulo y dentro del propio logo.
-            Ahora el logo dice quien es, y la linea de abajo dice que pantalla
-            es. Cada elemento hace un solo trabajo. */}
-        {logoEmpresaId ? (
+        {/* Tres arreglos posibles:
+            1. Sin logotipo (portada del grupo): titulo y subtitulo, como antes.
+            2. Logotipo COMO titulo (pantalla de areas): el logotipo grande
+               ocupa el lugar del nombre de la empresa, que repetia lo que el
+               propio logotipo dice. El h1 queda para lectores de pantalla.
+            3. Logotipo Y titulo (modulos): en fila con un separador, para que
+               los dos puedan ser grandes sin competir. En movil se apilan y
+               el separador se oculta: en columna no separa nada. */}
+        {!logoEmpresaId ? (
           <>
-            <LogoEmpresa
-              empresaId={logoEmpresaId}
-              alto={40}
-              className="animar-entrada mt-3"
-            />
+            <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">
+              {titulo}
+            </h1>
+            <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
+          </>
+        ) : logoEsTitulo ? (
+          <>
+            <h1 className="sr-only">{titulo}</h1>
+            <LogoEmpresa empresaId={logoEmpresaId} alto={52} className="animar-entrada" />
             {subtitulo && (
-              <p className="text-scale-sm text-text-muted mt-2">{subtitulo}</p>
+              <p className="text-scale-sm sm:text-scale-base text-text-muted mt-2.5">
+                {subtitulo}
+              </p>
             )}
           </>
         ) : (
-          <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
+          <>
+            <div className="flex flex-col items-start gap-2.5 sm:flex-row sm:items-center sm:gap-4">
+              <LogoEmpresa
+                empresaId={logoEmpresaId}
+                alto={40}
+                className="animar-entrada shrink-0"
+              />
+              <span
+                aria-hidden="true"
+                className="hidden h-9 w-px shrink-0 bg-border sm:block"
+              />
+              <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">
+                {titulo}
+              </h1>
+            </div>
+            {subtitulo && (
+              <p className="text-scale-sm sm:text-scale-base text-text-muted mt-2">{subtitulo}</p>
+            )}
+          </>
         )}
       </div>
       <div className="flex items-center gap-3 self-end sm:self-auto">
