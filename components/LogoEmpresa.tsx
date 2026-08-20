@@ -2,8 +2,14 @@
 
 interface Props {
   empresaId: string
-  /** Alto en pixeles. El ancho sale de la proporcion del archivo. */
-  alto?: number
+  /**
+   * Alto del logotipo. Acepta numero (pixeles) o cadena CSS.
+   *
+   * Se usa con clamp() para que escale con el ancho de la pantalla: a 76 px
+   * el logotipo de Acabados mide 313 px de ancho, que no cabe en un telefono
+   * de 320 px. Con clamp encoge solo, sin puntos de corte.
+   */
+  alto?: number | string
   className?: string
 }
 

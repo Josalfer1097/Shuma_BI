@@ -106,7 +106,11 @@ export function Header({
         ) : logoEsTitulo ? (
           <>
             <h1 className="sr-only">{titulo}</h1>
-            <LogoEmpresa empresaId={logoEmpresaId} alto={52} className="animar-entrada" />
+            <LogoEmpresa
+              empresaId={logoEmpresaId}
+              alto="clamp(46px, 13vw, 76px)"
+              className="animar-entrada"
+            />
             {subtitulo && (
               <p className="text-scale-sm sm:text-scale-base text-text-muted mt-2.5">
                 {subtitulo}
@@ -115,20 +119,18 @@ export function Header({
           </>
         ) : (
           <>
-            <div className="flex flex-col items-start gap-2.5 sm:flex-row sm:items-center sm:gap-4">
-              <LogoEmpresa
-                empresaId={logoEmpresaId}
-                alto={40}
-                className="animar-entrada shrink-0"
-              />
-              <span
-                aria-hidden="true"
-                className="hidden h-9 w-px shrink-0 bg-border sm:block"
-              />
-              <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">
-                {titulo}
-              </h1>
-            </div>
+            {/* Apilados, no en fila.
+                En fila el logotipo le quitaba ancho al titulo y "Tiempos de
+                Entrega" se partia en dos renglones. Apilados, el logotipo
+                puede crecer y el titulo cabe en una linea. */}
+            <LogoEmpresa
+              empresaId={logoEmpresaId}
+              alto="clamp(38px, 10vw, 58px)"
+              className="animar-entrada mb-2.5"
+            />
+            <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">
+              {titulo}
+            </h1>
             {subtitulo && (
               <p className="text-scale-sm sm:text-scale-base text-text-muted mt-2">{subtitulo}</p>
             )}
