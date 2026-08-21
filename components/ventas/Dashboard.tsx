@@ -98,7 +98,7 @@ export function Dashboard({ mensual, ranking, detalleMes, anioParam, mesParam }:
     dataRanking = construirRanking(rowsDetalle, dimensionParam)
   } else {
     // Filtramos la vista de ranking por año/mes si es necesario.
-    let rankingFiltrado = rowsRanking
+    const rankingFiltrado = rowsRanking
     if (mesSeleccionado) {
       // v_ventas_ranking no tiene anio_mes, tiene fecha de ultima_actividad.
       // Así que si no hay detalle, no se puede filtrar el ranking por mes exacto desde la vista 

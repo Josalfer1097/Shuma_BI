@@ -3,8 +3,6 @@
 import React from 'react'
 import { KpisVentas, formatMoneda, formatPct, formatEntero } from '@/lib/ventas'
 import { KpiCard } from '../logistica/KpiCard'
-import { cn } from '../ui/Tooltip'
-
 interface KpiRowProps {
   kpis: KpisVentas | null;
 }
