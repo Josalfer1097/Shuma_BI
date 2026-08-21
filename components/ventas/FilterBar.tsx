@@ -4,10 +4,11 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Select } from '../ui/Select'
 import { X, Filter } from 'lucide-react'
-import { CANALES, ETIQUETA_CANAL, Canal, Dimension, FilaMensual } from '@/lib/ventas'
+import { CANALES, ETIQUETA_CANAL, Canal, Dimension, FilaMensual, FilaRanking } from '@/lib/ventas'
 
 interface FilterBarProps {
   mensual: FilaMensual[];
+  opcionesEntidad?: FilaRanking[];
 }
 
 const MONTHS_ES: Record<string, string> = {
@@ -22,7 +23,7 @@ const DIMENSIONES_OPCIONES: { label: string, value: Dimension }[] = [
   { label: 'Producto', value: 'producto' },
 ]
 
-export function FilterBar({ mensual }: FilterBarProps) {
+export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -31,6 +32,53 @@ export function FilterBar({ mensual }: FilterBarProps) {
   const mesParam = searchParams.get('mes')
   const canalParam = searchParams.get('canal')
   const dimensionParam = searchParams.get('dimension') || 'cliente'
+  const entidadParam = searchParams.get('entidad')
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Combobox state
+  const [entidadSearch, setEntidadSearch] = useState('')
+  const [entidadOpen, setEntidadOpen] = useState(false)
+  const [comboboxFocused, setComboboxFocused] = useState(false)
+  const comboboxRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      if (comboboxRef.current && !comboboxRef.current.contains(e.target as Node)) {
+        setEntidadOpen(false)
+      }
+    }
+    if (entidadOpen) {
+      document.addEventListener('mousedown', handleOutsideClick)
+      document.addEventListener('touchstart', handleOutsideClick)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('touchstart', handleOutsideClick)
+    }
+  }, [entidadOpen])
+
+  // Reset search when dimension changes or component updates
+  useEffect(() => {
+    if (entidadParam && opcionesEntidad) {
+      const selected = opcionesEntidad.find(opt => opt.dimensionId === entidadParam)
+      if (selected && !comboboxFocused) {
+        setEntidadSearch(`${selected.nombre} (${selected.codigo})`)
+      }
+    } else if (!comboboxFocused) {
+      setEntidadSearch('')
+    }
+  }, [entidadParam, opcionesEntidad, comboboxFocused])
+
+  // Opciones filtradas en el combobox
+  const normalizedSearch = entidadSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  const filteredOpcionesEntidad = (opcionesEntidad || []).filter(opt => {
+    if (!normalizedSearch) return true
+    const nombre = (opt.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const codigo = (opt.codigo || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    return nombre.includes(normalizedSearch) || codigo.includes(normalizedSearch)
+  })
 
   // Extract unique years from mensual data
   const uniqueYears = Array.from(new Set(mensual.map(r => r.anio_mes.split('-')[0]))).sort().reverse()
@@ -41,24 +89,6 @@ export function FilterBar({ mensual }: FilterBarProps) {
       .filter(r => !anioParam || r.anio_mes.startsWith(`${anioParam}-`))
       .map(r => r.anio_mes.split('-')[1])
   )).sort()
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!mobileMenuOpen) return
-    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMobileMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleOutsideClick)
-    document.addEventListener('touchstart', handleOutsideClick)
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick)
-      document.removeEventListener('touchstart', handleOutsideClick)
-    }
-  }, [mobileMenuOpen])
 
   const handleAnioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value
@@ -116,8 +146,22 @@ export function FilterBar({ mensual }: FilterBarProps) {
     } else {
       params.set('dimension', val)
     }
+    // Si cambiamos de dimensión, la entidad seleccionada ya no tiene sentido
+    params.delete('entidad')
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
     setMobileMenuOpen(false)
+  }
+
+  const handleEntidadChange = (id: string | null) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (id === null) {
+      params.delete('entidad')
+    } else {
+      params.set('entidad', id)
+    }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    setEntidadOpen(false)
+    setComboboxFocused(false)
   }
 
   const clearFilters = () => {
@@ -140,6 +184,12 @@ export function FilterBar({ mensual }: FilterBarProps) {
   const removeCanal = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('canal')
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
+  const removeEntidad = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('entidad')
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
@@ -171,6 +221,17 @@ export function FilterBar({ mensual }: FilterBarProps) {
     activeFiltersChips.push(
       <button key="canal" onClick={removeCanal} aria-label={`Quitar el filtro de canal ${label}`} className={chipClases}>
         {label}
+        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
+      </button>
+    )
+    activeCount++
+  }
+  if (entidadParam && opcionesEntidad) {
+    const opt = opcionesEntidad.find(o => o.dimensionId === entidadParam)
+    const label = opt ? opt.nombre : entidadParam
+    activeFiltersChips.push(
+      <button key="entidad" onClick={removeEntidad} aria-label={`Quitar el filtro de entidad ${label}`} className={chipClases}>
+        <span className="truncate max-w-[150px]">{label}</span>
         <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
       </button>
     )
@@ -233,6 +294,74 @@ export function FilterBar({ mensual }: FilterBarProps) {
           ]}
         />
       </div>
+      {dimensionParam !== 'producto' && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto z-50">
+          <span className="text-text-muted text-scale-sm whitespace-nowrap">
+            {dimensionParam === 'vendedor' ? 'Vendedor:' : 'Cliente:'}
+          </span>
+          <div className="relative w-full sm:w-56" ref={comboboxRef}>
+            <input
+              type="text"
+              value={entidadSearch}
+              onFocus={() => {
+                setEntidadOpen(true)
+                setComboboxFocused(true)
+                if (entidadParam) setEntidadSearch('') // clear to show all options when opening if one is selected
+              }}
+              onBlur={() => {
+                // We delay the blur logic slightly to allow clicks on the dropdown to register
+                setTimeout(() => setComboboxFocused(false), 200)
+              }}
+              onChange={(e) => {
+                setEntidadSearch(e.target.value)
+                setEntidadOpen(true)
+              }}
+              placeholder={`Todos los ${dimensionParam === 'vendedor' ? 'vendedores' : 'clientes'}`}
+              className="w-full bg-bg-surface border border-border rounded-md px-3 py-1.5 text-scale-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+            {entidadSearch && (
+              <button 
+                onClick={() => {
+                  setEntidadSearch('')
+                  handleEntidadChange(null)
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            
+            {entidadOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-bg-surface border border-border rounded-md shadow-lg z-50">
+                <button
+                  className="w-full text-left px-3 py-2 text-scale-sm text-text-primary hover:bg-bg-elevated border-b border-border transition-colors font-medium"
+                  onMouseDown={() => handleEntidadChange(null)} // onMouseDown fires before onBlur
+                >
+                  Todos
+                </button>
+                {filteredOpcionesEntidad.length === 0 ? (
+                  <div className="px-3 py-4 text-center text-scale-sm text-text-muted">
+                    No se encontraron resultados
+                  </div>
+                ) : (
+                  filteredOpcionesEntidad.map(opt => (
+                    <button
+                      key={opt.dimensionId}
+                      className="w-full text-left px-3 py-2 text-scale-sm hover:bg-bg-elevated transition-colors"
+                      onMouseDown={() => handleEntidadChange(opt.dimensionId)}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-text-primary truncate">{opt.nombre}</span>
+                        <span className="text-scale-xs text-text-muted truncate">{opt.codigo}</span>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 

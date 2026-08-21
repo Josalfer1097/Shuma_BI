@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.30.2 — 2026-08-25
+
+- **Ventas**: Detalle del mes ahora filtra por dimensión desde la consulta, reduciendo datos innecesarios.
+- **Ventas**: Tabla de ranking inicializa colapsada, paginada a 25 filas, e incorpora buscador en memoria.
+- **Ventas**: Filtro por entidad (cliente/vendedor) disponible con listado de opciones, auto-completado y recálculo de KPI en tiempo real.
+- **Logística**: Tabla de detalle inicializa colapsada bajo el mismo componente disclosure.
+
 ## v0.30.1 — 2026-08-25
 
 - **Ventas**: Carga por dimensión en el ranking de ventas para optimizar rendimiento.

@@ -32,6 +32,7 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
   const { usaZonas } = useEmpresa()
   const [sortField, setSortField] = useState<SortField>('anio_mes')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [isOpen, setIsOpen] = useState(false)
   const [page, setPage] = useState(1)
   const rowsPerPage = 25
 
@@ -87,17 +88,26 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
   )
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg mt-8 flex flex-col">
-      <div className="flex items-start justify-between p-4 sm:p-5 border-b border-border">
-        <div>
+    <div className="bg-bg-surface border border-border rounded-lg mt-8 flex flex-col overflow-hidden">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 sm:p-5 border-b border-border hover:bg-bg-elevated transition-colors text-left"
+      >
+        <div className="flex items-center gap-2">
           <h3 className="text-text-primary font-medium">El dato fila por fila, por zona y mes</h3>
+          <Tooltip text="Cada renglón es una combinación de zona y mes. Puedes ordenar por cualquier columna para encontrar los casos extremos." />
         </div>
-        <Tooltip text="Cada renglon es una combinacion de zona y mes. Puedes ordenar por cualquier columna para encontrar los casos extremos." />
-      </div>
+        <div className="flex items-center gap-4">
+          <span className="text-scale-sm text-text-muted">{data.length} registros</span>
+          {isOpen ? <ChevronUp className="w-5 h-5 text-text-muted" /> : <ChevronDown className="w-5 h-5 text-text-muted" />}
+        </div>
+      </button>
       
-      {/* Mobile view */}
-      <div className="block sm:hidden p-4">
-        <div className="flex items-center gap-2 mb-4">
+      {isOpen && (
+        <>
+          {/* Mobile view */}
+          <div className="block sm:hidden p-4">
+            <div className="flex items-center gap-2 mb-4">
           <span className="text-text-muted text-scale-sm whitespace-nowrap">Ordenar:</span>
           <Select 
             className="w-full"
@@ -203,7 +213,9 @@ export function DetailTable({ data, partialMonth }: DetailTableProps) {
               Siguiente
             </button>
           </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

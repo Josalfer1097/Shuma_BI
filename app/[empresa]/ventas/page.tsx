@@ -65,12 +65,13 @@ async function traerTodo<T>(supabase: SupabaseClient, vista: string, empresa: st
   return filas
 }
 
-async function traerDetalleMes(supabase: SupabaseClient, empresa: string, anio: string, mes: string) {
+async function traerDetalleMes(supabase: SupabaseClient, empresa: string, anio: string, mes: string, dimension: string) {
   const BLOQUE = 1000
   const filas: VentaRow[] = []
   const fechaInicio = `${anio}-${mes}-01`
   // Calculamos fecha fin (primer día del siguiente mes)
-  const fechaFinDate = new Date(parseInt(anio), parseInt(mes), 1)
+  const fechaFinDate = new Date(parseInt(anio), parseInt(mes) - 1, 1) // fix month offset for Date
+  fechaFinDate.setMonth(fechaFinDate.getMonth() + 1)
   const anioFin = fechaFinDate.getFullYear()
   const mesFin = String(fechaFinDate.getMonth() + 1).padStart(2, '0')
   const fechaFin = `${anioFin}-${mesFin}-01`
@@ -80,6 +81,7 @@ async function traerDetalleMes(supabase: SupabaseClient, empresa: string, anio: 
       .from('ventas_agregado')
       .select('*')
       .eq('empresa', empresa)
+      .eq('dimension', dimension)
       .gte('fecha_cotizacion', fechaInicio)
       .lt('fecha_cotizacion', fechaFin)
       .range(desde, desde + BLOQUE - 1)
@@ -111,6 +113,7 @@ export default async function Page({
 
   const anioParam = typeof searchParams.anio === 'string' ? searchParams.anio : null
   const mesParam = typeof searchParams.mes === 'string' ? searchParams.mes : null
+  const dimensionParam = typeof searchParams.dimension === 'string' ? searchParams.dimension : 'cliente'
 
   const [mensualRes, rankingRes, etlRes] = await Promise.all([
     supabase.from('v_ventas_mensual').select('*').eq('empresa', empresaId),
@@ -133,7 +136,7 @@ export default async function Page({
   let detalleError = null
   if (anioParam && mesParam) {
     try {
-      detalleMes = await traerDetalleMes(supabase, empresaId, anioParam, mesParam)
+      detalleMes = await traerDetalleMes(supabase, empresaId, anioParam, mesParam, dimensionParam)
     } catch (e) {
       detalleError = e
     }
