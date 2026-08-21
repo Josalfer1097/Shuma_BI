@@ -1,6 +1,8 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { supabase } from '@/lib/supabase'
+import { crearClienteServidor } from '@/lib/supabase-server'
+import { obtenerSesion, puedeVer } from '@/lib/auth'
+import { MarcoEmpresa } from '@/components/MarcoEmpresa'
 import { Header } from '@/components/Header'
 import { AreaCard } from '@/components/AreaCard'
 import { PanelLogistica } from '@/components/PanelLogistica'
@@ -39,6 +41,14 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
   const empresa = buscarEmpresa(params.empresa)
   if (!empresa) notFound()
 
+  const supabase = crearClienteServidor()
+  const sesion = await obtenerSesion()
+
+  // El middleware ya garantizo que hay sesion. Aqui se comprueba el permiso
+  // concreto sobre esta empresa. Es la misma logica que aplica RLS en
+  // Postgres; esto solo evita mostrar una pantalla vacia sin explicacion.
+  if (!puedeVer(sesion, empresa.id, 'logistica')) redirect('/sin-acceso')
+
   const [reporteRes, etlRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresa.id),
     // maybeSingle y no single: una empresa sin corridas registradas devuelve
@@ -53,11 +63,15 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
   const etlStatus = etlRes.error ? null : ((etlRes.data as EtlStatus | null) ?? null)
 
   return (
+    <MarcoEmpresa empresaId={empresa.id}>
     <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <Header
+        nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
+          logoEmpresaId={empresa.id}
+        logoEsTitulo
         etlStatus={etlStatus}
         titulo={empresa.nombreCorto}
-        subtitulo={`${empresa.nombre} — Indicadores por área`}
+        subtitulo="Indicadores por área"
         volverA="/"
         volverTexto="Empresas"
       />
@@ -86,5 +100,6 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
 
       <Tour pasos={getTourEmpresa(empresa)} llaveStorage={`${LLAVE_TOUR_EMPRESA}-${empresa.id}`} />
     </main>
+    </MarcoEmpresa>
   )
 }

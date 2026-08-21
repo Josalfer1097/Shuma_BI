@@ -6,6 +6,8 @@ import { ThemeToggle } from './ThemeToggle'
 import { FontScaleButton } from './FontScaleButton'
 import { TourButton } from './TourButton'
 import { EmpresaSelector } from './EmpresaSelector'
+import { BotonSesion } from './BotonSesion'
+import { LogoEmpresa } from './LogoEmpresa'
 
 interface HeaderProps {
   /** Opcional: la portada no depende del estado de la actualizacion. */
@@ -17,6 +19,19 @@ interface HeaderProps {
   volverTexto?: string
   /** La portada entera es el selector de empresa, ahi sobra el desplegable. */
   conSelectorEmpresa?: boolean
+  /** Nombre de quien inicio sesion. Nulo dibuja el boton de entrar. */
+  nombreSesion?: string | null
+  /** Dibuja el logotipo sobre el titulo. Nulo en la portada, que es del grupo. */
+  logoEmpresaId?: string | null
+  /**
+   * El logotipo SUSTITUYE al titulo visible.
+   *
+   * Sirve para la pantalla de areas, donde el titulo era el nombre de la
+   * empresa y repetia lo que el logotipo ya dice. El h1 sigue existiendo para
+   * lectores de pantalla y para el arbol de encabezados: se oculta a la
+   * vista, no se elimina.
+   */
+  logoEsTitulo?: boolean
 }
 
 export function Header({
@@ -26,6 +41,9 @@ export function Header({
   volverA,
   volverTexto = 'Inicio',
   conSelectorEmpresa = true,
+  nombreSesion = null,
+  logoEmpresaId = null,
+  logoEsTitulo = false,
 }: HeaderProps) {
   let statusText = ''
   let statusColor = ''
@@ -58,10 +76,18 @@ export function Header({
   const dateStr = etlStatus?.fecha_corte ? new Date(etlStatus.fecha_corte).toLocaleDateString('es-MX', { timeZone: 'UTC', day: 'numeric', month: 'short' }) : ''
   const subText = etlStatus?.estado === 'ERROR' && dateStr ? `(datos hasta el ${dateStr})` : dateStr ? `(hasta el ${dateStr})` : ''
 
+  // Dos filas, no dos columnas.
+  //
+  // Con el logotipo dentro del bloque de titulo, la columna izquierda llegaba
+  // a cuatro niveles y los controles quedaban centrados contra ella, dejando
+  // un hueco grande a la derecha del titulo. Separando navegacion y controles
+  // en una fila de arriba, la segunda queda libre para poner el titulo a la
+  // izquierda y el logotipo a la derecha: eso llena el hueco y deja crecer al
+  // logotipo sin robarle ancho al titulo, que antes se partia en dos renglones.
   return (
-    <header className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 sm:pb-6 mb-6 border-b border-border gap-3">
-      <div>
-        {volverA && (
+    <header className="pb-4 sm:pb-6 mb-6 border-b border-border">
+      <div className="flex items-center justify-between gap-3">
+        {volverA ? (
           <Link
             href={volverA}
             className="inline-flex min-h-[44px] items-center gap-1.5 text-scale-sm text-text-muted transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
@@ -69,26 +95,77 @@ export function Header({
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {volverTexto}
           </Link>
+        ) : (
+          <span />
         )}
-        <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">{titulo}</h1>
-        <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
-      </div>
-      <div className="flex items-center gap-3 self-end sm:self-auto">
-        {statusText && (
-        <div className="flex items-center space-x-2 bg-bg-surface px-3 min-h-[44px] rounded-full border border-border w-fit">
-          <div className={`w-2 h-2 rounded-full ${statusColor === 'text-success' ? 'bg-success' : statusColor === 'text-danger' ? 'bg-danger' : 'bg-warning'}`} />
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-scale-xs sm:text-scale-sm ${statusColor}`}>{statusText}</span>
-            {subText && <span className="text-scale-xs sm:text-scale-sm text-text-muted">{subText}</span>}
+        <div className="flex items-center gap-3">
+          {statusText && (
+            <div className="flex items-center space-x-2 bg-bg-surface px-3 min-h-[44px] rounded-full border border-border w-fit">
+              <div className={`w-2 h-2 rounded-full ${statusColor === 'text-success' ? 'bg-success' : statusColor === 'text-danger' ? 'bg-danger' : 'bg-warning'}`} />
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`text-scale-xs sm:text-scale-sm ${statusColor}`}>{statusText}</span>
+                {subText && <span className="text-scale-xs sm:text-scale-sm text-text-muted">{subText}</span>}
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            {conSelectorEmpresa && <EmpresaSelector />}
+            <TourButton />
+            <FontScaleButton />
+            <ThemeToggle />
+            <BotonSesion nombre={nombreSesion} />
           </div>
         </div>
+      </div>
+
+      {/* Tres arreglos posibles:
+          1. Sin logotipo (portada del grupo): titulo y subtitulo, como antes.
+          2. Logotipo COMO titulo (pantalla de areas): el logotipo grande ocupa
+             el lugar del nombre de la empresa, que repetia lo que el propio
+             logotipo dice. El h1 queda para lectores de pantalla.
+          3. Logotipo Y titulo (modulos): titulo a la izquierda, logotipo a la
+             derecha. Son dos columnas, no dos elementos peleando por el mismo
+             renglon, asi que el logotipo puede ser grande y el titulo cabe en
+             una linea. En movil se apilan con el logotipo arriba. */}
+      <div className="mt-3 sm:mt-4">
+        {!logoEmpresaId ? (
+          <>
+            <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">
+              {titulo}
+            </h1>
+            <p className="text-scale-sm sm:text-scale-base text-text-muted mt-1">{subtitulo}</p>
+          </>
+        ) : logoEsTitulo ? (
+          <>
+            <h1 className="sr-only">{titulo}</h1>
+            <LogoEmpresa
+              empresaId={logoEmpresaId}
+              alto="clamp(46px, 13vw, 80px)"
+              className="animar-entrada"
+            />
+            {subtitulo && (
+              <p className="text-scale-sm sm:text-scale-base text-text-muted mt-3">
+                {subtitulo}
+              </p>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <div className="order-2 min-w-0 sm:order-1">
+              <h1 className="text-scale-2xl sm:text-scale-3xl font-bold font-exo text-text-primary tracking-tight">
+                {titulo}
+              </h1>
+              {subtitulo && (
+                <p className="text-scale-sm sm:text-scale-base text-text-muted mt-2">{subtitulo}</p>
+              )}
+            </div>
+            <LogoEmpresa
+              empresaId={logoEmpresaId}
+              alto="clamp(40px, 9vw, 72px)"
+              className="animar-entrada order-1 shrink-0 sm:order-2"
+            />
+          </div>
         )}
-        <div className="flex items-center gap-2">
-          {conSelectorEmpresa && <EmpresaSelector />}
-          <TourButton />
-          <FontScaleButton />
-          <ThemeToggle />
-        </div>
       </div>
     </header>
   )

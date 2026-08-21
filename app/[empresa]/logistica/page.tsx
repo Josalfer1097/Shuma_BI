@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-import { supabase } from '@/lib/supabase'
+import { crearClienteServidor } from '@/lib/supabase-server'
+import { obtenerSesion, puedeVer } from '@/lib/auth'
 import { Header } from '@/components/Header'
 import { Dashboard } from '@/components/logistica/Dashboard'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -8,7 +9,8 @@ import { Tour } from '@/components/Tour'
 import { getTourLogistica, LLAVE_TOUR_LOGISTICA } from '@/lib/tours'
 import { buscarEmpresa } from '@/lib/empresas'
 import { EmpresaProvider } from '@/lib/empresaContext'
-import { notFound } from 'next/navigation'
+import { MarcoEmpresa } from '@/components/MarcoEmpresa'
+import { notFound, redirect } from 'next/navigation'
 
 export const revalidate = 0
 
@@ -52,6 +54,11 @@ export default async function Page({ params }: { params: { empresa: string } }) 
     notFound()
   }
 
+  const supabase = crearClienteServidor()
+  const sesion = await obtenerSesion()
+
+  if (!puedeVer(sesion, empresaId, 'logistica')) redirect('/sin-acceso')
+
   const [reporteRes, etlRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresaId),
     // maybeSingle y no single: una empresa sin corridas registradas devuelve
@@ -87,11 +94,14 @@ export default async function Page({ params }: { params: { empresa: string } }) 
 
   return (
     <EmpresaProvider empresa={empresaObj}>
+      <MarcoEmpresa empresaId={empresaId}>
       <main className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <Header
+          nombreSesion={sesion.perfil?.nombre ?? sesion.correo}
+          logoEmpresaId={empresaId}
           etlStatus={etlRes.error ? null : etlRes.data}
           titulo="Tiempos de Entrega"
-          subtitulo={`${empresaObj.nombre} — Grupo Shuma`}
+          subtitulo="Tiempos desde la cotización hasta la validación"
           volverA={`/${empresaId}`}
           volverTexto={empresaObj.nombreCorto}
         />
@@ -101,6 +111,7 @@ export default async function Page({ params }: { params: { empresa: string } }) 
 
         <Tour pasos={getTourLogistica(empresaObj)} llaveStorage={`${LLAVE_TOUR_LOGISTICA}_${empresaId}`} />
       </main>
+      </MarcoEmpresa>
     </EmpresaProvider>
   )
 }

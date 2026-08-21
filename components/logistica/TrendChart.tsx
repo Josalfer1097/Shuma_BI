@@ -3,7 +3,8 @@
 import React from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
-  LineChart,
+  ComposedChart,
+  Area,
   Line,
   XAxis,
   YAxis,
@@ -325,8 +326,16 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
           de dibujarse en cuanto quedaba sola en su fila. */}
       <div className="w-full" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={dataWithMeta} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+          <ComposedChart data={dataWithMeta} margin={{ top: 5, right: 30, left: Math.round(-20 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+            <defs>
+              <linearGradient id="degradadoMediana" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.28} />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            {/* Rejilla mas tenue y sin guiones: los guiones competian con la
+                linea punteada del promedio y se leian como un tercer dato. */}
+            <CartesianGrid stroke="var(--border)" vertical={false} opacity={0.28} />
             <XAxis 
               dataKey="anio_mes" 
               stroke="var(--text-muted)" 
@@ -359,6 +368,17 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
               cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} 
               trigger="click"
             />
+            <Area
+              type="monotone"
+              dataKey="mediana_dias"
+              stroke="none"
+              fill="url(#degradadoMediana)"
+              // Sin punto propio ni entrada en leyenda: el area es el mismo
+              // dato que la linea, solo que relleno.
+              activeDot={false}
+              isAnimationActive={false}
+              legendType="none"
+            />
             <Line 
               type="monotone" 
               dataKey="mediana_dias" 
@@ -366,7 +386,7 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
               strokeWidth={2}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               dot={(props: any) => <CustomDot {...props} selectedMonth={selectedMonth} partialMonth={partialMonth} />}
-              activeDot={{ r: 6, stroke: 'var(--bg-surface)', strokeWidth: 2 }}
+              activeDot={{ r: 6, stroke: 'var(--bg-surface)', strokeWidth: 3 }}
             />
             <Line 
               type="monotone" 
@@ -377,7 +397,7 @@ export function TrendChart({ data, selectedMonth, partialMonth, anclaTour }: Tre
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               dot={(props: any) => <PromedioDot {...props} />}
             />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
       

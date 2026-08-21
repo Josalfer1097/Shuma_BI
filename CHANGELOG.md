@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.26.1 — 2026-08-13
+
+- El tablero ya tiene icono propio en la pestana del navegador. Antes salia
+  el icono generico y el navegador registraba un error al no encontrarlo.
+- Se limpian las advertencias de la consola del navegador. Aparecian decenas
+  por sesion al navegar entre pantallas y tapaban los mensajes que si
+  importan. No afectaban al funcionamiento.
+
+## v0.26.0 — 2026-08-12
+
+- El color de cada empresa ahora se ve dentro de sus tableros: filo superior,
+  ambiente de fondo y encabezados de indicadores. Ya se distingue de un
+  vistazo en que empresa se esta sin leer el titulo.
+- Los colores de las graficas NO cambian con la empresa: siguen siendo los
+  mismos para que una etapa lenta nunca se confunda con un error.
+- La grafica de tendencia mensual gana relleno degradado bajo la linea y una
+  rejilla mas tenue.
+
+## v0.25.0 — 2026-08-12
+
+- Cada empresa tiene ahora su color propio: azul marino para Comercializadora
+  y rojo escarlata para Acabados. Antes las dos usaban practicamente el mismo
+  azul del sistema y no se distinguian.
+- La pantalla de acceso se rehizo con superficie de vidrio, profundidad y los
+  dos colores del grupo. Sigue sin mostrar ninguna cifra.
+- Las tarjetas de la pantalla de inicio se tinen con el color de su empresa.
+
+## v0.24.0 — 2026-08-11
+
+- Ahora hay que iniciar sesion para entrar al tablero. Antes cualquiera con la
+  direccion podia ver los indicadores.
+- La pantalla de acceso se rediseno con fondo animado, marcos de esquina y
+  transiciones. El fondo es geometria abstracta: no muestra ninguna cifra.
+- La pantalla de inicio solo muestra las empresas asignadas a cada persona.
+- Quien entra a un area que no le corresponde ve una pantalla que se lo
+  explica, en vez de una pagina vacia.
+
+## v0.23.0 — 2026-08-11
+
+- Se agrega la pantalla de acceso. Se puede entrar con un enlace enviado al
+  correo o con contrasena, a eleccion de cada persona.
+- El encabezado muestra quien inicio sesion y permite salir.
+- Por ahora el tablero sigue abierto para todos: esta entrega solo habilita
+  el acceso, todavia no restringe nada.
+
 ## v0.22.2 — 2026-08-09
 
 - Se corrige el globo del recorrido guiado, que se colocaba encima del

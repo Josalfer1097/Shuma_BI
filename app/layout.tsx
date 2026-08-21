@@ -9,9 +9,19 @@ const dmSans = DM_Sans({
   subsets: ["latin"], 
   variable: "--font-dm-sans" 
 });
+// preload desactivado a proposito. El App Router vuelve a inyectar las
+// etiquetas <link rel="preload"> en cada navegacion del cliente, y el
+// navegador avisa de cada preload que ya no usa porque la fuente ya estaba
+// cargada. Eran ~75 advertencias por sesion tapando errores reales.
+//
+// DM Sans si conserva preload: es el texto corrido y se ve en el primer
+// pintado. Exo 2 y Neuropol son titulos e identidad, y con display swap
+// entran sin salto perceptible.
 const exo2 = Exo_2({ 
   subsets: ["latin"], 
-  variable: "--font-exo" 
+  variable: "--font-exo",
+  display: "swap",
+  preload: false
 });
 
 // Neuropol es la tipografia de identidad de Grupo Shuma. Licencia CC0, sin
@@ -26,6 +36,7 @@ const neuropol = localFont({
   variable: "--font-neuropol",
   display: "swap",
   weight: "400",
+  preload: false,
 });
 
 export const metadata: Metadata = {
