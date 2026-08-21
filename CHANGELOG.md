@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.30.0 — 2026-08-21
+
+- Implementación del módulo de Ventas, calcando el comportamiento, estructura y estilos visuales de Logística.
+- Se crean componentes dedicados (Dashboard, KpiRow, FilterBar, TrendChart, RankingTable, PanelHallazgos, Glossary) que consumen directamente las funciones de agregación.
+- Integración de vistas pre-agregadas `v_ventas_mensual` y `v_ventas_ranking` para mejorar rendimiento.
+- Incorporación de paginación para conjuntos de datos con más de 1,000 filas de PostgREST usando `.range()`.
+
 ## v0.26.1 — 2026-08-13
 
 - El tablero ya tiene icono propio en la pestana del navegador. Antes salia
