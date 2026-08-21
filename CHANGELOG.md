@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.30.1 — 2026-08-25
+
+- **Ventas**: Carga por dimensión en el ranking de ventas para optimizar rendimiento.
+- **Ventas**: Nuevo panel de ventas en la portada con métricas del mes más reciente.
+
 ## v0.30.0 — 2026-08-21
 
 - Implementación del módulo de Ventas, calcando el comportamiento, estructura y estilos visuales de Logística.

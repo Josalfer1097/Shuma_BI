@@ -148,11 +148,24 @@ function hallazgoSinSeguimiento(ranking0: FilaRankingVista[]): Hallazgo | null {
  * reduccion de tuberia.
  */
 function hallazgoRenglonAtipico(ranking: FilaRankingVista[]): Hallazgo | null {
-  const filas = excluirInterno(ranking).filter((r) => r.dimension === 'producto')
-  if (filas.length === 0) return null
+  const filas = excluirInterno(ranking)
+  const productos = filas.filter((r) => r.dimension === 'producto')
+  if (productos.length === 0) return null
 
-  const mayor = filas.reduce((a, b) => (b.imp_reng_max > a.imp_reng_max ? b : a))
-  const total = filas.reduce((s, r) => s + r.imp_cotizado, 0)
+  const mayor = productos.reduce((a, b) =>
+    b.imp_reng_max > a.imp_reng_max ? b : a,
+  )
+
+  // El denominador sale de la dimension cliente, no de producto.
+  //
+  // Las tres dimensiones suman identico, asi que da lo mismo cual se
+  // use para el total. Pero producto son ~12,000 filas contra 756 de
+  // cliente: pedirlas todas solo para sumar el mismo numero cuesta
+  // doce peticiones y bloquea el render. Asi basta con traer los
+  // pocos productos de mayor renglon.
+  const total = filas
+    .filter((r) => r.dimension === 'cliente')
+    .reduce((s, r) => s + r.imp_cotizado, 0)
   if (total === 0 || mayor.imp_reng_max === 0) return null
 
   const peso = (mayor.imp_reng_max / total) * 100

@@ -6,11 +6,14 @@ import { MarcoEmpresa } from '@/components/MarcoEmpresa'
 import { Header } from '@/components/Header'
 import { AreaCard } from '@/components/AreaCard'
 import { PanelLogistica } from '@/components/PanelLogistica'
+import { PanelVentas } from '@/components/PanelVentas'
 import { Tour } from '@/components/Tour'
 import { getTourEmpresa, LLAVE_TOUR_EMPRESA } from '@/lib/tours'
 import { resumenLogistica } from '@/lib/aggregate'
 import { buscarEmpresa } from '@/lib/empresas'
 import { AREAS_PENDIENTES, AREAS_ACTIVAS_SIN_PANEL } from '@/lib/areas'
+import { calcularKpis, soloVentaExterna } from '@/lib/ventas'
+import type { FilaMensual } from '@/lib/ventas'
 import type { ReporteRow, EtlStatus } from '@/lib/types'
 
 export const revalidate = 0
@@ -47,20 +50,35 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
   // El middleware ya garantizo que hay sesion. Aqui se comprueba el permiso
   // concreto sobre esta empresa. Es la misma logica que aplica RLS en
   // Postgres; esto solo evita mostrar una pantalla vacia sin explicacion.
-  if (!puedeVer(sesion, empresa.id, 'logistica')) redirect('/sin-acceso')
+  if (!puedeVer(sesion, empresa.id, 'logistica') && !puedeVer(sesion, empresa.id, 'ventas')) {
+     redirect('/sin-acceso')
+  }
 
-  const [reporteRes, etlRes] = await Promise.all([
+  const [reporteRes, etlRes, mensualVentasRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresa.id),
-    // maybeSingle y no single: una empresa sin corridas registradas devuelve
-    // cero filas, y con single eso seria un error que tumbaria la pagina.
     supabase.from('etl_status').select('*').eq('empresa', empresa.id).maybeSingle(),
+    supabase.from('v_ventas_mensual').select('*').eq('empresa', empresa.id),
   ])
 
   const filas = reporteRes.error ? [] : ((reporteRes.data as ReporteRow[]) ?? [])
   const resumen = filas.length > 0 ? resumenLogistica(filas, empresa.metaDias) : null
-  // El estado de la actualizacion es informacion secundaria: si falta, la
-  // pagina se muestra igual.
   const etlStatus = etlRes.error ? null : ((etlRes.data as EtlStatus | null) ?? null)
+
+  // Datos de Ventas para el Panel
+  const ventasRows = mensualVentasRes.error ? [] : ((mensualVentasRes.data as FilaMensual[]) ?? [])
+  let ventasKpis = null
+  let nombreMesVentas = ''
+  
+  if (ventasRows.length > 0) {
+    const ultimoMes = ventasRows.reduce((a, b) => b.anio_mes > a.anio_mes ? b : a).anio_mes
+    const filasUltimoMes = soloVentaExterna(ventasRows.filter(r => r.anio_mes === ultimoMes))
+    ventasKpis = calcularKpis(filasUltimoMes, 'cliente')
+    
+    // Obtener nombre del mes
+    const [a, m] = ultimoMes.split('-').map(Number)
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+    nombreMesVentas = `${meses[m - 1]} ${a}`
+  }
 
   return (
     <MarcoEmpresa empresaId={empresa.id}>
@@ -77,6 +95,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
       />
 
       <PanelLogistica resumen={resumen} empresa={empresa} />
+      <PanelVentas kpis={ventasKpis} empresa={empresa} nombreMes={nombreMesVentas} />
 
       <section>
         <div className="mb-4 flex items-baseline justify-between gap-3">

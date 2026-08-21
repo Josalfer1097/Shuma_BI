@@ -7,12 +7,13 @@ import { ArrowDown, ArrowUp } from 'lucide-react'
 interface RankingTableProps {
   data: FilaRanking[]
   dimension: Dimension
+  cargando?: boolean
 }
 
 type SortField = keyof FilaRanking
 type SortDirection = 'asc' | 'desc'
 
-export function RankingTable({ data, dimension }: RankingTableProps) {
+export function RankingTable({ data, dimension, cargando }: RankingTableProps) {
   const [sortField, setSortField] = useState<SortField>('impFacturado')
   const [sortDir, setSortDir] = useState<SortDirection>('desc')
 
@@ -83,7 +84,16 @@ export function RankingTable({ data, dimension }: RankingTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {sortedData.length === 0 ? (
+            {cargando ? (
+              <tr>
+                <td colSpan={showCotizaciones ? 7 : 5} className="py-8 text-center text-text-muted text-scale-sm">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent"></div>
+                    <span className="ml-3">Cargando ranking de {dimension}...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : sortedData.length === 0 ? (
               <tr>
                 <td colSpan={showCotizaciones ? 7 : 5} className="py-8 text-center text-text-muted text-scale-sm">
                   No hay datos para mostrar con los filtros actuales

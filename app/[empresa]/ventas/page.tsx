@@ -49,13 +49,15 @@ function DashboardSkeleton() {
   )
 }
 
-async function traerTodo<T>(supabase: SupabaseClient, vista: string, empresa: string) {
+async function traerTodo<T>(supabase: SupabaseClient, vista: string, empresa: string, dimensiones?: string[]) {
   const BLOQUE = 1000
   const filas: T[] = []
   for (let desde = 0; ; desde += BLOQUE) {
-    const { data, error } = await supabase
-      .from(vista).select('*').eq('empresa', empresa)
-      .range(desde, desde + BLOQUE - 1)
+    let query = supabase.from(vista).select('*').eq('empresa', empresa)
+    if (dimensiones) {
+      query = query.in('dimension', dimensiones)
+    }
+    const { data, error } = await query.range(desde, desde + BLOQUE - 1)
     if (error) throw error
     filas.push(...((data ?? []) as T[]))
     if (!data || data.length < BLOQUE) break
@@ -112,9 +114,18 @@ export default async function Page({
 
   const [mensualRes, rankingRes, etlRes] = await Promise.all([
     supabase.from('v_ventas_mensual').select('*').eq('empresa', empresaId),
-    traerTodo<FilaRankingVista>(supabase, 'v_ventas_ranking', empresaId)
-      .then(data => ({ data, error: null }))
-      .catch(error => ({ data: null, error })),
+    Promise.all([
+      traerTodo<FilaRankingVista>(supabase, 'v_ventas_ranking', empresaId, ['cliente', 'vendedor']),
+      supabase.from('v_ventas_ranking')
+        .select('*')
+        .eq('empresa', empresaId)
+        .eq('dimension', 'producto')
+        .order('imp_reng_max', { ascending: false })
+        .limit(20)
+    ]).then(([base, prod]) => {
+      if (prod.error) throw prod.error
+      return { data: [...base, ...(prod.data as FilaRankingVista[])], error: null }
+    }).catch(error => ({ data: null, error })),
     supabase.from('etl_estado').select('*').eq('empresa', empresaId).eq('area', 'ventas').maybeSingle(),
   ])
 

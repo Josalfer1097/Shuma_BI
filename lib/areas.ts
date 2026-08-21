@@ -83,6 +83,8 @@ export const AREAS_PENDIENTES = AREAS.filter((a) => a.estado === 'pendiente')
  * cifras. Las demas activas se muestran como tarjeta con liga, para que
  * activar un area siga siendo cosa de tocar solo este archivo.
  */
+const AREAS_CON_PANEL = ['logistica', 'ventas']
+
 export const AREAS_ACTIVAS_SIN_PANEL = AREAS.filter(
-  (a) => a.estado === 'activo' && a.id !== 'logistica',
+  (a) => a.estado === 'activo' && !AREAS_CON_PANEL.includes(a.id),
 )

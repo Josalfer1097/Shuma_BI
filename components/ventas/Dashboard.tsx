@@ -1,13 +1,14 @@
 'use client'
 
 import React from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useParams } from 'next/navigation'
 import { 
   FilaMensual, 
   FilaRankingVista, 
   VentaRow, 
   Dimension, 
   Canal,
+  FilaRanking,
   calcularKpis,
   serieMensualDesdeVista,
   construirRanking,
@@ -91,24 +92,49 @@ export function Dashboard({ mensual, ranking, detalleMes, anioParam, mesParam }:
   }
   const serie = serieMensualDesdeVista(mensualParaGrafica)
 
+  // Fetch dynamic ranking for productos
+  const params = useParams()
+  const empresaId = typeof params?.empresa === 'string' ? params.empresa.toLowerCase() : ''
+  const [productosRanking, setProductosRanking] = React.useState<FilaRankingVista[] | null>(null)
+  const [cargandoProductos, setCargandoProductos] = React.useState(false)
+
+  React.useEffect(() => {
+    if (dimensionParam === 'producto' && !rowsDetalle && !productosRanking && !cargandoProductos && empresaId) {
+      setCargandoProductos(true)
+      import('@/app/[empresa]/ventas/actions').then(m => {
+        m.traerRankingProductoAction(empresaId).then(data => {
+          setProductosRanking(data)
+          setCargandoProductos(false)
+        }).catch(err => {
+          console.error(err)
+          setCargandoProductos(false)
+        })
+      })
+    }
+  }, [dimensionParam, rowsDetalle, productosRanking, cargandoProductos, empresaId])
+
   // Ranking
   // Dependiendo de si hay detalle o no.
-  let dataRanking = []
+  let dataRanking: FilaRanking[] = []
+  let cargandoRanking = false
+
   if (rowsDetalle) {
     dataRanking = construirRanking(rowsDetalle, dimensionParam)
   } else {
-    // Filtramos la vista de ranking por año/mes si es necesario.
-    const rankingFiltrado = rowsRanking
-    if (mesSeleccionado) {
-      // v_ventas_ranking no tiene anio_mes, tiene fecha de ultima_actividad.
-      // Así que si no hay detalle, no se puede filtrar el ranking por mes exacto desde la vista 
-      // (a menos que hagamos un split, pero ultima_actividad es la ultima vez que compró, no la fecha de la venta en sí).
-      // Por eso el prompt dice que para el detalle de un mes se USE ventas_agregado (rowsDetalle).
-    } else if (anioParam) {
-      // Si solo filtraron año, el ranking tampoco es preciso porque v_ventas_ranking es histórico completo.
-      // Pero igual se muestra.
+    if (dimensionParam === 'producto') {
+      if (!productosRanking) {
+        cargandoRanking = true
+      } else {
+        let rankingFiltrado = productosRanking
+        if (canalParam) {
+          rankingFiltrado = rankingFiltrado.filter(r => r.canal === canalParam)
+        }
+        dataRanking = construirRankingDesdeVista(rankingFiltrado, dimensionParam)
+      }
+    } else {
+      const rankingFiltrado = rowsRanking
+      dataRanking = construirRankingDesdeVista(rankingFiltrado, dimensionParam)
     }
-    dataRanking = construirRankingDesdeVista(rankingFiltrado, dimensionParam)
   }
 
   // Hallazgos
@@ -141,6 +167,7 @@ export function Dashboard({ mensual, ranking, detalleMes, anioParam, mesParam }:
       <RankingTable 
         data={dataRanking} 
         dimension={dimensionParam} 
+        cargando={cargandoRanking}
       />
       
       <Glossary />
