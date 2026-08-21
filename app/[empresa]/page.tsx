@@ -10,7 +10,7 @@ import { Tour } from '@/components/Tour'
 import { getTourEmpresa, LLAVE_TOUR_EMPRESA } from '@/lib/tours'
 import { resumenLogistica } from '@/lib/aggregate'
 import { buscarEmpresa } from '@/lib/empresas'
-import { AREAS_PENDIENTES } from '@/lib/areas'
+import { AREAS_PENDIENTES, AREAS_ACTIVAS_SIN_PANEL } from '@/lib/areas'
 import type { ReporteRow, EtlStatus } from '@/lib/types'
 
 export const revalidate = 0
@@ -87,8 +87,8 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
         </div>
 
         <div data-tour="areas-pendientes" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {AREAS_PENDIENTES.map((area) => (
-            <AreaCard key={area.id} area={area} />
+          {[...AREAS_ACTIVAS_SIN_PANEL, ...AREAS_PENDIENTES].map((area) => (
+            <AreaCard key={area.id} area={area} empresaId={empresa.id} />
           ))}
         </div>
 

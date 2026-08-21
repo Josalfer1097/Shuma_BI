@@ -75,3 +75,14 @@ export const AREAS: Area[] = [
 ]
 
 export const AREAS_PENDIENTES = AREAS.filter((a) => a.estado === 'pendiente')
+
+/**
+ * Areas activas que NO tienen un panel de resumen propio en la portada.
+ *
+ * Logistica se excluye porque la portada le dibuja su propio panel con
+ * cifras. Las demas activas se muestran como tarjeta con liga, para que
+ * activar un area siga siendo cosa de tocar solo este archivo.
+ */
+export const AREAS_ACTIVAS_SIN_PANEL = AREAS.filter(
+  (a) => a.estado === 'activo' && a.id !== 'logistica',
+)

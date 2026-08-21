@@ -10,7 +10,7 @@ import type { Area } from '@/lib/areas'
  * entre activa y pendiente es informacion: dice de un vistazo que partes de
  * la plataforma ya tienen datos y cuales no.
  */
-export function AreaCard({ area }: { area: Area }) {
+export function AreaCard({ area, empresaId }: { area: Area; empresaId?: string }) {
   const Icono = area.icono
 
   if (area.estado === 'pendiente' || !area.ruta) {
@@ -36,9 +36,11 @@ export function AreaCard({ area }: { area: Area }) {
     )
   }
 
+  const href = empresaId && area.ruta ? `/${empresaId}${area.ruta}` : area.ruta!
+
   return (
     <Link
-      href={area.ruta}
+      href={href}
       className="group relative flex flex-col gap-3 rounded-lg border border-border bg-bg-surface p-5 transition-colors hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
       <div className="flex items-start justify-between gap-3">
