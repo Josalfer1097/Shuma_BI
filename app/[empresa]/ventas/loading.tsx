@@ -2,12 +2,14 @@ import {
   SkeletonFiltros, 
   SkeletonKpiRow, 
   SkeletonGrafica, 
-  SkeletonTabla 
+  SkeletonTabla,
+  SkeletonEstilos
 } from '@/components/ui/Skeleton'
 
 export default function LoadingVentas() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8">
+      <SkeletonEstilos />
       <div className="mb-8">
         <SkeletonFiltros />
       </div>

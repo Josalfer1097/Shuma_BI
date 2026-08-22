@@ -2,12 +2,14 @@ import {
   SkeletonKpiRow, 
   SkeletonGrafica, 
   SkeletonTabla,
-  Skeleton
+  Skeleton,
+  SkeletonEstilos
 } from '@/components/ui/Skeleton'
 
 export default function LoadingLogistica() {
   return (
-    <div className="animate-in fade-in duration-500">
+    <div>
+      <SkeletonEstilos />
       <Skeleton className="h-16 w-full mb-8" />
       
       <div className="mb-8">

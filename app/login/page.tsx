@@ -92,7 +92,7 @@ function FormularioAcceso() {
             <span className="text-accent">{'//'}</span> acceso
           </p>
           <div className="flex justify-center mb-6">
-            <LoginAnimacion tamano={120} />
+            <LoginAnimacion tamano={200} />
           </div>
           <h1 className="font-neuropol text-scale-4xl tracking-[0.18em] text-text-primary drop-shadow-[0_2px_20px_var(--accent)]">
             SHUMA

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.31.2 — 2026-08-26
+
+- **Mejoras**: Última compra desde el periodo completo, esqueletos con barrido, animación de login a tamaño legible y detección de captura errónea en la partida mayor.
+
 ## v0.31.1 — 2026-08-26
 
 - **UI/UX**: Implementada animación nativa de login y esqueletos de carga (Skeletons) para mejorar la transición de datos.

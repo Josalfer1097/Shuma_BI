@@ -182,7 +182,16 @@ export function Dashboard({
   let cargandoRanking = false
 
   if (rowsDetalle) {
-    dataRanking = construirRanking(rowsDetalle, dimensionParam)
+    const rawRanking = construirRanking(rowsDetalle, dimensionParam)
+    
+    const ultimaPorEntidad = new Map(
+      rowsRanking.map((r) => [r.dimension_id, r.ultima_factura]),
+    )
+    
+    dataRanking = rawRanking.map((f) => ({
+      ...f,
+      ultimaFactura: ultimaPorEntidad.get(f.dimensionId) ?? f.ultimaFactura ?? null,
+    }))
   } else {
     if (dimensionParam === 'producto') {
       if (!productosRanking) {
