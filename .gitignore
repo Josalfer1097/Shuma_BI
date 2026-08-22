@@ -51,3 +51,7 @@ __pycache__/
 .env*
 
 *.patch
+
+extract*.py
+extracted_prompt.txt
+prompt_*.txt

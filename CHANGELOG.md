@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.31.1 — 2026-08-26
+
+- **UI/UX**: Implementada animación nativa de login y esqueletos de carga (Skeletons) para mejorar la transición de datos.
+- **Ventas**: Nuevo indicador de "Clientes dormidos" bajo los KPIs y detalle extendido para la partida más grande.
+- **Filtros**: Agregada transición visual al aplicar filtros, congelando opacidad mientras cargan los datos.
 ## v0.31.0 — 2026-08-26
 
 - **Ventas**: Reestructuración de KPIs principales para reportar en pesos (En la mesa, Abandonado, Suspendido, Cancelado) y nueva visualización destacada para métricas de abandono accionables.

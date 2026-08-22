@@ -52,6 +52,24 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
   const paginatedData = sortedData.slice((page - 1) * rowsPerPage, page * rowsPerPage)
 
   const showCotizaciones = cotizacionesSumables(dimension)
+  const isCliente = dimension === 'cliente'
+
+  const colCount = 7 + (showCotizaciones ? 2 : 0) + (isCliente ? 1 : 0)
+
+  const formatDiasUltimaCompra = (ultimaFactura: string | null) => {
+    if (!ultimaFactura) return { texto: 'Nunca', colorClase: 'text-text-muted' }
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    const d = new Date(ultimaFactura)
+    d.setHours(0, 0, 0, 0)
+    const diffDays = Math.floor((hoy.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
+    
+    let colorClase = 'text-success' // verde < 90
+    if (diffDays >= 180) colorClase = 'text-danger'
+    else if (diffDays >= 90) colorClase = 'text-warning'
+    
+    return { texto: `${diffDays} días`, colorClase }
+  }
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null
@@ -128,12 +146,17 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                       </th>
                     </>
                   )}
+                  {isCliente && (
+                    <th className={thClass + " text-right"} onClick={() => handleSort('ultimaFactura')}>
+                      Última Compra <SortIcon field="ultimaFactura" />
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {cargando ? (
                   <tr>
-                    <td colSpan={showCotizaciones ? 9 : 7} className="py-8 text-center text-text-muted text-scale-sm">
+                    <td colSpan={colCount} className="py-8 text-center text-text-muted text-scale-sm">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent"></div>
                         <span className="ml-3">Cargando ranking de {dimension}...</span>
@@ -142,7 +165,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                   </tr>
                 ) : paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={showCotizaciones ? 9 : 7} className="py-8 text-center text-text-muted text-scale-sm">
+                    <td colSpan={colCount} className="py-8 text-center text-text-muted text-scale-sm">
                       No hay datos para mostrar con los filtros actuales
                     </td>
                   </tr>
@@ -182,6 +205,14 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                             {formatPct(row.sinSeguimientoPct)}
                           </td>
                         </>
+                      )}
+                      {isCliente && (
+                        <td className="py-3 px-4 text-right text-scale-sm">
+                          {(() => {
+                            const info = formatDiasUltimaCompra(row.ultimaFactura ?? null)
+                            return <span className={info.colorClase}>{info.texto}</span>
+                          })()}
+                        </td>
                       )}
                     </tr>
                   ))

@@ -2,9 +2,10 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Mail, KeyRound, Loader2, ArrowRight, Check } from 'lucide-react'
+import { Mail, KeyRound, ArrowRight, Check } from 'lucide-react'
 import { crearClienteNavegador } from '@/lib/supabase-browser'
 import { FondoAcceso } from '@/components/FondoAcceso'
+import { LoginAnimacion } from '@/components/LoginAnimacion'
 
 type Modo = 'enlace' | 'password'
 
@@ -90,6 +91,9 @@ function FormularioAcceso() {
           <p className="mb-3 font-mono text-scale-xs uppercase tracking-[0.3em] text-text-muted">
             <span className="text-accent">{'//'}</span> acceso
           </p>
+          <div className="flex justify-center mb-6">
+            <LoginAnimacion tamano={120} />
+          </div>
           <h1 className="font-neuropol text-scale-4xl tracking-[0.18em] text-text-primary drop-shadow-[0_2px_20px_var(--accent)]">
             SHUMA
           </h1>
@@ -231,14 +235,13 @@ function FormularioAcceso() {
                 className="boton-acceso animar-entrada group mt-1 flex w-full items-center justify-center gap-2 rounded-lg py-3.5 text-scale-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 style={{ animationDelay: '0.4s' }}
               >
-                {cargando || entrando ? (
-                  <Loader2 size={17} className="animate-spin" aria-hidden="true" />
-                ) : null}
-                {entrando
-                  ? 'Entrando'
-                  : modo === 'enlace'
-                    ? 'Mandarme el enlace'
-                    : 'Entrar'}
+                {entrando || (cargando && modo === 'password')
+                  ? 'Entrando…'
+                  : cargando && modo === 'enlace'
+                    ? 'Enviando…'
+                    : modo === 'enlace'
+                      ? 'Mandarme el enlace'
+                      : 'Entrar'}
                 {!cargando && !entrando && (
                   <ArrowRight
                     size={16}

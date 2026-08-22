@@ -60,6 +60,7 @@ LLAVE = ("empresa", "fecha_cotizacion", "canal", "dimension", "dimension_id")
 # INTEGER rechaza "0.0" con 22P02. Oracle devuelve todo como Decimal,
 # asi que hay que separar a mano lo que es conteo de lo que es dinero.
 METRICAS_ENTERAS = [
+    "reng_max_convertido",
     "reng_cotizados",
     "reng_facturados",
     "cotizaciones",
@@ -127,6 +128,7 @@ renglones AS (
         rc.ID_ARTICULO                AS id_articulo,
         rc.IMPORTE                    AS importe_cotizado,
         rc.CANTIDAD_VENDIDA           AS cantidad_cotizada,
+        NVL(art.DESCRIPCION, 'SIN NOMBRE') AS art_descripcion,
         CASE
             WHEN fac.id_renglon_cotizacion IS NOT NULL THEN 1
             ELSE 0
@@ -144,6 +146,8 @@ renglones AS (
           ON cot.ID_COTIZACION = rc.ID_COTIZACION
         LEFT JOIN SHUMA.COBTC_CLIENTE cli
           ON cli.ID_CLIENTE = cot.ID_CLIENTE
+        LEFT JOIN SHUMA.INVTC_ARTICULO art
+          ON art.ID_ARTICULO = rc.ID_ARTICULO
         LEFT JOIN factura_por_renglon fac
           ON fac.id_renglon_cotizacion = rc.ID_RENGLON_COTIZACION
     WHERE
@@ -191,7 +195,15 @@ SELECT
                   AND c.es_cancelada = 0
                  THEN c.importe_cotizado END), 0)  AS imp_en_proceso,
     NVL(MAX(c.importe_cotizado), 0)        AS imp_reng_max,
-    NVL(MAX(c.cantidad_cotizada), 0)       AS cant_reng_max,
+    -- Los tres salen del MISMO renglon: el de mayor importe.
+    -- Antes cant_reng_max era un MAX independiente, asi que podia
+    -- mostrar el importe de una linea y la cantidad de otra.
+    NVL(MAX(c.cantidad_cotizada)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC), 0) AS cant_reng_max,
+    MAX(c.art_descripcion)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC)     AS art_reng_max,
+    NVL(MAX(c.convertido)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC), 0) AS reng_max_convertido,
     COUNT(DISTINCT c.id_cotizacion)        AS cotizaciones,
     COUNT(DISTINCT CASE WHEN c.es_sin_seguim = 1 THEN c.id_cotizacion END) AS cotiz_sin_seguimiento,
     COUNT(DISTINCT CASE WHEN c.es_suspendida = 1 THEN c.id_cotizacion END) AS cotiz_suspendidas,
@@ -239,7 +251,15 @@ SELECT
                   AND c.es_cancelada = 0
                  THEN c.importe_cotizado END), 0)  AS imp_en_proceso,
     NVL(MAX(c.importe_cotizado), 0)           AS imp_reng_max,
-    NVL(MAX(c.cantidad_cotizada), 0)          AS cant_reng_max,
+    -- Los tres salen del MISMO renglon: el de mayor importe.
+    -- Antes cant_reng_max era un MAX independiente, asi que podia
+    -- mostrar el importe de una linea y la cantidad de otra.
+    NVL(MAX(c.cantidad_cotizada)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC), 0) AS cant_reng_max,
+    MAX(c.art_descripcion)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC)     AS art_reng_max,
+    NVL(MAX(c.convertido)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC), 0) AS reng_max_convertido,
     COUNT(DISTINCT c.id_cotizacion)           AS cotizaciones,
     COUNT(DISTINCT CASE WHEN c.es_sin_seguim = 1 THEN c.id_cotizacion END) AS cotiz_sin_seguimiento,
     COUNT(DISTINCT CASE WHEN c.es_suspendida = 1 THEN c.id_cotizacion END) AS cotiz_suspendidas,
@@ -294,7 +314,15 @@ SELECT
                   AND c.es_cancelada = 0
                  THEN c.importe_cotizado END), 0)  AS imp_en_proceso,
     NVL(MAX(c.importe_cotizado), 0)         AS imp_reng_max,
-    NVL(MAX(c.cantidad_cotizada), 0)        AS cant_reng_max,
+    -- Los tres salen del MISMO renglon: el de mayor importe.
+    -- Antes cant_reng_max era un MAX independiente, asi que podia
+    -- mostrar el importe de una linea y la cantidad de otra.
+    NVL(MAX(c.cantidad_cotizada)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC), 0) AS cant_reng_max,
+    MAX(c.art_descripcion)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC)     AS art_reng_max,
+    NVL(MAX(c.convertido)
+        KEEP (DENSE_RANK FIRST ORDER BY c.importe_cotizado DESC), 0) AS reng_max_convertido,
     COUNT(DISTINCT c.id_cotizacion)         AS cotizaciones,
     COUNT(DISTINCT CASE WHEN c.es_sin_seguim = 1 THEN c.id_cotizacion END) AS cotiz_sin_seguimiento,
     COUNT(DISTINCT CASE WHEN c.es_suspendida = 1 THEN c.id_cotizacion END) AS cotiz_suspendidas,
@@ -426,8 +454,14 @@ def aplicar_alias(filas: list[dict], mapa: dict) -> list[dict]:
                   "imp_sin_seguimiento", "imp_suspendido",
                   "imp_cancelado", "imp_en_proceso"):
             fila[k] = round(sum(g[k] for g in grupo), 2)
-        for k in METRICAS_MAX:
-            fila[k] = round(max(g[k] for g in grupo), 2)
+        fila["imp_reng_max"] = round(max(g["imp_reng_max"] for g in grupo), 2)
+        # cant, articulo y convertido describen UN renglon concreto: el
+        # de mayor importe. Se copian de esa fila, no se recalculan por
+        # separado, o se mezclarian datos de renglones distintos.
+        dom = max(grupo, key=lambda g: g["imp_reng_max"])
+        fila["cant_reng_max"] = round(dom["cant_reng_max"], 2)
+        fila["art_reng_max"] = dom["art_reng_max"]
+        fila["reng_max_convertido"] = int(dom["reng_max_convertido"])
         fusionadas.append(fila)
 
     colapsadas = len(grupos) - len(

@@ -1,0 +1,13 @@
+import { SkeletonKpiRow, SkeletonTabla } from '@/components/ui/Skeleton'
+
+export default function Loading() {
+  return (
+    <div className="space-y-8 p-6">
+      <SkeletonKpiRow n={2} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <SkeletonTabla filas={5} />
+        <SkeletonTabla filas={5} />
+      </div>
+    </div>
+  )
+}

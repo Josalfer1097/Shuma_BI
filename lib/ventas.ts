@@ -59,8 +59,9 @@ export interface VentaRow {
   cant_reng_max: number
   cotizaciones: number
   cotiz_sin_seguimiento: number
-  cotiz_suspendidas: number
-  cotiz_canceladas: number
+  art_reng_max: string
+  reng_max_convertido: number
+  ultima_factura: string | null
 
   actualizado_en: string
 }
@@ -89,6 +90,8 @@ export interface FilaMensual {
   cotiz_canceladas: number
   imp_reng_max: number
   cant_reng_max: number
+  art_reng_max: string
+  reng_max_convertido: number
 }
 
 /**
@@ -121,7 +124,10 @@ export interface FilaRankingVista {
   cotiz_canceladas: number
   imp_reng_max: number
   cant_reng_max: number
+  art_reng_max: string
+  reng_max_convertido: number
   ultima_actividad: string
+  ultima_factura: string | null
 }
 
 /** Cualquier fila con metricas de ventas: cruda o de vista. */
@@ -147,6 +153,8 @@ export interface KpisVentas {
   cotizSinSeguimiento: number | null
   impRenglonMax: number
   cantRenglonMax: number
+  artRenglonMax: string
+  renglonMaxConvertido: number
 }
 
 // ------------------------------------------------------------------
@@ -254,36 +262,46 @@ export function calcularKpis(
   if (filas.length === 0) return null
 
   const sum = (k: keyof FilaMensual) =>
-    filas.reduce((s, r) => s + (Number((r as FilaMensual)[k]) || 0), 0)
+    filas.reduce((acc, curr) => acc + ((curr as unknown as Record<string, unknown>)[k] as number || 0), 0)
+  // Ojo: no es la suma, es el articulo y valor de la fila con mayor importe de renglon
+  const dominanteReng = filas.reduce((a, b) =>
+    b.imp_reng_max > a.imp_reng_max ? b : a,
+  )
 
-  const renglones = sum('reng_cotizados')
-  const facturados = sum('reng_facturados')
+  const impFacturado = sum('imp_facturado')
   const impCotizado = sum('imp_cotizado')
-  const impCotConvertido = sum('imp_cot_convertido')
+  const impEnProceso = sum('imp_en_proceso')
+  const impSinSeguimiento = sum('imp_sin_seguimiento')
+  const impSuspendido = sum('imp_suspendido')
+  const impCancelado = sum('imp_cancelado')
 
   const sumables = cotizacionesSumables(dimension) && dimension !== null
   const cotizaciones = sumables ? sum('cotizaciones') : null
   const sinSeguimiento = sumables ? sum('cotiz_sin_seguimiento') : null
 
   return {
-    impFacturado: sum('imp_facturado'),
+    impFacturado,
     impCotizado,
-    impEnProceso: sum('imp_en_proceso'),
-    impSinSeguimiento: sum('imp_sin_seguimiento'),
-    impSuspendido: sum('imp_suspendido'),
-    impCancelado: sum('imp_cancelado'),
-    convRenglonesPct: conversionRenglones(facturados, renglones),
-    convImportePct: conversionImporte(impCotConvertido, impCotizado),
-    renglones,
+    impEnProceso,
+    impSinSeguimiento,
+    impSuspendido,
+    impCancelado,
+    convRenglonesPct: conversionRenglones(
+      sum('reng_facturados'),
+      sum('reng_cotizados'),
+    ),
+    convImportePct: conversionImporte(sum('imp_cot_convertido'), impCotizado),
+    renglones: sum('reng_cotizados'),
     cotizaciones,
     cotizSinSeguimiento: sinSeguimiento,
     sinSeguimientoPct:
       cotizaciones && cotizaciones > 0 && sinSeguimiento !== null
         ? (sinSeguimiento / cotizaciones) * 100
         : null,
-    // MAX, nunca suma: es el renglon mas grande del conjunto.
-    impRenglonMax: Math.max(0, ...filas.map((r) => r.imp_reng_max)),
-    cantRenglonMax: Math.max(0, ...filas.map((r) => r.cant_reng_max)),
+    impRenglonMax: dominanteReng.imp_reng_max,
+    cantRenglonMax: dominanteReng.cant_reng_max,
+    artRenglonMax: dominanteReng.art_reng_max,
+    renglonMaxConvertido: dominanteReng.reng_max_convertido,
   }
 }
 
@@ -401,7 +419,10 @@ export interface FilaRanking {
   cotizSinSeguimiento: number | null
   sinSeguimientoPct: number | null
   impRenglonMax: number
+  artRenglonMax: string
+  renglonMaxConvertido: number
   ultimaActividad: string
+  ultimaFactura: string | null
 }
 
 export type OrdenRanking = 'impFacturado' | 'impCotizado' | 'sinSeguimientoPct'
@@ -449,6 +470,12 @@ export function construirRankingDesdeVista(
     const ultimo = grupo.reduce((a, b) =>
       b.ultima_actividad > a.ultima_actividad ? b : a,
     )
+    const ultimaFac = grupo.reduce((a, b) => {
+      if (!a.ultima_factura) return b
+      if (!b.ultima_factura) return a
+      return b.ultima_factura > a.ultima_factura ? b : a
+    })
+
     salida.push({
       dimensionId,
       codigo: dominante.dimension_codigo,
@@ -466,7 +493,10 @@ export function construirRankingDesdeVista(
       cotizSinSeguimiento: k.cotizSinSeguimiento,
       sinSeguimientoPct: k.sinSeguimientoPct,
       impRenglonMax: k.impRenglonMax,
+      artRenglonMax: k.artRenglonMax,
+      renglonMaxConvertido: k.renglonMaxConvertido,
       ultimaActividad: ultimo.ultima_actividad,
+      ultimaFactura: ultimaFac.ultima_factura || null,
     })
   }
 
@@ -499,6 +529,12 @@ export function construirRanking(
     const ultimo = grupo.reduce((a, b) =>
       b.fecha_cotizacion > a.fecha_cotizacion ? b : a,
     )
+    const ultimaFac = grupo.reduce((a, b) => {
+      if (!a.ultima_factura) return b
+      if (!b.ultima_factura) return a
+      return b.ultima_factura > a.ultima_factura ? b : a
+    })
+
     filas.push({
       dimensionId,
       codigo: ultimo.dimension_codigo,
@@ -516,7 +552,10 @@ export function construirRanking(
       cotizSinSeguimiento: k.cotizSinSeguimiento,
       sinSeguimientoPct: k.sinSeguimientoPct,
       impRenglonMax: k.impRenglonMax,
+      artRenglonMax: k.artRenglonMax,
+      renglonMaxConvertido: k.renglonMaxConvertido,
       ultimaActividad: ultimo.fecha_cotizacion,
+      ultimaFactura: ultimaFac.ultima_factura || null,
     })
   }
 

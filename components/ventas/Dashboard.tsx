@@ -14,7 +14,8 @@ import {
   VentaRow,
   Dimension,
   Canal,
-  PuntoSerie
+  PuntoSerie,
+  formatMonedaCorta
 } from '@/lib/ventas'
 import { construirHallazgos } from '@/lib/hallazgosVentas'
 import { FilterBar } from './FilterBar'
@@ -49,6 +50,8 @@ export function Dashboard({
   defaultAnio,
   defaultMes
 }: DashboardProps) {
+  const [isPending, startTransition] = React.useTransition()
+  
   const searchParams = useSearchParams()
   const canalParam = searchParams.get('canal') as Canal | null
   const dimensionParam = (searchParams.get('dimension') as Dimension) || 'cliente'
@@ -205,6 +208,55 @@ export function Dashboard({
   }
   const opcionesEntidad = construirRankingDesdeVista(rankingParaOpciones, dimensionParam)
 
+  // Clientes Dormidos
+  let dormidosRiesgo = 0
+  let dormidosPerdidos = 0
+  let dormidosMonto = 0
+  const dormidosDetalle: { nombre: string, monto: number, dias: number }[] = []
+  
+  if (ranking) {
+    const ahora = new Date()
+    ahora.setHours(0, 0, 0, 0)
+    
+    const candidatos = ranking.filter(r => 
+      r.dimension === 'cliente' &&
+      r.canal === 'externo' &&
+      r.imp_facturado >= 500000 &&
+      r.ultima_factura
+    )
+
+    candidatos.forEach(r => {
+      const fechaFac = new Date(r.ultima_factura as string)
+      fechaFac.setHours(0, 0, 0, 0)
+      
+      const diffTime = ahora.getTime() - fechaFac.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays >= 90) {
+        if (diffDays > 180) {
+          dormidosPerdidos++
+        } else {
+          dormidosRiesgo++
+        }
+        dormidosMonto += r.imp_facturado
+        dormidosDetalle.push({ nombre: r.dimension_nombre, monto: r.imp_facturado, dias: diffDays })
+      }
+    })
+    
+    dormidosDetalle.sort((a, b) => b.monto - a.monto)
+  }
+  const totalDormidos = dormidosRiesgo + dormidosPerdidos
+
+  let txtMayores = ''
+  if (dormidosDetalle.length > 0) {
+    const top3 = dormidosDetalle.slice(0, 3)
+    if (top3.length === 1) {
+      txtMayores = `El mayor es ${top3[0].nombre}, ${formatMonedaCorta(top3[0].monto)}, ${top3[0].dias} días sin comprar.`
+    } else {
+      txtMayores = `Los mayores son ${top3.map(d => `${d.nombre} (${formatMonedaCorta(d.monto)}, ${d.dias} días)`).join(', ')}.`
+    }
+  }
+
   // Hallazgos
   let mensualParaHallazgos = mensual
   let rankingParaHallazgos = ranking // Este `ranking` es la prop original
@@ -224,9 +276,12 @@ export function Dashboard({
         opcionesEntidad={opcionesEntidad}
         defaultAnio={defaultAnio}
         defaultMes={defaultMes}
+        isPending={isPending}
+        startTransition={startTransition}
       />
       
-      <div className="flex justify-end mb-4">
+      <div className={`transition-opacity duration-300 ease-in-out ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        <div className="flex justify-end mb-4">
         <PanelHallazgos hallazgos={hallazgos} />
       </div>
 
@@ -241,6 +296,15 @@ export function Dashboard({
           partialMonth={partialMonth} 
         />
       </div>
+
+      {totalDormidos > 0 && (
+        <div className="mt-4 rounded-lg border border-border bg-bg-surface p-4 text-scale-sm">
+          <p className="text-text-secondary">
+            <strong className="text-text-primary font-semibold">{totalDormidos} clientes dormido{totalDormidos !== 1 ? 's' : ''}, {formatMonedaCorta(dormidosMonto)}.</strong>{' '}
+            {dormidosPerdidos} perdido{dormidosPerdidos !== 1 ? 's' : ''} con más de 180 días y {dormidosRiesgo} en riesgo. {txtMayores}
+          </p>
+        </div>
+      )}
       
       <TrendChart 
         data={serie} 
@@ -258,6 +322,7 @@ export function Dashboard({
       />
       
       <Glossary />
+      </div>
     </>
   )
 }

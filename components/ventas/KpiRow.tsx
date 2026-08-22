@@ -72,6 +72,25 @@ export function KpiRow({
 
   const mostradorImpSinSeguimiento = kpisMostrador?.impSinSeguimiento || 0
 
+  let txtPartidaStatus = ''
+  if (kpis.impRenglonMax > 0) {
+    if (kpis.renglonMaxConvertido >= kpis.impRenglonMax) {
+      txtPartidaStatus = 'Ya llegó a factura'
+    } else if (kpis.renglonMaxConvertido === 0) {
+      txtPartidaStatus = 'Sigue en proceso de venta'
+    } else {
+      txtPartidaStatus = 'Parcialmente facturado'
+    }
+  }
+
+  const partidaMasGrandeSec = kpis.impRenglonMax > 0 ? (
+    <span className="text-text-muted font-normal text-scale-xs block mt-1 leading-tight text-center overflow-hidden text-ellipsis" title={`${kpis.artRenglonMax}\n${txtPartidaStatus}`}>
+      <span className="block truncate max-w-[200px] mx-auto">{kpis.artRenglonMax}</span>
+      <span className="block mt-0.5">{txtPartidaStatus}</span>
+    </span>
+  ) : undefined
+
+
   return (
     <div className="mb-8">
       {/* Primera fila: KPI Principales (4 tarjetas) */}
@@ -135,6 +154,7 @@ export function KpiRow({
         <KpiCard
           title="Partida más grande"
           value={formatMoneda(kpis.impRenglonMax)}
+          secondary={partidaMasGrandeSec}
           tooltip="El producto de mayor monto en una sola cotización del periodo. Sirve para detectar errores de captura: si un mes se dispara, casi siempre es un dedazo en la cantidad."
         />
       </div>

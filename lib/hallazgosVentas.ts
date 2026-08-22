@@ -179,6 +179,65 @@ function hallazgoAbandonado(ranking0: FilaRankingVista[]): Hallazgo | null {
 }
 
 /**
+ * Clientes grandes dormidos.
+ * 
+ * Si hay perdidos (> 180 días), muestra el total y el mayor.
+ * Si no hay perdidos pero hay en riesgo (90-180), muestra el total y el mayor.
+ */
+function hallazgoDormidos(ranking: FilaRankingVista[]): Hallazgo | null {
+  const ahora = new Date()
+  ahora.setHours(0, 0, 0, 0)
+  
+  const candidatos = ranking.filter(r => 
+    r.dimension === 'cliente' &&
+    r.canal === 'externo' &&
+    r.imp_facturado >= 500000 &&
+    r.ultima_factura
+  )
+
+  let perdidos = 0
+  let mayorPerdido: FilaRankingVista | null = null
+  let riesgo = 0
+  let mayorRiesgo: FilaRankingVista | null = null
+
+  for (const r of candidatos) {
+    const fechaFac = new Date(r.ultima_factura as string)
+    fechaFac.setHours(0, 0, 0, 0)
+    
+    const diffTime = ahora.getTime() - fechaFac.getTime()
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays > 180) {
+      perdidos++
+      if (!mayorPerdido || r.imp_facturado > mayorPerdido.imp_facturado) mayorPerdido = r
+    } else if (diffDays >= 90) {
+      riesgo++
+      if (!mayorRiesgo || r.imp_facturado > mayorRiesgo.imp_facturado) mayorRiesgo = r
+    }
+  }
+
+  if (perdidos > 0 && mayorPerdido) {
+    return {
+      tipo: 'atipico',
+      tono: 'malo',
+      titulo: `${perdidos} cliente${perdidos > 1 ? 's' : ''} grande${perdidos > 1 ? 's' : ''} perdido${perdidos > 1 ? 's' : ''}`,
+      detalle: `Llevan más de 180 días sin comprar. El mayor de ellos es ${mayorPerdido.dimension_nombre} (${formatMonedaCorta(mayorPerdido.imp_facturado)} facturados históricamente).`
+    }
+  }
+
+  if (riesgo > 0 && mayorRiesgo) {
+    return {
+      tipo: 'atipico',
+      tono: 'malo',
+      titulo: `${riesgo} cliente${riesgo > 1 ? 's' : ''} grande${riesgo > 1 ? 's' : ''} en riesgo`,
+      detalle: `Llevan entre 90 y 180 días sin comprar. El mayor es ${mayorRiesgo.dimension_nombre} (${formatMonedaCorta(mayorRiesgo.imp_facturado)} facturados históricamente).`
+    }
+  }
+
+  return null
+}
+
+/**
  * El producto mas grande del periodo.
  *
  * Es un hecho, no una regla. Deja ver de un vistazo si un solo dedazo
@@ -294,6 +353,7 @@ export function construirHallazgos(
   mesActual: string | null,
 ): Hallazgo[] {
   const lista: (Hallazgo | null)[] = [
+    hallazgoDormidos(ranking),
     hallazgoAbandonado(ranking),
     mesActual ? hallazgoCambioMensual(mensual, mesActual) : null,
     hallazgoBrechaConversion(mensual),
@@ -410,5 +470,11 @@ export const GLOSARIO_VENTAS: EntradaGlosario[] = [
       'notas de crédito y anticipos aplicados. En el año esas ' +
       'deducciones pesan cerca del 9.6% de la facturación. La cifra ' +
       'neta vive en el reporte de facturación del sistema, no aquí.',
+  },
+  {
+    termino: 'Clientes dormidos',
+    definicion:
+      'Clientes con ficha que han facturado más de 500 mil pesos históricamente ' +
+      'y llevan más de 90 días sin comprar. Si superan los 180 días, se consideran perdidos.',
   },
 ]

@@ -10,6 +10,8 @@ interface FilterBarProps {
   opcionesEntidad?: FilaRanking[];
   defaultAnio?: string | null;
   defaultMes?: string | null;
+  isPending: boolean;
+  startTransition: React.TransitionStartFunction;
 }
 
 const MONTHS_ES: Record<string, string> = {
@@ -24,7 +26,7 @@ const DIMENSIONES_OPCIONES: { label: string, value: Dimension }[] = [
   { label: 'Producto', value: 'producto' },
 ]
 
-export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }: FilterBarProps) {
+export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes, isPending, startTransition }: FilterBarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -108,7 +110,9 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
         }
       }
     }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    })
   }
 
   const handleMesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -124,7 +128,9 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
          params.set('anio', activeAnio)
       }
     }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    })
   }
 
   const handleCanalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -135,7 +141,9 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
     } else {
       params.set('canal', val)
     }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    })
   }
 
   const handleDimensionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -147,7 +155,9 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
       params.set('dimension', val)
     }
     params.delete('entidad')
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    })
   }
 
   const handleEntidadChange = (id: string | null) => {
@@ -157,7 +167,9 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
     } else {
       params.set('entidad', id)
     }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    })
     setEntidadOpen(false)
     setComboboxFocused(false)
   }
@@ -168,7 +180,9 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
     params.set('mes', 'Todos')
     params.delete('canal')
     params.delete('entidad')
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    })
   }
 
   const hasActiveFilters = activeAnio !== 'Todos' || activeMes !== 'Todos' || canalParam || entidadParam
@@ -184,9 +198,10 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
           <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Dimensión</label>
           <div className="relative">
             <select
+              disabled={isPending}
               value={dimensionParam}
               onChange={handleDimensionChange}
-              className={`${selectBaseClasses} border-border`}
+              className={`${selectBaseClasses} border-border ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {DIMENSIONES_OPCIONES.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -203,9 +218,10 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
           <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Canal</label>
           <div className="relative">
             <select
+              disabled={isPending}
               value={canalParam || 'Todos'}
               onChange={handleCanalChange}
-              className={`${selectBaseClasses} ${canalParam ? 'border-accent' : 'border-border'}`}
+              className={`${selectBaseClasses} ${canalParam ? 'border-accent' : 'border-border'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <option value="Todos">Todos</option>
               {CANALES.filter(c => c !== 'interno').map(c => (
@@ -223,9 +239,10 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
           <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Año</label>
           <div className="relative">
             <select
+              disabled={isPending}
               value={activeAnio}
               onChange={handleAnioChange}
-              className={`${selectBaseClasses} ${activeAnio !== 'Todos' ? 'border-accent' : 'border-border'}`}
+              className={`${selectBaseClasses} ${activeAnio !== 'Todos' ? 'border-accent' : 'border-border'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <option value="Todos">Todos</option>
               {uniqueYears.map(y => (
@@ -243,9 +260,10 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
           <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Mes</label>
           <div className="relative">
             <select
+              disabled={isPending}
               value={activeMes}
               onChange={handleMesChange}
-              className={`${selectBaseClasses} ${activeMes !== 'Todos' ? 'border-accent' : 'border-border'}`}
+              className={`${selectBaseClasses} ${activeMes !== 'Todos' ? 'border-accent' : 'border-border'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <option value="Todos">Todos</option>
               {validMonthsForYear.map(m => (
@@ -266,6 +284,7 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
             </label>
             <div className="relative w-full" ref={comboboxRef}>
               <input
+                disabled={isPending}
                 type="text"
                 value={entidadSearch}
                 onFocus={() => {
@@ -281,7 +300,7 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
                   setEntidadOpen(true)
                 }}
                 placeholder={`Todos`}
-                className={`w-full bg-bg-surface border rounded-lg px-3 min-h-[44px] text-scale-sm text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors ${entidadParam ? 'border-accent' : 'border-border'}`}
+                className={`w-full bg-bg-surface border rounded-lg px-3 min-h-[44px] text-scale-sm text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors ${entidadParam ? 'border-accent' : 'border-border'} ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {entidadSearch && (
                 <button 
@@ -336,8 +355,9 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
         {hasActiveFilters && (
           <div className="flex flex-col gap-1 justify-end">
             <button
+              disabled={isPending}
               onClick={clearFilters}
-              className="flex items-center justify-center gap-2 min-h-[44px] w-full text-danger hover:bg-danger/10 border border-transparent hover:border-danger/20 rounded-lg transition-colors text-scale-sm font-medium"
+              className={`flex items-center justify-center gap-2 min-h-[44px] w-full text-danger hover:bg-danger/10 border border-transparent hover:border-danger/20 rounded-lg transition-colors text-scale-sm font-medium ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               Limpiar todo
               <X className="w-4 h-4" />
