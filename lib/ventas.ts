@@ -51,6 +51,10 @@ export interface VentaRow {
   imp_cotizado: number
   imp_facturado: number
   imp_cot_convertido: number
+  imp_en_proceso: number
+  imp_sin_seguimiento: number
+  imp_suspendido: number
+  imp_cancelado: number
   imp_reng_max: number
   cant_reng_max: number
   cotizaciones: number
@@ -75,6 +79,10 @@ export interface FilaMensual {
   imp_cotizado: number
   imp_facturado: number
   imp_cot_convertido: number
+  imp_en_proceso: number
+  imp_sin_seguimiento: number
+  imp_suspendido: number
+  imp_cancelado: number
   cotizaciones: number
   cotiz_sin_seguimiento: number
   cotiz_suspendidas: number
@@ -103,6 +111,10 @@ export interface FilaRankingVista {
   imp_cotizado: number
   imp_facturado: number
   imp_cot_convertido: number
+  imp_en_proceso: number
+  imp_sin_seguimiento: number
+  imp_suspendido: number
+  imp_cancelado: number
   cotizaciones: number
   cotiz_sin_seguimiento: number
   cotiz_suspendidas: number
@@ -118,6 +130,10 @@ export type FilaMetrica = VentaRow | FilaMensual | FilaRankingVista
 export interface KpisVentas {
   impFacturado: number
   impCotizado: number
+  impEnProceso: number
+  impSinSeguimiento: number
+  impSuspendido: number
+  impCancelado: number
   /** Renglones que llegaron a factura / renglones cotizados. */
   convRenglonesPct: number
   /** Importe cotizado de lo que si se facturo / importe cotizado. */
@@ -252,6 +268,10 @@ export function calcularKpis(
   return {
     impFacturado: sum('imp_facturado'),
     impCotizado,
+    impEnProceso: sum('imp_en_proceso'),
+    impSinSeguimiento: sum('imp_sin_seguimiento'),
+    impSuspendido: sum('imp_suspendido'),
+    impCancelado: sum('imp_cancelado'),
     convRenglonesPct: conversionRenglones(facturados, renglones),
     convImportePct: conversionImporte(impCotConvertido, impCotizado),
     renglones,
@@ -371,6 +391,10 @@ export interface FilaRanking {
   canal: Canal
   impFacturado: number
   impCotizado: number
+  impEnProceso: number
+  impSinSeguimiento: number
+  impSuspendido: number
+  impCancelado: number
   convRenglonesPct: number
   convImportePct: number
   cotizaciones: number | null
@@ -432,6 +456,10 @@ export function construirRankingDesdeVista(
       canal: dominante.canal,
       impFacturado: k.impFacturado,
       impCotizado: k.impCotizado,
+      impEnProceso: k.impEnProceso,
+      impSinSeguimiento: k.impSinSeguimiento,
+      impSuspendido: k.impSuspendido,
+      impCancelado: k.impCancelado,
       convRenglonesPct: k.convRenglonesPct,
       convImportePct: k.convImportePct,
       cotizaciones: k.cotizaciones,
@@ -478,6 +506,10 @@ export function construirRanking(
       canal,
       impFacturado: k.impFacturado,
       impCotizado: k.impCotizado,
+      impEnProceso: k.impEnProceso,
+      impSinSeguimiento: k.impSinSeguimiento,
+      impSuspendido: k.impSuspendido,
+      impCancelado: k.impCancelado,
       convRenglonesPct: k.convRenglonesPct,
       convImportePct: k.convImportePct,
       cotizaciones: k.cotizaciones,

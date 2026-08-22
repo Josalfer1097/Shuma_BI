@@ -112,6 +112,12 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                   <th className={thClass + " text-right"} onClick={() => handleSort('convRenglonesPct')}>
                     Conv. Productos <SortIcon field="convRenglonesPct" />
                   </th>
+                  <th className={thClass + " text-right"} onClick={() => handleSort('impEnProceso')}>
+                    En la mesa <SortIcon field="impEnProceso" />
+                  </th>
+                  <th className={thClass + " text-right"} onClick={() => handleSort('impSinSeguimiento')}>
+                    Abandonado <SortIcon field="impSinSeguimiento" />
+                  </th>
                   {showCotizaciones && (
                     <>
                       <th className={thClass + " text-right"} onClick={() => handleSort('cotizaciones')}>
@@ -127,7 +133,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
               <tbody className="divide-y divide-border">
                 {cargando ? (
                   <tr>
-                    <td colSpan={showCotizaciones ? 7 : 5} className="py-8 text-center text-text-muted text-scale-sm">
+                    <td colSpan={showCotizaciones ? 9 : 7} className="py-8 text-center text-text-muted text-scale-sm">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent"></div>
                         <span className="ml-3">Cargando ranking de {dimension}...</span>
@@ -136,7 +142,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                   </tr>
                 ) : paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={showCotizaciones ? 7 : 5} className="py-8 text-center text-text-muted text-scale-sm">
+                    <td colSpan={showCotizaciones ? 9 : 7} className="py-8 text-center text-text-muted text-scale-sm">
                       No hay datos para mostrar con los filtros actuales
                     </td>
                   </tr>
@@ -160,6 +166,12 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                       </td>
                       <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
                         {formatPct(row.convRenglonesPct)}
+                      </td>
+                      <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                        {formatMoneda(row.impEnProceso)}
+                      </td>
+                      <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                        {formatMoneda(row.impSinSeguimiento)}
                       </td>
                       {showCotizaciones && (
                         <>

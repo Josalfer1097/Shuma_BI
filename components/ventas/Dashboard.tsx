@@ -95,6 +95,28 @@ export function Dashboard({
     kpis = calcularKpis(rowsMensual, dimensionParam)
   }
 
+  // KPIs específicos para Abandonado y Mostrador
+  let kpisExterno = null
+  let kpisMostrador = null
+  if (rowsDetalle) {
+    kpisExterno = calcularKpis(rowsDetalle.filter(r => r.canal === 'externo'), dimensionParam)
+    kpisMostrador = calcularKpis(rowsDetalle.filter(r => r.canal === 'mostrador'), dimensionParam)
+  } else if (entidadParam && dimensionParam !== 'producto') {
+    kpisExterno = calcularKpis(rowsRanking.filter(r => r.canal === 'externo'), dimensionParam)
+    kpisMostrador = calcularKpis(rowsRanking.filter(r => r.canal === 'mostrador'), dimensionParam)
+  } else {
+    kpisExterno = calcularKpis(rowsMensual.filter(r => r.canal === 'externo'), dimensionParam)
+    kpisMostrador = calcularKpis(rowsMensual.filter(r => r.canal === 'mostrador'), dimensionParam)
+  }
+
+  let rankingVendedoresExterno: FilaRanking[] = []
+  if (rowsDetalle) {
+    rankingVendedoresExterno = construirRanking(rowsDetalle.filter(r => r.canal === 'externo'), 'vendedor')
+  } else {
+    rankingVendedoresExterno = construirRankingDesdeVista(ranking.filter(r => r.canal === 'externo'), 'vendedor')
+  }
+  rankingVendedoresExterno.sort((a, b) => (b.impSinSeguimiento ?? 0) - (a.impSinSeguimiento ?? 0))
+
   // Serie de tiempo
   let serie: PuntoSerie[] = []
   let serieFull: PuntoSerie[] | undefined
@@ -119,12 +141,8 @@ export function Dashboard({
     serieFull = serieMensualDesdeVista(mensualParaGraficaFull)
   }
 
-  const now = new Date()
-  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   const maxAnioMes = mensual.reduce((max, row) => (row.anio_mes > max ? row.anio_mes : max), '')
-  // Si el mes seleccionado es el mismo que el actual (el sistema está cursando el mes actual) 
-  // o si el mes seleccionado coincide con el maxAnioMes y ese es el actual.
-  const isUltimoMes = mesSeleccionado === currentYearMonth || (mesSeleccionado === maxAnioMes && maxAnioMes === currentYearMonth)
+  const isUltimoMes = mesSeleccionado === maxAnioMes
   const partialMonth = isUltimoMes ? mesSeleccionado : null
 
   // Fetch dynamic ranking for productos
@@ -213,7 +231,15 @@ export function Dashboard({
       </div>
 
       <div data-tour="kpis-cierre">
-        <KpiRow kpis={kpis} partialMonth={partialMonth} />
+        <KpiRow 
+          kpis={kpis} 
+          kpisExterno={kpisExterno}
+          kpisMostrador={kpisMostrador}
+          rankingVendedoresExterno={rankingVendedoresExterno}
+          canalParam={canalParam}
+          isUltimoMes={isUltimoMes}
+          partialMonth={partialMonth} 
+        />
       </div>
       
       <TrendChart 

@@ -119,9 +119,9 @@ export default async function Page({
   const esHistorico = anioParam === 'Todos' || mesParam === 'Todos'
   const debePedirDetalle = (anioParam && mesParam && !esHistorico)
 
-  const colsMensual = 'empresa, anio_mes, canal, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, imp_reng_max, cant_reng_max'
-  const colsRanking = 'empresa, dimension, dimension_id, canal, dimension_codigo, dimension_nombre, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, imp_reng_max, cant_reng_max, ultima_actividad'
-  const colsDetalle = 'empresa, fecha_cotizacion, canal, dimension, dimension_id, dimension_codigo, dimension_nombre, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, imp_reng_max, cant_reng_max, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, actualizado_en'
+  const colsMensual = 'empresa, anio_mes, canal, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, imp_en_proceso, imp_sin_seguimiento, imp_suspendido, imp_cancelado, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, imp_reng_max, cant_reng_max'
+  const colsRanking = 'empresa, dimension, dimension_id, canal, dimension_codigo, dimension_nombre, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, imp_en_proceso, imp_sin_seguimiento, imp_suspendido, imp_cancelado, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, imp_reng_max, cant_reng_max, ultima_actividad'
+  const colsDetalle = 'empresa, fecha_cotizacion, canal, dimension, dimension_id, dimension_codigo, dimension_nombre, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, imp_en_proceso, imp_sin_seguimiento, imp_suspendido, imp_cancelado, imp_reng_max, cant_reng_max, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, actualizado_en'
 
   const [mensualRes, rankingRes, etlRes, detalleRes] = await Promise.all([
     supabase.from('v_ventas_mensual').select(colsMensual).eq('empresa', empresaId),

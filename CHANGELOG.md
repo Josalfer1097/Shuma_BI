@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.31.0 — 2026-08-26
+
+- **Ventas**: Reestructuración de KPIs principales para reportar en pesos (En la mesa, Abandonado, Suspendido, Cancelado) y nueva visualización destacada para métricas de abandono accionables.
+
 ## v0.30.4 — 2026-08-26
 
 - **Ventas**: Comparativo anual corregido, lenguaje de negocio en los indicadores, aviso de mes incompleto y recorrido guiado de ventas.

@@ -71,6 +71,10 @@ METRICAS_DECIMALES = [
     "imp_cotizado",
     "imp_facturado",
     "imp_cot_convertido",
+    "imp_sin_seguimiento",
+    "imp_suspendido",
+    "imp_cancelado",
+    "imp_en_proceso",
     "imp_reng_max",
     "cant_reng_max",
 ]
@@ -79,6 +83,10 @@ METRICAS_SUMA = METRICAS_ENTERAS + [
     "imp_cotizado",
     "imp_facturado",
     "imp_cot_convertido",
+    "imp_sin_seguimiento",
+    "imp_suspendido",
+    "imp_cancelado",
+    "imp_en_proceso",
 ]
 METRICAS_MAX = [
     "imp_reng_max",
@@ -166,6 +174,22 @@ SELECT
     NVL(SUM(c.importe_facturado), 0)       AS imp_facturado,
     NVL(SUM(CASE WHEN c.convertido = 1
                  THEN c.importe_cotizado END), 0)  AS imp_cot_convertido,
+    -- Los cuatro importes de abajo mas imp_cot_convertido parten
+    -- imp_cotizado sin traslape y sin dejar residuo. Se calculan
+    -- por status porque el porcentaje solo no mueve a nadie: 7.7%
+    -- de cotizaciones sin seguimiento no dice nada, y los pesos
+    -- que representan si.
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_sin_seguim = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_sin_seguimiento,
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_suspendida = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_suspendido,
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_cancelada = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_cancelado,
+    NVL(SUM(CASE WHEN c.convertido = 0
+                  AND c.es_sin_seguim = 0
+                  AND c.es_suspendida = 0
+                  AND c.es_cancelada = 0
+                 THEN c.importe_cotizado END), 0)  AS imp_en_proceso,
     NVL(MAX(c.importe_cotizado), 0)        AS imp_reng_max,
     NVL(MAX(c.cantidad_cotizada), 0)       AS cant_reng_max,
     COUNT(DISTINCT c.id_cotizacion)        AS cotizaciones,
@@ -198,6 +222,22 @@ SELECT
     NVL(SUM(c.importe_facturado), 0)          AS imp_facturado,
     NVL(SUM(CASE WHEN c.convertido = 1
                  THEN c.importe_cotizado END), 0)  AS imp_cot_convertido,
+    -- Los cuatro importes de abajo mas imp_cot_convertido parten
+    -- imp_cotizado sin traslape y sin dejar residuo. Se calculan
+    -- por status porque el porcentaje solo no mueve a nadie: 7.7%
+    -- de cotizaciones sin seguimiento no dice nada, y los pesos
+    -- que representan si.
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_sin_seguim = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_sin_seguimiento,
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_suspendida = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_suspendido,
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_cancelada = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_cancelado,
+    NVL(SUM(CASE WHEN c.convertido = 0
+                  AND c.es_sin_seguim = 0
+                  AND c.es_suspendida = 0
+                  AND c.es_cancelada = 0
+                 THEN c.importe_cotizado END), 0)  AS imp_en_proceso,
     NVL(MAX(c.importe_cotizado), 0)           AS imp_reng_max,
     NVL(MAX(c.cantidad_cotizada), 0)          AS cant_reng_max,
     COUNT(DISTINCT c.id_cotizacion)           AS cotizaciones,
@@ -237,6 +277,22 @@ SELECT
     NVL(SUM(c.importe_facturado), 0)        AS imp_facturado,
     NVL(SUM(CASE WHEN c.convertido = 1
                  THEN c.importe_cotizado END), 0)  AS imp_cot_convertido,
+    -- Los cuatro importes de abajo mas imp_cot_convertido parten
+    -- imp_cotizado sin traslape y sin dejar residuo. Se calculan
+    -- por status porque el porcentaje solo no mueve a nadie: 7.7%
+    -- de cotizaciones sin seguimiento no dice nada, y los pesos
+    -- que representan si.
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_sin_seguim = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_sin_seguimiento,
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_suspendida = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_suspendido,
+    NVL(SUM(CASE WHEN c.convertido = 0 AND c.es_cancelada = 1
+                 THEN c.importe_cotizado END), 0)  AS imp_cancelado,
+    NVL(SUM(CASE WHEN c.convertido = 0
+                  AND c.es_sin_seguim = 0
+                  AND c.es_suspendida = 0
+                  AND c.es_cancelada = 0
+                 THEN c.importe_cotizado END), 0)  AS imp_en_proceso,
     NVL(MAX(c.importe_cotizado), 0)         AS imp_reng_max,
     NVL(MAX(c.cantidad_cotizada), 0)        AS cant_reng_max,
     COUNT(DISTINCT c.id_cotizacion)         AS cotizaciones,
@@ -366,7 +422,9 @@ def aplicar_alias(filas: list[dict], mapa: dict) -> list[dict]:
         }
         for k in METRICAS_ENTERAS:
             fila[k] = int(sum(g[k] for g in grupo))
-        for k in ("imp_cotizado", "imp_facturado", "imp_cot_convertido"):
+        for k in ("imp_cotizado", "imp_facturado", "imp_cot_convertido",
+                  "imp_sin_seguimiento", "imp_suspendido",
+                  "imp_cancelado", "imp_en_proceso"):
             fila[k] = round(sum(g[k] for g in grupo), 2)
         for k in METRICAS_MAX:
             fila[k] = round(max(g[k] for g in grupo), 2)

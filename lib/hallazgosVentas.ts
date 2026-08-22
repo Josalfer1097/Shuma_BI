@@ -141,6 +141,44 @@ function hallazgoSinSeguimiento(ranking0: FilaRankingVista[]): Hallazgo | null {
 }
 
 /**
+ * Concentración del abandono en vendedores específicos.
+ */
+function hallazgoAbandonado(ranking0: FilaRankingVista[]): Hallazgo | null {
+  const rankingExterno = ranking0.filter((r) => r.canal === 'externo')
+  const ranking = construirRankingDesdeVista(rankingExterno, 'vendedor')
+  if (ranking.length < 2) return null
+
+  const orden = [...ranking].sort(
+    (a, b) => (b.impSinSeguimiento ?? 0) - (a.impSinSeguimiento ?? 0)
+  )
+  const total = orden.reduce((s, f) => s + (f.impSinSeguimiento ?? 0), 0)
+  if (total === 0) return null
+
+  const v1 = orden[0]
+  const v2 = orden[1]
+  const p1 = (v1.impSinSeguimiento ?? 0) / total
+  const p2 = (v2.impSinSeguimiento ?? 0) / total
+
+  if (p1 > 0.4) {
+    return {
+      tipo: 'atipico',
+      tono: 'malo',
+      titulo: `${v1.nombre} concentra el ${formatPct(p1 * 100)} del abandono`,
+      detalle: `De los ${formatMonedaCorta(total)} sin seguimiento en el canal externo, ${formatMonedaCorta(v1.impSinSeguimiento ?? 0)} son de un solo vendedor.`,
+    }
+  } else if (p1 + p2 > 0.4) {
+    return {
+      tipo: 'atipico',
+      tono: 'malo',
+      titulo: `Dos vendedores concentran el ${formatPct((p1 + p2) * 100)} del abandono`,
+      detalle: `${v1.nombre} (${formatMonedaCorta(v1.impSinSeguimiento ?? 0)}) y ${v2.nombre} (${formatMonedaCorta(v2.impSinSeguimiento ?? 0)}) suman la mayor parte de los ${formatMonedaCorta(total)} sin seguimiento.`,
+    }
+  }
+
+  return null
+}
+
+/**
  * El producto mas grande del periodo.
  *
  * Es un hecho, no una regla. Deja ver de un vistazo si un solo dedazo
@@ -256,6 +294,7 @@ export function construirHallazgos(
   mesActual: string | null,
 ): Hallazgo[] {
   const lista: (Hallazgo | null)[] = [
+    hallazgoAbandonado(ranking),
     mesActual ? hallazgoCambioMensual(mensual, mesActual) : null,
     hallazgoBrechaConversion(mensual),
     hallazgoSinSeguimiento(ranking),
