@@ -24,6 +24,8 @@ import { KpiRow } from './KpiRow'
 import { TrendChart } from './TrendChart'
 import { RankingTable } from './RankingTable'
 import { Glossary } from './Glossary'
+import { PanelEmbudo } from './PanelEmbudo'
+import { PanelConcentracion } from './PanelConcentracion'
 import { PanelHallazgos } from './PanelHallazgos'
 import { PanelVendedores } from './PanelVendedores'
 
@@ -113,14 +115,6 @@ export function Dashboard({
     kpisExterno = calcularKpis(rowsMensual.filter(r => r.canal === 'externo'), dimensionParam)
     kpisMostrador = calcularKpis(rowsMensual.filter(r => r.canal === 'mostrador'), dimensionParam)
   }
-
-  let rankingVendedoresExterno: FilaRanking[] = []
-  if (rowsDetalle) {
-    rankingVendedoresExterno = construirRanking(rowsDetalle.filter(r => r.canal === 'externo'), 'vendedor')
-  } else {
-    rankingVendedoresExterno = construirRankingDesdeVista(ranking.filter(r => r.canal === 'externo'), 'vendedor')
-  }
-  rankingVendedoresExterno.sort((a, b) => (b.impSinSeguimiento ?? 0) - (a.impSinSeguimiento ?? 0))
 
   // Serie de tiempo
   let serie: PuntoSerie[] = []
@@ -293,7 +287,6 @@ export function Dashboard({
           kpis={kpis} 
           kpisExterno={kpisExterno}
           kpisMostrador={kpisMostrador}
-          rankingVendedoresExterno={rankingVendedoresExterno}
           canalParam={canalParam}
           isUltimoMes={isUltimoMes}
           partialMonth={partialMonth} 
@@ -317,7 +310,11 @@ export function Dashboard({
         anclaTour="tendencia" 
       />
       
-      <PanelVendedores dataVendedores={rankingVendedoresExterno} />
+      <PanelEmbudo ranking={ranking} />
+      
+      <PanelConcentracion data={dataRanking} dimension={dimensionParam} />
+      
+      <PanelVendedores ranking={ranking} entidadParam={entidadParam} />
       
       <RankingTable 
         data={dataRanking} 

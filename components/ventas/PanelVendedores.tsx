@@ -1,120 +1,177 @@
 'use client'
 
-import React from 'react'
-import { FilaRanking } from '@/lib/ventas'
-import { formatMonedaCorta } from '@/lib/ventas'
+import { useState } from 'react'
+import {
+  construirRankingDesdeVista,
+  formatMonedaCorta,
+  formatPct,
+  type FilaRanking,
+  type FilaRankingVista,
+} from '@/lib/ventas'
 import { Select } from '../ui/Select'
 
-interface PanelVendedoresProps {
-  dataVendedores: FilaRanking[]
+/**
+ * Seguimiento por vendedor. Panel de contexto, siempre visible.
+ *
+ * REGLA 7 — el indicador se calcula SOLO sobre canal externo, aunque el filtro
+ * de la pagina este en "Todos". Mostrador abandona el 93.3% por naturaleza del
+ * canal e intercompania convierte al 98%: mezclarlos aplana las diferencias
+ * entre vendedores, que es lo unico que este panel existe para mostrar.
+ *
+ * REGLA 1 — la conversion NUNCA es impFacturado / impCotizado. El precio sube
+ * entre cotizacion y factura y esa razon pasa del 100%. Se usa
+ * `convImportePct`, que lib/ventas.ts calcula con impCotConvertido de
+ * numerador y entrega en escala 0-100.
+ *
+ * REGLA 3 — "sin seguimiento" es el status F: el ERP suspende sola la
+ * cotizacion a los diez dias sin actividad. No es venta perdida y la interfaz
+ * no emite juicio. Nada de "olvidado", "perdido" ni "riesgo".
+ *
+ * ORIGEN DE DATOS — recibe `ranking`, la vista completa sin filtrar. NO puede
+ * recibir el detalle del mes: ese viene con .eq('dimension', dimensionParam) y
+ * no tiene filas de vendedor salvo que el usuario haya elegido esa dimension a
+ * mano. Por eso el panel salia vacio en v0.32.0.
+ */
+
+const PISO_COTIZADO = 1_000_000
+const MAXIMO_FILAS = 8
+
+type MetricaOrden = 'seguimiento' | 'facturado' | 'cotizado' | 'conversion'
+
+const OPCIONES_ORDEN: { label: string; value: MetricaOrden }[] = [
+  { label: 'Sin seguimiento', value: 'seguimiento' },
+  { label: 'Mayor facturación', value: 'facturado' },
+  { label: 'Mayor cotización', value: 'cotizado' },
+  { label: 'Mejor conversión', value: 'conversion' },
+]
+
+type PanelVendedoresProps = {
+  ranking: FilaRankingVista[] | null | undefined
+  entidadParam?: string | null
 }
 
-type MetricaOrden = 'facturado' | 'cotizado' | 'conversion' | 'tiempo'
+function ordenar(filas: FilaRanking[], orden: MetricaOrden): FilaRanking[] {
+  const copia = filas.slice()
 
-export function PanelVendedores({ dataVendedores }: PanelVendedoresProps) {
-  const [orden, setOrden] = React.useState<MetricaOrden>('facturado')
+  switch (orden) {
+    case 'seguimiento':
+      return copia.sort((a, b) => (b.sinSeguimientoPct ?? 0) - (a.sinSeguimientoPct ?? 0))
+    case 'facturado':
+      return copia.sort((a, b) => b.impFacturado - a.impFacturado)
+    case 'cotizado':
+      return copia.sort((a, b) => b.impCotizado - a.impCotizado)
+    case 'conversion':
+      return copia.sort((a, b) => b.convImportePct - a.convImportePct)
+    default:
+      return copia
+  }
+}
 
-  // Solo vendedores de canal externo (1) con actividad. El pipeline
-  // intercompania (2) y de gobierno (3) distorsiona las metricas.
-  const activos = dataVendedores.filter(
-    (v) => v.canal === 'externo' && (v.impFacturado > 0 || v.impCotizado > 0)
+export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps) {
+  const [orden, setOrden] = useState<MetricaOrden>('seguimiento')
+
+  if (!ranking || ranking.length === 0) return null
+
+  const soloExterno = ranking.filter(
+    (r) => r.dimension === 'vendedor' && r.canal === 'externo',
   )
 
-  const maxFacturado = Math.max(...activos.map(v => v.impFacturado), 1)
-  const maxCotizado = Math.max(...activos.map(v => v.impCotizado), 1)
+  if (soloExterno.length === 0) return null
 
-  const ordenados = [...activos].sort((a, b) => {
-    switch (orden) {
-      case 'facturado':
-        return b.impFacturado - a.impFacturado
-      case 'cotizado':
-        return b.impCotizado - a.impCotizado
-      case 'conversion': {
-        const convA = a.impCotizado > 0 ? a.impFacturado / a.impCotizado : 0
-        const convB = b.impCotizado > 0 ? b.impFacturado / b.impCotizado : 0
-        return convB - convA
-      }
-      case 'tiempo': {
-        const tA = a.sinSeguimientoPct ?? 0
-        const tB = b.sinSeguimientoPct ?? 0
-        return tB - tA // Mayor porcentaje de olvido
-      }
-      default:
-        return 0
-    }
-  })
+  const activos = construirRankingDesdeVista(soloExterno, 'vendedor').filter(
+    (f) => f.impCotizado >= PISO_COTIZADO,
+  )
+
+  const filas = ordenar(activos, orden).slice(0, MAXIMO_FILAS)
+
+  // Denominador unico para las dos barras. Con maximos separados, la barra de
+  // facturado puede verse mas larga que la de cotizado y sugiere haber
+  // facturado mas de lo que se cotizo.
+  const maxCotizado = filas.reduce((mayor, f) => Math.max(mayor, f.impCotizado), 1)
 
   return (
-    <div className="bg-bg-surface border border-border rounded-lg p-5 mb-8">
-      <div className="flex items-center justify-between mb-6">
+    <section className="mb-8 rounded-lg border border-border bg-bg-surface p-5">
+      <header className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-text-primary font-medium">Seguimiento por vendedor</h3>
-          <p className="text-text-muted text-scale-xs mt-1">
-            Canal externo. Comparativa de conversión.
+          <h3 className="font-medium text-text-primary">Seguimiento por vendedor</h3>
+          <p className="mt-1 text-scale-xs text-text-muted">
+            Canal externo, periodo completo. La barra clara es lo cotizado; la
+            sólida, lo facturado.
           </p>
         </div>
         <Select
           value={orden}
           onChange={(e) => setOrden(e.target.value as MetricaOrden)}
-          options={[
-            { label: 'Mayor facturación', value: 'facturado' },
-            { label: 'Mayor cotización', value: 'cotizado' },
-            { label: 'Mejor conversión', value: 'conversion' },
-            { label: 'Mayor riesgo', value: 'tiempo' }
-          ]}
-          className="text-scale-xs py-1"
+          options={OPCIONES_ORDEN}
+          className="shrink-0 py-1 text-scale-xs"
         />
-      </div>
+      </header>
 
-      <div className="space-y-4">
-        {ordenados.map((vendedor) => {
-          const pctFacturado = (vendedor.impFacturado / maxFacturado) * 100
-          const pctCotizado = (vendedor.impCotizado / maxCotizado) * 100
-          const conversion = vendedor.impCotizado > 0
-            ? ((vendedor.impFacturado / vendedor.impCotizado) * 100).toFixed(1)
-            : '0.0'
+      {filas.length === 0 ? (
+        <div className="rounded border border-dashed border-border py-8 text-center text-scale-sm text-text-muted">
+          Ningún vendedor supera el piso de cotización en este periodo.
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {filas.map((f) => {
+            const anchoCotizado = (f.impCotizado / maxCotizado) * 100
+            const anchoFacturado = (f.impFacturado / maxCotizado) * 100
+            const pctSeg = f.sinSeguimientoPct
+            const resaltado = entidadParam != null && entidadParam === f.dimensionId
 
-          return (
-            <div key={vendedor.dimensionId} className="group relative">
-              <div className="flex items-baseline justify-between mb-1.5">
-                <span className="text-scale-sm font-medium text-text-primary truncate pr-4">
-                  {vendedor.nombre}
-                </span>
-                <span className="text-scale-xs font-mono text-text-muted shrink-0">
-                  {conversion}% conv
-                </span>
-              </div>
-
-              <div className="relative h-2 w-full rounded-full bg-border overflow-hidden mb-1">
-                <div
-                  className="absolute top-0 left-0 h-full bg-text-muted opacity-40 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${pctCotizado}%` }}
-                />
-                <div
-                  className="absolute top-0 left-0 h-full bg-accent rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${pctFacturado}%` }}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between text-scale-xs mt-1 text-text-muted">
-                <div className="flex gap-3">
-                  <span className="text-accent">{formatMonedaCorta(vendedor.impFacturado)} fact</span>
-                  <span>{formatMonedaCorta(vendedor.impCotizado)} cotiz</span>
+            return (
+              <li
+                key={f.dimensionId}
+                className={
+                  resaltado
+                    ? '-mx-2 rounded border-l-2 border-accent bg-bg-elevated px-2 py-1.5'
+                    : undefined
+                }
+              >
+                <div className="mb-1.5 flex items-baseline justify-between gap-4">
+                  <span className="truncate text-scale-sm font-medium text-text-primary">
+                    {f.nombre}
+                  </span>
+                  <span className="shrink-0 font-mono text-scale-xs text-text-muted">
+                    {formatPct(f.convImportePct)} conv.
+                  </span>
                 </div>
-                <span>
-                  {vendedor.sinSeguimientoPct !== null ? `${vendedor.sinSeguimientoPct.toFixed(0)}% olvidado` : '--'}
-                </span>
-              </div>
-            </div>
-          )
-        })}
 
-        {activos.length === 0 && (
-          <div className="py-8 text-center text-text-muted text-scale-sm border border-dashed border-border rounded">
-            No hay actividad de canal externo en este periodo.
-          </div>
-        )}
-      </div>
-    </div>
+                <div className="relative mb-1 h-2 w-full overflow-hidden rounded-full bg-bg-elevated">
+                  <div
+                    className="absolute left-0 top-0 h-full rounded-full bg-text-muted opacity-30"
+                    style={{ width: `${anchoCotizado}%` }}
+                  />
+                  <div
+                    className="absolute left-0 top-0 h-full rounded-full bg-accent"
+                    style={{ width: `${anchoFacturado}%` }}
+                  />
+                </div>
+
+                <div className="mt-1 flex items-center justify-between gap-4 text-scale-xs text-text-muted">
+                  <span className="flex gap-3">
+                    <span className="text-accent">
+                      {formatMonedaCorta(f.impFacturado)} fact.
+                    </span>
+                    <span>{formatMonedaCorta(f.impCotizado)} cotiz.</span>
+                  </span>
+                  <span
+                    className={
+                      pctSeg !== null && pctSeg > 30
+                        ? 'text-danger'
+                        : pctSeg !== null && pctSeg > 15
+                          ? 'text-warning'
+                          : 'text-text-muted'
+                    }
+                  >
+                    {formatPct(pctSeg)} sin seguimiento
+                  </span>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </section>
   )
 }

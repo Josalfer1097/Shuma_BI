@@ -79,7 +79,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
   if (data.length === 0) {
     return (
       <div className="bg-bg-surface border border-border rounded-lg p-4 sm:p-5 h-60 sm:h-80 flex items-center justify-center">
-        <span className="text-text-muted text-scale-sm">Sin datos para la selección actual</span>
+        <span className="text-text-muted text-scale-sm">No hay historia para mostrar. Intenta cambiar el filtro de canal o elegir otra entidad.</span>
       </div>
     )
   }

@@ -84,9 +84,14 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-5 text-left hover:bg-bg-elevated transition-colors border-b border-border"
       >
-        <h3 className="text-scale-lg font-medium text-text-primary">
-          Ranking por {dimension} {periodoLabel && <span className="text-text-muted text-scale-md font-normal ml-1">({periodoLabel})</span>}
-        </h3>
+        <div>
+          <h3 className="font-medium text-text-primary">
+            Ranking por {dimension}
+          </h3>
+          <p className="mt-1 text-scale-xs text-text-muted">
+            {periodoLabel ? periodoLabel : 'Histórico completo'}
+          </p>
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-scale-sm text-text-muted">{data.length} registros</span>
           {isOpen ? <ChevronUp className="w-5 h-5 text-text-muted" /> : <ChevronDown className="w-5 h-5 text-text-muted" />}
@@ -166,7 +171,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                 ) : paginatedData.length === 0 ? (
                   <tr>
                     <td colSpan={colCount} className="py-8 text-center text-text-muted text-scale-sm">
-                      No hay datos para mostrar con los filtros actuales
+                      No hay datos en esta dimensión. Intenta cambiar el filtro de canal o ampliar el periodo.
                     </td>
                   </tr>
                 ) : (
@@ -178,36 +183,36 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                           <span className="text-scale-xs text-text-muted">{row.codigo}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right text-scale-sm text-text-primary">
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-primary">
                         {formatMoneda(row.impFacturado)}
                       </td>
-                      <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                         {formatMoneda(row.impCotizado)}
                       </td>
-                      <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                         {formatPct(row.convImportePct)}
                       </td>
-                      <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                         {formatPct(row.convRenglonesPct)}
                       </td>
-                      <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                         {formatMoneda(row.impEnProceso)}
                       </td>
-                      <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                         {formatMoneda(row.impSinSeguimiento)}
                       </td>
                       {showCotizaciones && (
                         <>
-                          <td className="py-3 px-4 text-right text-scale-sm text-text-secondary">
+                          <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                             {formatEntero(row.cotizaciones)}
                           </td>
-                          <td className={`py-3 px-4 text-right text-scale-sm ${row.sinSeguimientoPct !== null && row.sinSeguimientoPct > 30 ? 'text-danger' : row.sinSeguimientoPct !== null && row.sinSeguimientoPct > 15 ? 'text-warning' : 'text-text-secondary'}`}>
+                          <td className={`py-3 px-4 text-right tabular-nums text-scale-sm ${row.sinSeguimientoPct !== null && row.sinSeguimientoPct > 30 ? 'text-danger' : row.sinSeguimientoPct !== null && row.sinSeguimientoPct > 15 ? 'text-warning' : 'text-text-secondary'}`}>
                             {formatPct(row.sinSeguimientoPct)}
                           </td>
                         </>
                       )}
                       {isCliente && (
-                        <td className="py-3 px-4 text-right text-scale-sm">
+                        <td className="py-3 px-4 text-right text-scale-sm tabular-nums">
                           {(() => {
                             const info = formatDiasUltimaCompra(row.ultimaFactura ?? null)
                             return <span className={info.colorClase}>{info.texto}</span>

@@ -80,7 +80,7 @@ export function PanelHallazgos({ hallazgos }: { hallazgos: Hallazgo[] }) {
                 <div>
                   <h2 className="text-scale-lg font-semibold text-text-primary">Qué está pasando</h2>
                   <p className="mt-1 text-scale-xs text-text-muted">
-                    Sobre el periodo y los filtros que tienes aplicados
+                    Periodo completo, sin importar el mes filtrado.
                   </p>
                 </div>
                 <button
