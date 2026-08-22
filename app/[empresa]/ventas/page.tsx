@@ -13,6 +13,7 @@ import { notFound, redirect } from 'next/navigation'
 import { SupabaseClient } from '@supabase/supabase-js'
 import type { FilaMensual, FilaRankingVista, VentaRow } from '@/lib/ventas'
 import { getTourVentas, LLAVE_TOUR_VENTAS } from '@/lib/tours'
+import { AREAS, areaDisponible } from '@/lib/areas'
 
 export const revalidate = 900
 
@@ -111,6 +112,35 @@ export default async function Page({
   const sesion = await obtenerSesion()
 
   if (!puedeVer(sesion, empresaId, 'ventas')) redirect('/sin-acceso')
+
+  const areaVentas = AREAS.find((a) => a.id === 'ventas')
+
+  if (!areaVentas || !areaDisponible(areaVentas, empresaId)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-base p-6">
+        <div className="max-w-md w-full bg-bg-surface border border-border rounded-lg p-8 text-center shadow-xl">
+          <div className="w-12 h-12 rounded-full bg-warning/20 text-warning flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-scale-xl font-semibold text-text-primary mb-2">
+            Ventas todavía no está disponible para {empresaObj.nombreCorto}
+          </h2>
+          <p className="text-text-muted mb-6 text-scale-sm">
+            El módulo está construido, pero la carga de datos de esta empresa sigue
+            pendiente. Preferimos no mostrar nada a mostrar ceros que parezcan cifras.
+          </p>
+          <a
+            href={`/${empresaId}`}
+            className="block w-full bg-accent hover:bg-accent-deep text-white font-medium py-2 px-4 rounded transition-colors"
+          >
+            Volver al inicio
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   const anioParam = typeof searchParams.anio === 'string' ? searchParams.anio : null
   const mesParam = typeof searchParams.mes === 'string' ? searchParams.mes : null

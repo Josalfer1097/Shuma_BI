@@ -21,6 +21,20 @@ export interface Area {
   ruta: string | null
   icono: LucideIcon
   estado: EstadoArea
+  /**
+   * Empresas donde el area tiene datos reales.
+   *
+   * `undefined` significa todas: es el caso normal y no hay que declararlo.
+   * Un arreglo restringe el area a esos ids de empresa.
+   *
+   * Existe porque `estado` es global y los datos no lo son. Ventas cargo
+   * primero en CFS: sin esta propiedad, Acabados entra a /acabados/ventas y
+   * ve el tablero completo con $0 en cada tarjeta, porque la vista devuelve
+   * un arreglo vacio y no un error. Un tablero de ceros parece un dato.
+   *
+   * Los ids van en minusculas y salen de lib/empresas.ts.
+   */
+  empresas?: string[]
 }
 
 export const AREAS: Area[] = [
@@ -47,6 +61,7 @@ export const AREAS: Area[] = [
     ruta: '/ventas',
     icono: TrendingUp,
     estado: 'activo',
+    empresas: ['cfs'],
   },
   {
     id: 'compras',
@@ -74,17 +89,42 @@ export const AREAS: Area[] = [
   },
 ]
 
-export const AREAS_PENDIENTES = AREAS.filter((a) => a.estado === 'pendiente')
-
-/**
- * Areas activas que NO tienen un panel de resumen propio en la portada.
- *
- * Logistica se excluye porque la portada le dibuja su propio panel con
- * cifras. Las demas activas se muestran como tarjeta con liga, para que
- * activar un area siga siendo cosa de tocar solo este archivo.
- */
 const AREAS_CON_PANEL = ['logistica', 'ventas']
 
-export const AREAS_ACTIVAS_SIN_PANEL = AREAS.filter(
-  (a) => a.estado === 'activo' && !AREAS_CON_PANEL.includes(a.id),
-)
+/**
+ * Si el area tiene datos reales para esa empresa.
+ *
+ * Un area sin `empresas` aplica a todas. Es la respuesta unica a
+ * "esta area se muestra aqui": la portada, la ruta y cualquier
+ * consumidor futuro preguntan lo mismo y no reimplementan la regla.
+ */
+export function areaDisponible(area: Area, empresaId: string): boolean {
+  if (!area.empresas) return true
+  return area.empresas.includes(empresaId.toLowerCase())
+}
+
+/**
+ * Un area activa en el registro pero sin datos para esta empresa se degrada
+ * a 'pendiente'. No se oculta: esconderla haria que el grupo de areas
+ * cambiara de tamano entre empresas y pareciera un error de carga.
+ * Mostrarla como pendiente es la verdad y ya tiene tratamiento visual.
+ */
+export function areasPendientes(empresaId: string): Area[] {
+  return AREAS.filter(
+    (a) => a.estado === 'pendiente' || !areaDisponible(a, empresaId),
+  )
+}
+
+/**
+ * Areas activas que NO tienen panel de resumen propio en la portada.
+ * Se excluyen las que no tienen datos para la empresa: esas ya salen
+ * en `areasPendientes`.
+ */
+export function areasActivasSinPanel(empresaId: string): Area[] {
+  return AREAS.filter(
+    (a) =>
+      a.estado === 'activo' &&
+      areaDisponible(a, empresaId) &&
+      !AREAS_CON_PANEL.includes(a.id),
+  )
+}

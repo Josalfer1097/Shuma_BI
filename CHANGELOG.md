@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.32.1] — 2026-08-22
+
+### Añadido
+- `Area.empresas`: habilitación de área por empresa. Un área activa sin datos para una empresa se degrada a "pendiente" en su portada en vez de mostrar un tablero de ceros.
+- Estado explícito en `/[empresa]/ventas` cuando el área no tiene datos para esa empresa.
+
+### Cambiado
+- `AREAS_PENDIENTES` y `AREAS_ACTIVAS_SIN_PANEL` pasan de constantes a las funciones `areasPendientes(empresaId)` y `areasActivasSinPanel(empresaId)`.
+
 ## v0.31.2 — 2026-08-26
 
 - **Mejoras**: Última compra desde el periodo completo, esqueletos con barrido, animación de login a tamaño legible y detección de captura errónea en la partida mayor.

@@ -11,7 +11,7 @@ import { Tour } from '@/components/Tour'
 import { getTourEmpresa, LLAVE_TOUR_EMPRESA } from '@/lib/tours'
 import { resumenLogistica } from '@/lib/aggregate'
 import { buscarEmpresa } from '@/lib/empresas'
-import { AREAS_PENDIENTES, AREAS_ACTIVAS_SIN_PANEL } from '@/lib/areas'
+import { areaDisponible, areasPendientes, areasActivasSinPanel, AREAS } from '@/lib/areas'
 import { calcularKpis, soloVentaExterna } from '@/lib/ventas'
 import type { FilaMensual } from '@/lib/ventas'
 import type { ReporteRow, EtlStatus } from '@/lib/types'
@@ -43,6 +43,11 @@ export async function generateMetadata({
 export default async function AreasDeEmpresa({ params }: { params: { empresa: string } }) {
   const empresa = buscarEmpresa(params.empresa)
   if (!empresa) notFound()
+
+  const pendientes = areasPendientes(empresa.id)
+  const activasSinPanel = areasActivasSinPanel(empresa.id)
+  const areaVentas = AREAS.find((a) => a.id === 'ventas')
+  const ventasDisponible = areaVentas ? areaDisponible(areaVentas, empresa.id) : false
 
   const supabase = crearClienteServidor()
   const sesion = await obtenerSesion()
@@ -101,18 +106,20 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
       />
 
       <PanelLogistica resumen={resumen} empresa={empresa} />
-      <PanelVentas kpis={ventasKpis} empresa={empresa} nombreMes={nombreMesVentas} isUltimoMes={isUltimoMesVentas} />
+      {ventasDisponible && (
+        <PanelVentas kpis={ventasKpis} empresa={empresa} nombreMes={nombreMesVentas} isUltimoMes={isUltimoMesVentas} />
+      )}
 
       <section>
         <div className="mb-4 flex items-baseline justify-between gap-3">
           <h2 className="text-scale-lg font-semibold text-text-primary">Otras áreas</h2>
           <span className="text-scale-xs text-text-muted">
-            {AREAS_PENDIENTES.length} pendientes de integrar
+            {pendientes.length} pendientes de integrar
           </span>
         </div>
 
         <div data-tour="areas-pendientes" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[...AREAS_ACTIVAS_SIN_PANEL, ...AREAS_PENDIENTES].map((area) => (
+          {[...activasSinPanel, ...pendientes].map((area) => (
             <AreaCard key={area.id} area={area} empresaId={empresa.id} />
           ))}
         </div>
