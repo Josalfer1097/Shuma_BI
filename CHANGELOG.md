@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.32.3] — 2026-08-22
+
+### Corregido
+- El embudo etiquetaba como "Facturado" el campo `imp_cot_convertido`, que es otra cifra que la tarjeta "Facturado" de KpiRow. Ahora dice "Cotizado que se facturó".
+- `package.json` había quedado en 0.32.1 con el CHANGELOG en 0.32.2.
+
+### Añadido
+- Tramos "Suspendida a mano" y "Cancelado" en el embudo: los cinco tramos ahora suman el cotizado y desaparecen las notas que explicaban el hueco.
+- Aviso de descuadre en el embudo con tolerancia del 0.1%. Si aparece, hay un estado nuevo en el ERP.
+- `TooltipDato`: tooltip de dato al pasar el cursor, en portal para que no lo recorte el `overflow-hidden` de las barras.
+- Tooltips de explicación y de dato en embudo, concentración, vendedores, ranking y hallazgos.
+
+### Cambiado
+- `PanelConcentracion` deja de usar el `title=` nativo del navegador.
+
 ## [0.32.1] — 2026-08-22
 
 ### Añadido

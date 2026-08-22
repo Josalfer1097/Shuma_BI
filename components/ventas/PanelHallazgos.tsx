@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Lightbulb, X, TrendingDown, TrendingUp, AlertTriangle, Info } from 'lucide-react'
 import type { Hallazgo, Tono } from '@/lib/hallazgosVentas'
+import { Tooltip } from '../ui/Tooltip'
 
 /**
  * Panel de hallazgos del periodo.
@@ -78,7 +79,10 @@ export function PanelHallazgos({ hallazgos }: { hallazgos: Hallazgo[] }) {
             <aside className="fixed inset-y-0 right-0 flex w-full max-w-md flex-col border-l border-border bg-bg-base shadow-2xl sm:w-[26rem]">
               <div className="flex items-start justify-between gap-4 border-b border-border p-5">
                 <div>
-                  <h2 className="text-scale-lg font-semibold text-text-primary">Qué está pasando</h2>
+                  <h2 className="flex items-center gap-2 text-scale-lg font-semibold text-text-primary">
+                    Qué está pasando
+                    <Tooltip text="Son cálculos sobre el periodo completo, no sobre el mes filtrado." />
+                  </h2>
                   <p className="mt-1 text-scale-xs text-text-muted">
                     Periodo completo, sin importar el mes filtrado.
                   </p>

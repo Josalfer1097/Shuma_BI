@@ -9,6 +9,8 @@ import {
   type FilaRankingVista,
 } from '@/lib/ventas'
 import { Select } from '../ui/Select'
+import { Tooltip } from '../ui/Tooltip'
+import { TooltipDato } from '../ui/TooltipDato'
 
 /**
  * Seguimiento por vendedor. Panel de contexto, siempre visible.
@@ -93,7 +95,10 @@ export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps)
     <section className="mb-8 rounded-lg border border-border bg-bg-surface p-5">
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-medium text-text-primary">Seguimiento por vendedor</h3>
+          <h3 className="flex items-center gap-2 font-medium text-text-primary">
+            Seguimiento por vendedor
+            <Tooltip text="Canal externo por regla de negocio. La conversión usa importe convertido como numerador. 'Sin seguimiento' es la suspensión automática a los diez días." />
+          </h3>
           <p className="mt-1 text-scale-xs text-text-muted">
             Canal externo, periodo completo. La barra clara es lo cotizado; la
             sólida, lo facturado.
@@ -128,45 +133,63 @@ export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps)
                     : undefined
                 }
               >
-                <div className="mb-1.5 flex items-baseline justify-between gap-4">
-                  <span className="truncate text-scale-sm font-medium text-text-primary">
-                    {f.nombre}
-                  </span>
-                  <span className="shrink-0 font-mono text-scale-xs text-text-muted">
-                    {formatPct(f.convImportePct)} conv.
-                  </span>
-                </div>
-
-                <div className="relative mb-1 h-2 w-full overflow-hidden rounded-full bg-bg-elevated">
-                  <div
-                    className="absolute left-0 top-0 h-full rounded-full bg-text-muted opacity-30"
-                    style={{ width: `${anchoCotizado}%` }}
-                  />
-                  <div
-                    className="absolute left-0 top-0 h-full rounded-full bg-accent"
-                    style={{ width: `${anchoFacturado}%` }}
-                  />
-                </div>
-
-                <div className="mt-1 flex items-center justify-between gap-4 text-scale-xs text-text-muted">
-                  <span className="flex gap-3">
-                    <span className="text-accent">
-                      {formatMonedaCorta(f.impFacturado)} fact.
+                <TooltipDato
+                  contenido={
+                    <div className="space-y-1">
+                      <p className="font-medium text-text-primary">{f.nombre}</p>
+                      <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-text-secondary tabular-nums">
+                        <span>Cotizado:</span>
+                        <span className="text-right">{formatMonedaCorta(f.impCotizado)}</span>
+                        <span>Facturado:</span>
+                        <span className="text-right">{formatMonedaCorta(f.impFacturado)}</span>
+                        <span>Conversión:</span>
+                        <span className="text-right">{formatPct(f.convImportePct)}</span>
+                        <span>Sin seg.:</span>
+                        <span className="text-right">{formatPct(pctSeg)}</span>
+                      </div>
+                    </div>
+                  }
+                >
+                  <div className="mb-1.5 flex items-baseline justify-between gap-4">
+                    <span className="truncate text-scale-sm font-medium text-text-primary">
+                      {f.nombre}
                     </span>
-                    <span>{formatMonedaCorta(f.impCotizado)} cotiz.</span>
-                  </span>
-                  <span
-                    className={
-                      pctSeg !== null && pctSeg > 30
-                        ? 'text-danger'
-                        : pctSeg !== null && pctSeg > 15
-                          ? 'text-warning'
-                          : 'text-text-muted'
-                    }
-                  >
-                    {formatPct(pctSeg)} sin seguimiento
-                  </span>
-                </div>
+                    <span className="shrink-0 font-mono text-scale-xs text-text-muted">
+                      {formatPct(f.convImportePct)} conv.
+                    </span>
+                  </div>
+  
+                  <div className="relative mb-1 h-2 w-full overflow-hidden rounded-full bg-bg-elevated">
+                    <div
+                      className="absolute left-0 top-0 h-full rounded-full bg-text-muted opacity-30"
+                      style={{ width: `${anchoCotizado}%` }}
+                    />
+                    <div
+                      className="absolute left-0 top-0 h-full rounded-full bg-accent"
+                      style={{ width: `${anchoFacturado}%` }}
+                    />
+                  </div>
+  
+                  <div className="mt-1 flex items-center justify-between gap-4 text-scale-xs text-text-muted">
+                    <span className="flex gap-3 tabular-nums">
+                      <span className="text-accent">
+                        {formatMonedaCorta(f.impFacturado)} fact.
+                      </span>
+                      <span>{formatMonedaCorta(f.impCotizado)} cotiz.</span>
+                    </span>
+                    <span
+                      className={
+                        pctSeg !== null && pctSeg > 30
+                          ? 'text-danger font-medium'
+                          : pctSeg !== null && pctSeg > 15
+                            ? 'text-warning font-medium'
+                            : 'text-text-muted'
+                      }
+                    >
+                      {formatPct(pctSeg)} sin seguimiento
+                    </span>
+                  </div>
+                </TooltipDato>
               </li>
             )
           })}

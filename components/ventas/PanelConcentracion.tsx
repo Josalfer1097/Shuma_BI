@@ -1,6 +1,8 @@
 'use client'
 
 import { formatMonedaCorta, formatPct, type FilaRanking, type Dimension } from '@/lib/ventas'
+import { Tooltip } from '../ui/Tooltip'
+import { TooltipDato } from '../ui/TooltipDato'
 
 type PanelConcentracionProps = {
   data: FilaRanking[]
@@ -43,7 +45,10 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
     <section className="mb-8 min-h-[160px] rounded-lg border border-border bg-bg-surface p-5">
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-medium text-text-primary">Concentración de venta</h3>
+          <h3 className="flex items-center gap-2 font-medium text-text-primary">
+            Concentración de venta
+            <Tooltip text="Mide la dependencia sobre los principales registros de la dimensión activa. Se ordena por importe facturado, no cotizado." />
+          </h3>
           <p className="mt-1 text-scale-xs text-text-muted">
             Dependencia sobre los principales registros de {dimension}. Basado en importe facturado.
           </p>
@@ -52,10 +57,54 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
 
       <div className="flex flex-col gap-3">
         <div className="h-4 w-full overflow-hidden rounded-full bg-bg-elevated flex">
-          {pctTop1 > 0 && <div className="h-full transition-all duration-500 ease-out bg-accent" style={{ width: `${pctTop1}%` }} title={`Top 1: ${formatPct(pctTop1)}`} />}
-          {pctTop2to5 > 0 && <div className="h-full transition-all duration-500 ease-out bg-accent-deep" style={{ width: `${pctTop2to5}%` }} title={`Top 2-5: ${formatPct(pctTop2to5)}`} />}
-          {pctTop6to20 > 0 && <div className="h-full transition-all duration-500 ease-out bg-text-muted opacity-80" style={{ width: `${pctTop6to20}%` }} title={`Top 6-20: ${formatPct(pctTop6to20)}`} />}
-          {pctResto > 0 && <div className="h-full transition-all duration-500 ease-out bg-bg-elevated brightness-90" style={{ width: `${pctResto}%` }} title={`Resto: ${formatPct(pctResto)}`} />}
+          {pctTop1 > 0 && (
+            <TooltipDato contenido={
+              <div className="space-y-1">
+                <p className="font-medium text-text-primary">Top 1</p>
+                <p className="tabular-nums text-text-secondary">
+                  {formatMonedaCorta(sumTop1)} · {formatPct(pctTop1)} del facturado
+                </p>
+              </div>
+            }>
+              <div className="h-full transition-all duration-500 ease-out bg-accent" style={{ width: `${pctTop1}%` }} />
+            </TooltipDato>
+          )}
+          {pctTop2to5 > 0 && (
+            <TooltipDato contenido={
+              <div className="space-y-1">
+                <p className="font-medium text-text-primary">Top 2–5</p>
+                <p className="tabular-nums text-text-secondary">
+                  {formatMonedaCorta(sumTop2to5)} · {formatPct(pctTop2to5)} del facturado
+                </p>
+              </div>
+            }>
+              <div className="h-full transition-all duration-500 ease-out bg-accent-deep" style={{ width: `${pctTop2to5}%` }} />
+            </TooltipDato>
+          )}
+          {pctTop6to20 > 0 && (
+            <TooltipDato contenido={
+              <div className="space-y-1">
+                <p className="font-medium text-text-primary">Top 6–20</p>
+                <p className="tabular-nums text-text-secondary">
+                  {formatMonedaCorta(sumTop6to20)} · {formatPct(pctTop6to20)} del facturado
+                </p>
+              </div>
+            }>
+              <div className="h-full transition-all duration-500 ease-out bg-text-muted opacity-80" style={{ width: `${pctTop6to20}%` }} />
+            </TooltipDato>
+          )}
+          {pctResto > 0 && (
+            <TooltipDato contenido={
+              <div className="space-y-1">
+                <p className="font-medium text-text-primary">Resto</p>
+                <p className="tabular-nums text-text-secondary">
+                  {formatMonedaCorta(sumResto)} · {formatPct(pctResto)} del facturado
+                </p>
+              </div>
+            }>
+              <div className="h-full transition-all duration-500 ease-out bg-bg-elevated brightness-90" style={{ width: `${pctResto}%` }} />
+            </TooltipDato>
+          )}
         </div>
         
         <div className="flex justify-between items-center text-scale-xs mt-2">

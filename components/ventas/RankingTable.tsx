@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FilaRanking, Dimension, formatMoneda, formatPct, formatEntero, cotizacionesSumables } from '@/lib/ventas'
+import { FilaRanking, Dimension, formatMoneda, formatMonedaCorta, formatPct, formatEntero, cotizacionesSumables } from '@/lib/ventas'
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Search } from 'lucide-react'
+import { Tooltip } from '../ui/Tooltip'
+import { TooltipDato } from '../ui/TooltipDato'
 
 interface RankingTableProps {
   data: FilaRanking[]
@@ -124,36 +126,36 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                     Nombre <SortIcon field="nombre" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('impFacturado')}>
-                    Facturado <SortIcon field="impFacturado" />
+                    Facturado <Tooltip text="Importe facturado en el periodo, a precio de factura." /> <SortIcon field="impFacturado" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('impCotizado')}>
-                    Cotizado <SortIcon field="impCotizado" />
+                    Cotizado <Tooltip text="Importe cotizado en el periodo, a precio de cotización." /> <SortIcon field="impCotizado" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('convImportePct')}>
-                    Conv. Importe <SortIcon field="convImportePct" />
+                    Conv. Importe <Tooltip text="Porcentaje del importe cotizado que llegó a factura." /> <SortIcon field="convImportePct" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('convRenglonesPct')}>
-                    Conv. Productos <SortIcon field="convRenglonesPct" />
+                    Conv. Productos <Tooltip text="Porcentaje de los productos cotizados que llegaron a factura." /> <SortIcon field="convRenglonesPct" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('impEnProceso')}>
-                    En la mesa <SortIcon field="impEnProceso" />
+                    En la mesa <Tooltip text="Cotizaciones abiertas con actividad reciente al momento del corte." /> <SortIcon field="impEnProceso" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('impSinSeguimiento')}>
-                    Abandonado <SortIcon field="impSinSeguimiento" />
+                    Abandonado <Tooltip text="El ERP suspende sola la cotización a los diez días sin actividad. No es que el cliente dijera que no: es que nadie volvió a hablarle." /> <SortIcon field="impSinSeguimiento" />
                   </th>
                   {showCotizaciones && (
                     <>
                       <th className={thClass + " text-right"} onClick={() => handleSort('cotizaciones')}>
-                        Cotizaciones <SortIcon field="cotizaciones" />
+                        Cotizaciones <Tooltip text="Número total de cotizaciones en el periodo." /> <SortIcon field="cotizaciones" />
                       </th>
                       <th className={thClass + " text-right"} onClick={() => handleSort('sinSeguimientoPct')}>
-                        Sin Seg. % <SortIcon field="sinSeguimientoPct" />
+                        Sin Seg. % <Tooltip text="El ERP suspende sola la cotización a los diez días sin actividad; no es que el cliente dijera que no." /> <SortIcon field="sinSeguimientoPct" />
                       </th>
                     </>
                   )}
                   {isCliente && (
                     <th className={thClass + " text-right"} onClick={() => handleSort('ultimaFactura')}>
-                      Última Compra <SortIcon field="ultimaFactura" />
+                      Última Compra <Tooltip text="Días transcurridos desde la última factura de este cliente." /> <SortIcon field="ultimaFactura" />
                     </th>
                   )}
                 </tr>
@@ -184,10 +186,14 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                         </div>
                       </td>
                       <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-primary">
-                        {formatMoneda(row.impFacturado)}
+                        <TooltipDato contenido={formatMoneda(row.impFacturado)}>
+                          {formatMonedaCorta(row.impFacturado)}
+                        </TooltipDato>
                       </td>
                       <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
-                        {formatMoneda(row.impCotizado)}
+                        <TooltipDato contenido={formatMoneda(row.impCotizado)}>
+                          {formatMonedaCorta(row.impCotizado)}
+                        </TooltipDato>
                       </td>
                       <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                         {formatPct(row.convImportePct)}
@@ -196,10 +202,14 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                         {formatPct(row.convRenglonesPct)}
                       </td>
                       <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
-                        {formatMoneda(row.impEnProceso)}
+                        <TooltipDato contenido={formatMoneda(row.impEnProceso)}>
+                          {formatMonedaCorta(row.impEnProceso)}
+                        </TooltipDato>
                       </td>
                       <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
-                        {formatMoneda(row.impSinSeguimiento)}
+                        <TooltipDato contenido={formatMoneda(row.impSinSeguimiento)}>
+                          {formatMonedaCorta(row.impSinSeguimiento)}
+                        </TooltipDato>
                       </td>
                       {showCotizaciones && (
                         <>
