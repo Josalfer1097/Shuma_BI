@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.30.4 — 2026-08-26
+
+- **Ventas**: Comparativo anual corregido, lenguaje de negocio en los indicadores, aviso de mes incompleto y recorrido guiado de ventas.
+
 ## v0.30.3 — 2026-08-26
 
 - Caché de 15 minutos en página de Ventas para optimizar velocidad.

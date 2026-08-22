@@ -12,6 +12,7 @@ import { MarcoEmpresa } from '@/components/MarcoEmpresa'
 import { notFound, redirect } from 'next/navigation'
 import { SupabaseClient } from '@supabase/supabase-js'
 import type { FilaMensual, FilaRankingVista, VentaRow } from '@/lib/ventas'
+import { getTourVentas, LLAVE_TOUR_VENTAS } from '@/lib/tours'
 
 export const revalidate = 900
 
@@ -185,10 +186,6 @@ export default async function Page({
     )
   }
 
-  // tour llave needs a ventas one, let's just create a generic one or use the same pattern
-  const llaveTour = `tour_ventas_${empresaId}`
-  // Let's create some default steps for tour if needed. I'll just pass an empty array if not defined yet.
-  
   return (
     <EmpresaProvider empresa={empresaObj}>
       <MarcoEmpresa empresaId={empresaId}>
@@ -198,7 +195,7 @@ export default async function Page({
             logoEmpresaId={empresaId}
             etlStatus={etlRes.error ? null : etlRes.data}
             titulo="Ventas"
-            subtitulo="Colocación, conversión de cotizaciones y comportamiento por zona"
+            subtitulo="Cotizaciones, conversión a factura y seguimiento por vendedor"
             volverA={`/${empresaId}`}
             volverTexto={empresaObj.nombreCorto}
           />
@@ -214,7 +211,7 @@ export default async function Page({
             />
           </Suspense>
 
-          <Tour pasos={[]} llaveStorage={llaveTour} />
+          <Tour pasos={getTourVentas()} llaveStorage={LLAVE_TOUR_VENTAS} />
         </main>
       </MarcoEmpresa>
     </EmpresaProvider>

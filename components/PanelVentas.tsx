@@ -11,21 +11,28 @@ function Indicador({
   nota,
   tono = 'neutro',
   ancla,
+  incompleto = false,
 }: {
   etiqueta: string
   valor: string
   nota: string
   tono?: 'neutro' | 'bueno' | 'alerta'
   ancla?: string
+  incompleto?: boolean
 }) {
   const colorValor =
     tono === 'bueno' ? 'text-success' : tono === 'alerta' ? 'text-danger' : 'text-text-primary'
 
   return (
-    <div data-tour={ancla} className="flex flex-col gap-1 rounded-md border border-border bg-bg-base/40 p-4">
+    <div data-tour={ancla} className="flex flex-col gap-1 rounded-md border border-border bg-bg-base/40 p-4 relative">
       <span className="text-scale-xs uppercase tracking-wide text-text-muted">{etiqueta}</span>
       <span className={`text-scale-2xl font-semibold font-exo ${colorValor}`}>{valor}</span>
       <span className="text-scale-xs text-text-muted">{nota}</span>
+      {incompleto && (
+        <span className="text-warning text-scale-xs mt-2 block font-normal leading-tight">
+          Periodo incompleto, el % va a subir
+        </span>
+      )}
     </div>
   )
 }
@@ -34,10 +41,12 @@ export function PanelVentas({
   kpis,
   empresa,
   nombreMes,
+  isUltimoMes = false,
 }: {
   kpis: KpisVentas | null
   empresa: Empresa
   nombreMes: string
+  isUltimoMes?: boolean
 }) {
   return (
     <section data-tour="panel-ventas" className="mb-10 rounded-lg border border-border bg-bg-surface p-5 sm:p-6">
@@ -51,7 +60,7 @@ export function PanelVentas({
               Ventas - {empresa.nombreCorto}
             </h2>
             <p className="text-scale-sm text-text-muted">
-              Colocación, conversión de cotizaciones y comportamiento por zona
+              Cotizaciones, conversión a factura y seguimiento por vendedor
             </p>
           </div>
         </div>
@@ -82,10 +91,10 @@ export function PanelVentas({
               tono="neutro"
             />
             <Indicador
-              etiqueta="Conversión por importe"
+              etiqueta="Dinero que se cierra"
               valor={formatPct(kpis.convImportePct)}
               nota="De cada 100 pesos cotizados"
-              tono="neutro"
+              incompleto={isUltimoMes}
             />
             <Indicador
               etiqueta="Cotizaciones"

@@ -176,7 +176,7 @@ export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }:
   const selectBaseClasses = "w-full bg-bg-surface border rounded-lg px-3 min-h-[44px] text-scale-sm text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors appearance-none"
 
   return (
-    <div className="mb-8">
+    <div data-tour="filtros" className="mb-8">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         
         {/* Dimensión */}

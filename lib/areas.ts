@@ -43,7 +43,7 @@ export const AREAS: Area[] = [
   {
     id: 'ventas',
     nombre: 'Ventas',
-    descripcion: 'Colocación, conversión de cotizaciones y comportamiento por zona',
+    descripcion: 'Cotizaciones, conversión a factura y seguimiento por vendedor',
     ruta: '/ventas',
     icono: TrendingUp,
     estado: 'activo',

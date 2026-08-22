@@ -20,8 +20,10 @@ import { useFontScale } from '@/lib/fontScaleContext'
 
 interface TrendChartProps {
   data: PuntoSerie[];
+  dataFull?: PuntoSerie[];
   anclaTour?: string;
   selectedMonth?: string | null;
+  partialMonth?: string | null;
 }
 
 const MONTHS_ES: Record<string, string> = {
@@ -67,7 +69,7 @@ const CustomDot = (props: any) => {
   return <circle cx={cx} cy={cy} r={4} fill="var(--accent)" strokeWidth={0} />;
 };
 
-export function TrendChart({ data, selectedMonth, anclaTour }: TrendChartProps) {
+export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaTour }: TrendChartProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -103,24 +105,25 @@ export function TrendChart({ data, selectedMonth, anclaTour }: TrendChartProps) 
     let prev = null;
     let pLabel = '';
 
+    const seriesToSearch = dataFull || data;
+
     if (compMode === 'anterior') {
-      if (data.length > 1) {
-        prev = data[data.length - 2];
-        const [pAnio, pMes] = prev.anioMes.split('-');
-        pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
-      }
+      const pAnio = mes === '01' ? String(Number(anio) - 1) : anio;
+      const pMes = mes === '01' ? '12' : String(Number(mes) - 1).padStart(2, '0');
+      const targetAnioMes = `${pAnio}-${pMes}`;
+      prev = seriesToSearch.find(d => d.anioMes === targetAnioMes) || null;
+      pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
     } else if (compMode === 'anual') {
-      if (data.length > 12) {
-        prev = data[data.length - 13];
-        const [pAnio, pMes] = prev.anioMes.split('-');
-        pLabel = `${MONTHS_ES[pMes] || pMes} ${pAnio}`;
-      }
+      const pAnio = String(Number(anio) - 1);
+      const targetAnioMes = `${pAnio}-${mes}`;
+      prev = seriesToSearch.find(d => d.anioMes === targetAnioMes) || null;
+      pLabel = `${MONTHS_ES[mes] || mes} ${pAnio}`;
     }
 
     if (!prev) {
       comparisonNode = (
         <div className="bg-bg-elevated/30 border border-border rounded p-3 mb-4 flex justify-center text-scale-sm text-text-muted">
-          sin dato para comparar
+          No hay periodo comparable ({pLabel})
         </div>
       );
     } else {
@@ -147,6 +150,8 @@ export function TrendChart({ data, selectedMonth, anclaTour }: TrendChartProps) 
         );
       };
 
+      const isIncomplete = partialMonth === selectedMonth;
+
       comparisonNode = (
         <div className="bg-bg-elevated/30 border border-border rounded p-4 mb-4 grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-1 px-2">
@@ -154,6 +159,11 @@ export function TrendChart({ data, selectedMonth, anclaTour }: TrendChartProps) 
             <div className="flex flex-col items-start mt-1">
               <span className="text-text-primary text-scale-xl font-semibold leading-none mb-1.5">{formatMoneda(current.impFacturado)}</span>
               <span className="text-scale-xs font-medium">{formatDiff(diffFacturado, percFacturado)} <span className="text-text-muted opacity-70 font-normal">vs {pLabel}</span></span>
+              {isIncomplete && (
+                <span className="text-warning text-scale-xs mt-1 font-normal block leading-tight">
+                  Periodo incompleto, puede mostrar una caída engañosa
+                </span>
+              )}
             </div>
           </div>
         </div>

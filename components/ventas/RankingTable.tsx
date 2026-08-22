@@ -110,7 +110,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                     Conv. Importe <SortIcon field="convImportePct" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('convRenglonesPct')}>
-                    Conv. Renglones <SortIcon field="convRenglonesPct" />
+                    Conv. Productos <SortIcon field="convRenglonesPct" />
                   </th>
                   {showCotizaciones && (
                     <>

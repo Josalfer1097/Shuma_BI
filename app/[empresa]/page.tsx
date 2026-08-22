@@ -69,6 +69,8 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
   let ventasKpis = null
   let nombreMesVentas = ''
   
+  let isUltimoMesVentas = false
+  
   if (ventasRows.length > 0) {
     const ultimoMes = ventasRows.reduce((a, b) => b.anio_mes > a.anio_mes ? b : a).anio_mes
     const filasUltimoMes = soloVentaExterna(ventasRows.filter(r => r.anio_mes === ultimoMes))
@@ -78,6 +80,10 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
     const [a, m] = ultimoMes.split('-').map(Number)
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
     nombreMesVentas = `${meses[m - 1]} ${a}`
+
+    const now = new Date()
+    const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    isUltimoMesVentas = ultimoMes === currentYearMonth
   }
 
   return (
@@ -95,7 +101,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
       />
 
       <PanelLogistica resumen={resumen} empresa={empresa} />
-      <PanelVentas kpis={ventasKpis} empresa={empresa} nombreMes={nombreMesVentas} />
+      <PanelVentas kpis={ventasKpis} empresa={empresa} nombreMes={nombreMesVentas} isUltimoMes={isUltimoMesVentas} />
 
       <section>
         <div className="mb-4 flex items-baseline justify-between gap-3">

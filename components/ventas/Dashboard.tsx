@@ -97,6 +97,7 @@ export function Dashboard({
 
   // Serie de tiempo
   let serie: PuntoSerie[] = []
+  let serieFull: PuntoSerie[] | undefined
   if (entidadParam && dimensionParam !== 'producto') {
     if (rowsDetalle) {
       serie = serieMensual(rowsDetalle, dimensionParam)
@@ -106,14 +107,25 @@ export function Dashboard({
     }
   } else {
     let mensualParaGrafica = mensual
+    let mensualParaGraficaFull = mensual
     if (canalParam) {
       mensualParaGrafica = mensualParaGrafica.filter(r => r.canal === canalParam)
+      mensualParaGraficaFull = mensualParaGraficaFull.filter(r => r.canal === canalParam)
     }
     if (anioParam) {
       mensualParaGrafica = mensualParaGrafica.filter(r => r.anio_mes.startsWith(`${anioParam}-`))
     }
     serie = serieMensualDesdeVista(mensualParaGrafica)
+    serieFull = serieMensualDesdeVista(mensualParaGraficaFull)
   }
+
+  const now = new Date()
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const maxAnioMes = mensual.reduce((max, row) => (row.anio_mes > max ? row.anio_mes : max), '')
+  // Si el mes seleccionado es el mismo que el actual (el sistema está cursando el mes actual) 
+  // o si el mes seleccionado coincide con el maxAnioMes y ese es el actual.
+  const isUltimoMes = mesSeleccionado === currentYearMonth || (mesSeleccionado === maxAnioMes && maxAnioMes === currentYearMonth)
+  const partialMonth = isUltimoMes ? mesSeleccionado : null
 
   // Fetch dynamic ranking for productos
   const params = useParams()
@@ -200,12 +212,16 @@ export function Dashboard({
         <PanelHallazgos hallazgos={hallazgos} />
       </div>
 
-      <KpiRow kpis={kpis} />
+      <div data-tour="kpis-cierre">
+        <KpiRow kpis={kpis} partialMonth={partialMonth} />
+      </div>
       
       <TrendChart 
         data={serie} 
+        dataFull={serieFull}
         selectedMonth={mesSeleccionado} 
-        anclaTour="ventas-tendencia" 
+        partialMonth={partialMonth}
+        anclaTour="tendencia" 
       />
       
       <RankingTable 

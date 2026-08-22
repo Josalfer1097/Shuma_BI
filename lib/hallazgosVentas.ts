@@ -53,8 +53,8 @@ function nombreMes(anioMes: string): string {
 /**
  * La brecha entre las dos conversiones.
  *
- * En CFS los renglones convierten cerca del 67% pero solo el 26% del
- * dinero. No es contradiccion: el renglon que se factura promedia mucho
+ * En CFS los productos convierten cerca del 67% pero solo el 26% del
+ * dinero. No es contradiccion: el producto que se factura promedia mucho
  * menos que el que no. Lo grande no cierra, y ese es el hallazgo, no el
  * porcentaje.
  */
@@ -78,8 +78,8 @@ function hallazgoBrechaConversion(rows: FilaMensual[]): Hallazgo | null {
     tono: 'neutro',
     titulo: 'Lo grande no cierra',
     detalle:
-      `${formatPct(k.convRenglonesPct)} de los renglones se facturan, pero ` +
-      `solo ${formatPct(k.convImportePct)} del importe. El renglón que sí se ` +
+      `${formatPct(k.convRenglonesPct)} de los productos se facturan, pero ` +
+      `solo ${formatPct(k.convImportePct)} del importe. El producto que sí se ` +
       `factura promedia ${formatMoneda(ticketSi)}; el que no, ` +
       `${formatMoneda(ticketNo)}. Son ${veces.toFixed(1)} veces más grande.`,
   }
@@ -141,7 +141,7 @@ function hallazgoSinSeguimiento(ranking0: FilaRankingVista[]): Hallazgo | null {
 }
 
 /**
- * El renglon mas grande del periodo.
+ * El producto mas grande del periodo.
  *
  * Es un hecho, no una regla. Deja ver de un vistazo si un solo dedazo
  * inflo el periodo: ya se detecto uno de 700,251 piezas de una
@@ -162,7 +162,7 @@ function hallazgoRenglonAtipico(ranking: FilaRankingVista[]): Hallazgo | null {
   // use para el total. Pero producto son ~12,000 filas contra 756 de
   // cliente: pedirlas todas solo para sumar el mismo numero cuesta
   // doce peticiones y bloquea el render. Asi basta con traer los
-  // pocos productos de mayor renglon.
+  // pocos productos de mayor partida.
   const total = filas
     .filter((r) => r.dimension === 'cliente')
     .reduce((s, r) => s + r.imp_cotizado, 0)
@@ -174,7 +174,7 @@ function hallazgoRenglonAtipico(ranking: FilaRankingVista[]): Hallazgo | null {
   return {
     tipo: 'atipico',
     tono: 'neutro',
-    titulo: `Un solo renglón vale ${formatPct(peso)} del periodo`,
+    titulo: `Un solo producto vale ${formatPct(peso)} del periodo`,
     detalle:
       `${mayor.dimension_nombre} (${mayor.dimension_codigo}) por ` +
       `${formatMoneda(mayor.imp_reng_max)} en ${formatEntero(mayor.cant_reng_max)} ` +
@@ -211,7 +211,7 @@ function hallazgoCanales(rows: FilaMensual[]): Hallazgo | null {
       `Intercompañía: ${formatPct((inter / total) * 100)}` +
       (kInter
         ? `, y convierte al ${formatPct(kInter.convImportePct)} porque la venta ` +
-          `entre empresas del grupo casi siempre se factura. Por eso no suma al consolidado.`
+        `entre empresas del grupo casi siempre se factura. Por eso no suma al consolidado.`
         : '.'),
   }
 }
@@ -282,29 +282,30 @@ export interface EntradaGlosario {
  */
 export const GLOSARIO_VENTAS: EntradaGlosario[] = [
   {
-    termino: 'Renglón cotizado',
+    termino: 'Producto cotizado',
     definicion:
-      'Una línea de una cotización: un artículo con su cantidad y su precio. ' +
-      'Una cotización de diez productos son diez renglones.',
+      'Cada artículo que aparece en una cotización, con su cantidad y su ' +
+      'precio. Una cotización con diez artículos distintos cuenta como ' +
+      'diez productos.',
   },
   {
-    termino: 'Renglón facturado',
+    termino: 'Producto facturado',
     definicion:
-      'Renglón cotizado que llegó a factura. Si se surtió en dos entregas ' +
+      'Producto cotizado que llegó a factura. Si se surtió en dos entregas ' +
       'sigue contando una sola vez, para que la comparación contra los ' +
       'cotizados tenga sentido.',
   },
   {
-    termino: 'Conversión por renglones',
+    termino: 'Conversión por productos',
     definicion:
-      'De cada cien líneas cotizadas, cuántas terminaron facturadas. Mide ' +
-      'qué tan seguido se cierra.',
+      'De cada cien productos cotizados, cuántos terminaron facturados. ' +
+      'Mide qué tan seguido se cierra.',
   },
   {
     termino: 'Conversión por importe',
     definicion:
       'De cada cien pesos cotizados, cuántos terminaron facturados. Mide ' +
-      'cuánto dinero se cierra. Siempre es más baja que la de renglones, ' +
+      'cuánto dinero se cierra. Siempre es más baja que la de productos, ' +
       'porque las cotizaciones grandes cierran menos que las chicas.',
   },
   {
@@ -343,5 +344,32 @@ export const GLOSARIO_VENTAS: EntradaGlosario[] = [
       'Clientes y vendedores son unos cientos y se pueden ver día por día. ' +
       'Los artículos son casi siete mil, y a ese detalle el dato deja de ' +
       'decir algo. La serie diaria sale de clientes, que suma exactamente igual.',
+  },
+  {
+    termino: 'Qué fecha usa este tablero',
+    definicion:
+      'Todo aquí se cuenta en la fecha de la COTIZACIÓN, no la de la ' +
+      'factura. Una cotización de mayo que se facturó en junio aparece ' +
+      'en mayo. Es lo correcto para medir qué tan bien se convierte lo ' +
+      'que se cotiza: la venta se gana el día que se cotiza, no el día ' +
+      'que se emite el papel.',
+  },
+  {
+    termino: 'Por qué no cuadra contra el reporte de facturación',
+    definicion:
+      'El reporte de facturación del sistema cuenta en la fecha de la ' +
+      'factura. Por eso los dos coinciden en el año pero difieren mes a ' +
+      'mes, a veces hasta 25%: son las cotizaciones que se facturan el ' +
+      'mes siguiente. Contra 2026 completo la diferencia entre ambos es ' +
+      'menor al 1%. Ninguno de los dos está mal; responden preguntas ' +
+      'distintas.',
+  },
+  {
+    termino: 'Qué NO incluye el facturado',
+    definicion:
+      'Es el importe de la factura antes de descontar devoluciones, ' +
+      'notas de crédito y anticipos aplicados. En el año esas ' +
+      'deducciones pesan cerca del 9.6% de la facturación. La cifra ' +
+      'neta vive en el reporte de facturación del sistema, no aquí.',
   },
 ]

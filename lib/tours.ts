@@ -15,6 +15,7 @@ import type { Empresa } from './empresas'
 export const LLAVE_TOUR_PORTADA = 'shuma-bi-tour-portada'
 export const LLAVE_TOUR_EMPRESA = 'shuma-bi-tour-empresa'
 export const LLAVE_TOUR_LOGISTICA = 'shuma-bi-tour-logistica'
+export const LLAVE_TOUR_VENTAS = 'shuma-bi-tour-ventas'
 
 export const TOUR_PORTADA: PasoTour[] = [
   {
@@ -32,6 +33,11 @@ export const TOUR_PORTADA: PasoTour[] = [
     titulo: 'Dónde se va el tiempo',
     cuerpo:
       'Más de la mitad del tiempo de entrega es material ya surtido esperando camión. No es un problema de almacén ni de choferes: es de programación de rutas. Es la mayor oportunidad de mejora que muestra el tablero.',
+  },
+  {
+    ancla: 'panel-ventas',
+    titulo: 'Cotizado no es vendido',
+    cuerpo: 'El panel muestra lo que ya se facturó, no lo que se cotizó. De cada cien pesos que se cotizan, alrededor de una cuarta parte termina en factura, y las cotizaciones grandes cierran mucho menos que las chicas. Por eso el monto cotizado nunca se presenta como si fuera venta.',
   },
   {
     ancla: 'areas-pendientes',
@@ -96,6 +102,11 @@ export const getTourEmpresa = (empresa: Empresa): PasoTour[] => {
       cuerpo: `Este número es la mediana, o sea el caso típico. No es el promedio: unas cuantas entregas muy lentas lo jalan hacia arriba y harían ver a la operación fuera de meta sin estarlo. La meta de ${empresa.nombreCorto} es de ${empresa.metaDias} días.`,
     },
     {
+      ancla: 'panel-ventas',
+      titulo: 'Cotizado no es vendido',
+      cuerpo: 'El panel muestra lo que ya se facturó, no lo que se cotizó. De cada cien pesos que se cotizan, alrededor de una cuarta parte termina en factura, y las cotizaciones grandes cierran mucho menos que las chicas. Por eso el monto cotizado nunca se presenta como si fuera venta.',
+    },
+    {
       ancla: 'areas-pendientes',
       titulo: 'Las áreas que faltan',
       cuerpo:
@@ -103,4 +114,29 @@ export const getTourEmpresa = (empresa: Empresa): PasoTour[] => {
     },
   ]
   return pasos
+}
+
+export const getTourVentas = (): PasoTour[] => {
+  return [
+    {
+      ancla: 'kpis-cierre',
+      titulo: 'Dos formas de medir lo mismo',
+      cuerpo: 'Uno cuenta productos y el otro cuenta pesos, y siempre difieren: se cierra la mayoría de los productos cotizados pero solo una fracción del dinero. La explicación es que lo grande cierra menos. La brecha entre ambos números importa más que cualquiera de los dos por separado.',
+    },
+    {
+      ancla: 'kpi-sin-seguimiento',
+      titulo: 'Lo único accionable hoy',
+      cuerpo: 'El sistema suspende sola una cotización a los diez días sin que nadie la toque. No es que el cliente dijera que no: nadie volvió a hablarle. Entre vendedores va del 1% al 46%, así que no es un tema del área sino de personas concretas.',
+    },
+    {
+      ancla: 'tendencia',
+      titulo: 'El mes en curso siempre se ve mal',
+      cuerpo: 'Los datos cierran al día anterior y una cotización reciente aún no tuvo tiempo de facturarse. El porcentaje de cierre del último mes nace bajo y sube durante las semanas siguientes. Su caída no significa que la venta se haya detenido.',
+    },
+    {
+      ancla: 'filtros',
+      titulo: 'Filtra y comparte la vista',
+      cuerpo: 'Puedes acotar por canal, año, mes y cliente. El filtro se guarda en la dirección del navegador: si copias el enlace y lo mandas, quien lo abra ve exactamente lo mismo que tú.',
+    },
+  ]
 }
