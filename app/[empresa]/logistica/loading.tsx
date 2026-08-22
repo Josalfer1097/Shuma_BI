@@ -5,10 +5,12 @@ import {
   Skeleton,
   SkeletonEstilos
 } from '@/components/ui/Skeleton'
+import { BarraRuta } from '@/components/ui/BarraRuta'
 
 export default function LoadingLogistica() {
   return (
-    <div>
+    <>
+      <BarraRuta />
       <SkeletonEstilos />
       <Skeleton className="h-16 w-full mb-8" />
       
@@ -24,6 +26,6 @@ export default function LoadingLogistica() {
       <div>
         <SkeletonTabla filas={6} />
       </div>
-    </div>
+    </>
   )
 }

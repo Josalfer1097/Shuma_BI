@@ -73,12 +73,12 @@ export function KpiRow({
   const mostradorImpSinSeguimiento = kpisMostrador?.impSinSeguimiento || 0
 
   let txtPartidaStatus = ''
-  let unitario = undefined
+  let unitario: number | undefined = undefined
   if (kpis.impRenglonMax > 0) {
     if (kpis.renglonMaxConvertido >= kpis.impRenglonMax) {
       txtPartidaStatus = 'Ya llegó a factura'
     } else if (kpis.renglonMaxConvertido === 0) {
-      txtPartidaStatus = 'No facturada'
+      txtPartidaStatus = 'Sigue en proceso de venta'
     } else {
       txtPartidaStatus = 'Parcialmente facturado'
     }
@@ -91,13 +91,11 @@ export function KpiRow({
     <span className="text-text-muted font-normal text-scale-xs block mt-1 leading-tight text-center overflow-hidden text-ellipsis" title={`${kpis.artRenglonMax}\n${txtPartidaStatus}`}>
       <span className="block truncate max-w-[200px] mx-auto">{kpis.artRenglonMax}</span>
       {unitario !== undefined && (
-        <span className="block mt-0.5">{kpis.cantRenglonMax.toLocaleString('en-US')} pzas · {formatMoneda(unitario)} c/u</span>
+        <span className="block mt-0.5">{kpis.cantRenglonMax.toLocaleString('es-MX')} pzas · {formatMoneda(unitario)} c/u</span>
       )}
       <span className="block mt-0.5">{txtPartidaStatus}</span>
     </span>
   ) : undefined
-
-
   return (
     <div className="mb-8">
       {/* Primera fila: KPI Principales (4 tarjetas) */}

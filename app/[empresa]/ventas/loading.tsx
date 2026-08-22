@@ -5,10 +5,12 @@ import {
   SkeletonTabla,
   SkeletonEstilos
 } from '@/components/ui/Skeleton'
+import { BarraRuta } from '@/components/ui/BarraRuta'
 
 export default function LoadingVentas() {
   return (
     <div className="space-y-8">
+      <BarraRuta />
       <SkeletonEstilos />
       <div className="mb-8">
         <SkeletonFiltros />

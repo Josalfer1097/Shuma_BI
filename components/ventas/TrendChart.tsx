@@ -93,7 +93,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
 
   let comparisonNode = null;
   let chartTitle = "Tendencia de facturación";
-  let chartTooltip = "La línea sólida es el importe facturado. La línea punteada es el importe cotizado. Si la brecha se amplía, se está cotizando más pero cerrando menos.";
+  let chartTooltip = "La línea sólida es el importe facturado y usa el eje izquierdo. La línea punteada es el cotizado y usa el eje derecho, que es de otra escala. Cada una se lee por su forma: importa si suben o bajan, no dónde se cruzan.";
 
   if (selectedMonth) {
     const [anio, mes] = selectedMonth.split('-')
@@ -203,7 +203,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
 
       <div className="w-full" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 5, right: 30, left: Math.round(-10 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+          <ComposedChart data={data} margin={{ top: 5, right: Math.round(30 + (scale - 1) * 10), left: Math.round(-10 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
             <defs>
               <linearGradient id="degradadoFacturado" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.28} />
@@ -222,6 +222,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
               minTickGap={30}
             />
             <YAxis 
+              yAxisId="facturado"
               stroke="var(--text-muted)" 
               fontSize={Math.round(11 * scale)} 
               tickLine={false}
@@ -229,9 +230,19 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
               dx={Math.round(-10 * scale)}
               tickFormatter={(val) => formatMonedaCorta(val)}
             />
+            <YAxis
+              yAxisId="cotizado"
+              orientation="right"
+              stroke="var(--text-muted)"
+              fontSize={Math.round(11 * scale)}
+              tickLine={false}
+              axisLine={false}
+              dx={Math.round(10 * scale)}
+              tickFormatter={(val) => formatMonedaCorta(val)}
+            />
             
             {selectedMonth && (
-              <ReferenceLine x={selectedMonth} stroke="var(--warning)" strokeDasharray="3 3" />
+              <ReferenceLine yAxisId="facturado" x={selectedMonth} stroke="var(--warning)" strokeDasharray="3 3" />
             )}
             
             <RechartsTooltip 
@@ -241,6 +252,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
             />
             <Area
               type="monotone"
+              yAxisId="facturado"
               dataKey="impFacturado"
               stroke="none"
               fill="url(#degradadoFacturado)"
@@ -250,6 +262,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
             />
             <Line 
               type="monotone" 
+              yAxisId="facturado"
               dataKey="impFacturado" 
               stroke="var(--accent)" 
               strokeWidth={2}
@@ -259,6 +272,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
             />
             <Line 
               type="monotone" 
+              yAxisId="cotizado"
               dataKey="impCotizado" 
               stroke="var(--text-muted)" 
               strokeWidth={2}

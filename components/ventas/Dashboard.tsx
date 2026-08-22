@@ -15,7 +15,8 @@ import {
   Dimension,
   Canal,
   PuntoSerie,
-  formatMonedaCorta
+  formatMonedaCorta,
+  enriquecerConUltimaFactura
 } from '@/lib/ventas'
 import { construirHallazgos } from '@/lib/hallazgosVentas'
 import { FilterBar } from './FilterBar'
@@ -24,6 +25,7 @@ import { TrendChart } from './TrendChart'
 import { RankingTable } from './RankingTable'
 import { Glossary } from './Glossary'
 import { PanelHallazgos } from './PanelHallazgos'
+import { PanelVendedores } from './PanelVendedores'
 
 const MONTHS_ES: Record<string, string> = {
   '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
@@ -183,15 +185,7 @@ export function Dashboard({
 
   if (rowsDetalle) {
     const rawRanking = construirRanking(rowsDetalle, dimensionParam)
-    
-    const ultimaPorEntidad = new Map(
-      rowsRanking.map((r) => [r.dimension_id, r.ultima_factura]),
-    )
-    
-    dataRanking = rawRanking.map((f) => ({
-      ...f,
-      ultimaFactura: ultimaPorEntidad.get(f.dimensionId) ?? f.ultimaFactura ?? null,
-    }))
+    dataRanking = enriquecerConUltimaFactura(rawRanking, rowsRanking, dimensionParam)
   } else {
     if (dimensionParam === 'producto') {
       if (!productosRanking) {
@@ -322,6 +316,8 @@ export function Dashboard({
         partialMonth={partialMonth}
         anclaTour="tendencia" 
       />
+      
+      <PanelVendedores dataVendedores={rankingVendedoresExterno} />
       
       <RankingTable 
         data={dataRanking} 

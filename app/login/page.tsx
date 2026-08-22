@@ -6,6 +6,7 @@ import { Mail, KeyRound, ArrowRight, Check } from 'lucide-react'
 import { crearClienteNavegador } from '@/lib/supabase-browser'
 import { FondoAcceso } from '@/components/FondoAcceso'
 import { LoginAnimacion } from '@/components/LoginAnimacion'
+import { PantallaCarga } from '@/components/ui/PantallaCarga'
 
 type Modo = 'enlace' | 'password'
 
@@ -261,6 +262,7 @@ function FormularioAcceso() {
           ¿SIN ACCESO? ESCRIBE A SISTEMAS
         </p>
       </div>
+      <PantallaCarga activo={entrando} />
     </main>
   )
 }

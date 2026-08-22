@@ -562,6 +562,53 @@ export function construirRanking(
   return filas.sort((a, b) => (b[orden] ?? 0) - (a[orden] ?? 0))
 }
 
+/**
+ * Regla 10: "ultima compra" es dato del periodo completo, no del mes filtrado.
+ *
+ * `construirRanking` trabaja sobre el detalle del mes seleccionado, asi que su
+ * `ultimaFactura` solo ve ese mes y devuelve null para quien no facturo ahi.
+ * Esta funcion repone el dato con la vista de periodo completo.
+ *
+ * El filtro por dimension NO es opcional. `v_ventas_ranking` se trae con
+ * `dimension IN ('cliente','vendedor')` en una sola llamada, y los
+ * `dimension_id` de una dimension pueden colisionar con los de la otra. Sin
+ * filtrar, la tabla de clientes muestra la ultima factura de un vendedor:
+ * un dato que se ve correcto y no lo es.
+ *
+ * Si no hay filas de esa dimension (caso 'producto', que llega por otra
+ * consulta), devuelve el ranking tal cual y no inventa nada.
+ */
+export function enriquecerConUltimaFactura(
+  ranking: FilaRanking[],
+  filasVista: FilaRankingVista[] | null | undefined,
+  dimension: Dimension,
+): FilaRanking[] {
+  if (!filasVista || filasVista.length === 0) return ranking
+
+  const ultimaPorEntidad = new Map<string, string | null>()
+
+  for (const fila of filasVista) {
+    if (fila.dimension !== dimension) continue
+
+    const previa = ultimaPorEntidad.get(fila.dimension_id)
+    const candidata = fila.ultima_factura ?? null
+
+    // Una entidad tiene una fila por canal. Nos quedamos con la mas reciente.
+    if (candidata !== null && (previa == null || candidata > previa)) {
+      ultimaPorEntidad.set(fila.dimension_id, candidata)
+    } else if (!ultimaPorEntidad.has(fila.dimension_id)) {
+      ultimaPorEntidad.set(fila.dimension_id, previa ?? null)
+    }
+  }
+
+  if (ultimaPorEntidad.size === 0) return ranking
+
+  return ranking.map((f) => ({
+    ...f,
+    ultimaFactura: ultimaPorEntidad.get(f.dimensionId) ?? f.ultimaFactura ?? null,
+  }))
+}
+
 // ------------------------------------------------------------------
 // Formato
 // ------------------------------------------------------------------
