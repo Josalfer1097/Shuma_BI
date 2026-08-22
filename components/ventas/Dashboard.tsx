@@ -24,15 +24,31 @@ import { RankingTable } from './RankingTable'
 import { Glossary } from './Glossary'
 import { PanelHallazgos } from './PanelHallazgos'
 
+const MONTHS_ES: Record<string, string> = {
+  '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+  '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+  '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+}
+
 interface DashboardProps {
   mensual: FilaMensual[]
   ranking: FilaRankingVista[]
   detalleMes: VentaRow[] | null
   anioParam: string | null
   mesParam: string | null
+  defaultAnio?: string | null
+  defaultMes?: string | null
 }
 
-export function Dashboard({ mensual, ranking, detalleMes, anioParam, mesParam }: DashboardProps) {
+export function Dashboard({ 
+  mensual, 
+  ranking, 
+  detalleMes, 
+  anioParam, 
+  mesParam,
+  defaultAnio,
+  defaultMes
+}: DashboardProps) {
   const searchParams = useSearchParams()
   const canalParam = searchParams.get('canal') as Canal | null
   const dimensionParam = (searchParams.get('dimension') as Dimension) || 'cliente'
@@ -105,6 +121,14 @@ export function Dashboard({ mensual, ranking, detalleMes, anioParam, mesParam }:
   const [productosRanking, setProductosRanking] = React.useState<FilaRankingVista[] | null>(null)
   const [cargandoProductos, setCargandoProductos] = React.useState(false)
 
+  const activeAnio = anioParam === 'Todos' ? 'Todos' : (anioParam || defaultAnio || 'Todos')
+  const activeMes = mesParam === 'Todos' ? 'Todos' : (mesParam || defaultMes || 'Todos')
+
+  const isPeriodoAll = activeAnio === 'Todos' && activeMes === 'Todos'
+  const periodoLabel = isPeriodoAll 
+    ? "Histórico completo" 
+    : `${activeMes !== 'Todos' ? MONTHS_ES[activeMes] || activeMes : ''} ${activeAnio !== 'Todos' ? activeAnio : ''}`.trim()
+
   React.useEffect(() => {
     if (dimensionParam === 'producto' && !rowsDetalle && !productosRanking && !cargandoProductos && empresaId) {
       setCargandoProductos(true)
@@ -165,7 +189,12 @@ export function Dashboard({ mensual, ranking, detalleMes, anioParam, mesParam }:
 
   return (
     <>
-      <FilterBar mensual={mensual} opcionesEntidad={opcionesEntidad} />
+      <FilterBar 
+        mensual={mensual} 
+        opcionesEntidad={opcionesEntidad}
+        defaultAnio={defaultAnio}
+        defaultMes={defaultMes}
+      />
       
       <div className="flex justify-end mb-4">
         <PanelHallazgos hallazgos={hallazgos} />
@@ -183,6 +212,7 @@ export function Dashboard({ mensual, ranking, detalleMes, anioParam, mesParam }:
         data={dataRanking} 
         dimension={dimensionParam} 
         cargando={cargandoRanking}
+        periodoLabel={periodoLabel}
       />
       
       <Glossary />

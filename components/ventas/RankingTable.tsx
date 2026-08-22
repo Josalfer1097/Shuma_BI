@@ -8,12 +8,13 @@ interface RankingTableProps {
   data: FilaRanking[]
   dimension: Dimension
   cargando?: boolean
+  periodoLabel?: string
 }
 
 type SortField = keyof FilaRanking
 type SortDirection = 'asc' | 'desc'
 
-export function RankingTable({ data, dimension, cargando }: RankingTableProps) {
+export function RankingTable({ data, dimension, cargando, periodoLabel }: RankingTableProps) {
   const [sortField, setSortField] = useState<SortField>('impFacturado')
   const [sortDir, setSortDir] = useState<SortDirection>('desc')
   const [isOpen, setIsOpen] = useState(false)
@@ -66,7 +67,7 @@ export function RankingTable({ data, dimension, cargando }: RankingTableProps) {
         className="w-full flex items-center justify-between p-5 text-left hover:bg-bg-elevated transition-colors border-b border-border"
       >
         <h3 className="text-scale-lg font-medium text-text-primary">
-          Ranking por {dimension}
+          Ranking por {dimension} {periodoLabel && <span className="text-text-muted text-scale-md font-normal ml-1">({periodoLabel})</span>}
         </h3>
         <div className="flex items-center gap-4">
           <span className="text-scale-sm text-text-muted">{data.length} registros</span>

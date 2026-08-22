@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.30.3 — 2026-08-26
+
+- Caché de 15 minutos en página de Ventas para optimizar velocidad.
+- Consultas a Supabase optimizadas con columnas explícitas en lugar de `select('*')`.
+- Al entrar sin parámetros, se selecciona por default el último mes con datos.
+- Rediseño completo de la barra de filtros (layout tipo grid, altura adaptada, estilos unificados).
+
 ## v0.30.2 — 2026-08-25
 
 - **Ventas**: Detalle del mes ahora filtra por dimensión desde la consulta, reduciendo datos innecesarios.

@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { Select } from '../ui/Select'
-import { X, Filter } from 'lucide-react'
-import { CANALES, ETIQUETA_CANAL, Canal, Dimension, FilaMensual, FilaRanking } from '@/lib/ventas'
+import { X } from 'lucide-react'
+import { CANALES, ETIQUETA_CANAL, Dimension, FilaMensual, FilaRanking } from '@/lib/ventas'
 
 interface FilterBarProps {
   mensual: FilaMensual[];
   opcionesEntidad?: FilaRanking[];
+  defaultAnio?: string | null;
+  defaultMes?: string | null;
 }
 
 const MONTHS_ES: Record<string, string> = {
@@ -23,7 +24,7 @@ const DIMENSIONES_OPCIONES: { label: string, value: Dimension }[] = [
   { label: 'Producto', value: 'producto' },
 ]
 
-export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
+export function FilterBar({ mensual, opcionesEntidad, defaultAnio, defaultMes }: FilterBarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -34,8 +35,8 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
   const dimensionParam = searchParams.get('dimension') || 'cliente'
   const entidadParam = searchParams.get('entidad')
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const activeAnio = anioParam === 'Todos' ? 'Todos' : (anioParam || defaultAnio || 'Todos')
+  const activeMes = mesParam === 'Todos' ? 'Todos' : (mesParam || defaultMes || 'Todos')
 
   // Combobox state
   const [entidadSearch, setEntidadSearch] = useState('')
@@ -59,7 +60,6 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
     }
   }, [entidadOpen])
 
-  // Reset search when dimension changes or component updates
   useEffect(() => {
     if (entidadParam && opcionesEntidad) {
       const selected = opcionesEntidad.find(opt => opt.dimensionId === entidadParam)
@@ -71,7 +71,6 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
     }
   }, [entidadParam, opcionesEntidad, comboboxFocused])
 
-  // Opciones filtradas en el combobox
   const normalizedSearch = entidadSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   const filteredOpcionesEntidad = (opcionesEntidad || []).filter(opt => {
     if (!normalizedSearch) return true
@@ -80,13 +79,11 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
     return nombre.includes(normalizedSearch) || codigo.includes(normalizedSearch)
   })
 
-  // Extract unique years from mensual data
   const uniqueYears = Array.from(new Set(mensual.map(r => r.anio_mes.split('-')[0]))).sort().reverse()
   
-  // Extract valid months based on selected year
   const validMonthsForYear = Array.from(new Set(
     mensual
-      .filter(r => !anioParam || r.anio_mes.startsWith(`${anioParam}-`))
+      .filter(r => activeAnio === 'Todos' || r.anio_mes.startsWith(`${activeAnio}-`))
       .map(r => r.anio_mes.split('-')[1])
   )).sort()
 
@@ -94,36 +91,40 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
     const val = e.target.value
     const params = new URLSearchParams(searchParams.toString())
     if (val === 'Todos') {
-      params.delete('anio')
+      params.set('anio', 'Todos')
+      params.set('mes', 'Todos')
     } else {
       params.set('anio', val)
-    }
-
-    if (val !== 'Todos' && mesParam) {
-      const monthsInNewYear = new Set(
-        mensual
-          .filter(r => r.anio_mes.startsWith(`${val}-`))
-          .map(r => r.anio_mes.split('-')[1])
-      )
-      if (!monthsInNewYear.has(mesParam)) {
-        params.delete('mes')
+      if (activeMes !== 'Todos') {
+        const monthsInNewYear = new Set(
+          mensual
+            .filter(r => r.anio_mes.startsWith(`${val}-`))
+            .map(r => r.anio_mes.split('-')[1])
+        )
+        if (!monthsInNewYear.has(activeMes)) {
+          params.set('mes', 'Todos')
+        } else if (!searchParams.has('mes')) {
+          params.set('mes', activeMes)
+        }
       }
     }
-
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
-    setMobileMenuOpen(false)
   }
 
   const handleMesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value
     const params = new URLSearchParams(searchParams.toString())
     if (val === 'Todos') {
-      params.delete('mes')
+      params.set('mes', 'Todos')
     } else {
       params.set('mes', val)
+      if (activeAnio === 'Todos' && uniqueYears.length > 0) {
+         params.set('anio', uniqueYears[0])
+      } else if (activeAnio !== 'Todos' && !searchParams.has('anio')) {
+         params.set('anio', activeAnio)
+      }
     }
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
-    setMobileMenuOpen(false)
   }
 
   const handleCanalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -135,7 +136,6 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
       params.set('canal', val)
     }
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
-    setMobileMenuOpen(false)
   }
 
   const handleDimensionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -146,10 +146,8 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
     } else {
       params.set('dimension', val)
     }
-    // Si cambiamos de dimensión, la entidad seleccionada ya no tiene sentido
     params.delete('entidad')
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
-    setMobileMenuOpen(false)
   }
 
   const handleEntidadChange = (id: string | null) => {
@@ -165,236 +163,188 @@ export function FilterBar({ mensual, opcionesEntidad }: FilterBarProps) {
   }
 
   const clearFilters = () => {
-    router.push(pathname, { scroll: false })
-    setMobileMenuOpen(false)
-  }
-
-  const removeYear = () => {
     const params = new URLSearchParams(searchParams.toString())
-    params.delete('anio')
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
-  }
-
-  const removeMonth = () => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete('mes')
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
-  }
-
-  const removeCanal = () => {
-    const params = new URLSearchParams(searchParams.toString())
+    params.set('anio', 'Todos')
+    params.set('mes', 'Todos')
     params.delete('canal')
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
-  }
-
-  const removeEntidad = () => {
-    const params = new URLSearchParams(searchParams.toString())
     params.delete('entidad')
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
-  const activeFiltersChips = []
-  let activeCount = 0
+  const hasActiveFilters = activeAnio !== 'Todos' || activeMes !== 'Todos' || canalParam || entidadParam
 
-  const chipClases = 'flex-shrink-0 flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium'
-
-  if (anioParam) {
-    activeFiltersChips.push(
-      <button key="anio" onClick={removeYear} aria-label={`Quitar el filtro de año ${anioParam}`} className={chipClases}>
-        {anioParam}
-        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
-      </button>
-    )
-    activeCount++
-  }
-  if (mesParam) {
-    activeFiltersChips.push(
-      <button key="mes" onClick={removeMonth} aria-label={`Quitar el filtro de mes ${MONTHS_ES[mesParam]}`} className={chipClases}>
-        {MONTHS_ES[mesParam]}
-        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
-      </button>
-    )
-    activeCount++
-  }
-  if (canalParam) {
-    const label = ETIQUETA_CANAL[canalParam as Canal] || canalParam
-    activeFiltersChips.push(
-      <button key="canal" onClick={removeCanal} aria-label={`Quitar el filtro de canal ${label}`} className={chipClases}>
-        {label}
-        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
-      </button>
-    )
-    activeCount++
-  }
-  if (entidadParam && opcionesEntidad) {
-    const opt = opcionesEntidad.find(o => o.dimensionId === entidadParam)
-    const label = opt ? opt.nombre : entidadParam
-    activeFiltersChips.push(
-      <button key="entidad" onClick={removeEntidad} aria-label={`Quitar el filtro de entidad ${label}`} className={chipClases}>
-        <span className="truncate max-w-[150px]">{label}</span>
-        <span className="bg-accent/20 rounded-full p-0.5"><X className="w-3.5 h-3.5" /></span>
-      </button>
-    )
-    activeCount++
-  }
-
-  if (activeCount >= 2) {
-    activeFiltersChips.push(
-      <button key="clear-all" onClick={clearFilters} className="flex-shrink-0 flex items-center gap-1.5 bg-danger/10 text-danger hover:bg-danger/20 transition-colors border border-danger/30 rounded-full pl-3 pr-2 min-h-[44px] text-scale-sm whitespace-nowrap font-medium">
-        Limpiar todo
-        <X className="w-4 h-4" />
-      </button>
-    )
-  }
-
-  const selectsContent = (
-    <>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-scale-sm whitespace-nowrap">Dimensión:</span>
-        <Select
-          className="w-full sm:w-36"
-          value={dimensionParam}
-          onChange={handleDimensionChange}
-          options={DIMENSIONES_OPCIONES}
-        />
-      </div>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-scale-sm whitespace-nowrap">Canal:</span>
-        <Select
-          className="w-full sm:w-48"
-          value={canalParam || 'Todos'}
-          onChange={handleCanalChange}
-          options={[
-            { label: 'Todos', value: 'Todos' },
-            ...CANALES.filter(c => c !== 'interno').map(c => ({ label: ETIQUETA_CANAL[c], value: c }))
-          ]}
-        />
-      </div>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-scale-sm whitespace-nowrap">Año:</span>
-        <Select
-          className="w-full sm:w-32"
-          value={anioParam || 'Todos'}
-          onChange={handleAnioChange}
-          options={[
-            { label: 'Todos', value: 'Todos' },
-            ...uniqueYears.map(y => ({ label: y, value: y }))
-          ]}
-        />
-      </div>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <span className="text-text-muted text-scale-sm whitespace-nowrap">Mes:</span>
-        <Select
-          className="w-full sm:w-40"
-          value={mesParam || 'Todos'}
-          onChange={handleMesChange}
-          options={[
-            { label: 'Todos', value: 'Todos' },
-            ...validMonthsForYear.map(m => ({ label: MONTHS_ES[m] || m, value: m }))
-          ]}
-        />
-      </div>
-      {dimensionParam !== 'producto' && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto z-50">
-          <span className="text-text-muted text-scale-sm whitespace-nowrap">
-            {dimensionParam === 'vendedor' ? 'Vendedor:' : 'Cliente:'}
-          </span>
-          <div className="relative w-full sm:w-56" ref={comboboxRef}>
-            <input
-              type="text"
-              value={entidadSearch}
-              onFocus={() => {
-                setEntidadOpen(true)
-                setComboboxFocused(true)
-                if (entidadParam) setEntidadSearch('') // clear to show all options when opening if one is selected
-              }}
-              onBlur={() => {
-                // We delay the blur logic slightly to allow clicks on the dropdown to register
-                setTimeout(() => setComboboxFocused(false), 200)
-              }}
-              onChange={(e) => {
-                setEntidadSearch(e.target.value)
-                setEntidadOpen(true)
-              }}
-              placeholder={`Todos los ${dimensionParam === 'vendedor' ? 'vendedores' : 'clientes'}`}
-              className="w-full bg-bg-surface border border-border rounded-md px-3 py-1.5 text-scale-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-            />
-            {entidadSearch && (
-              <button 
-                onClick={() => {
-                  setEntidadSearch('')
-                  handleEntidadChange(null)
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            
-            {entidadOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-bg-surface border border-border rounded-md shadow-lg z-50">
-                <button
-                  className="w-full text-left px-3 py-2 text-scale-sm text-text-primary hover:bg-bg-elevated border-b border-border transition-colors font-medium"
-                  onMouseDown={() => handleEntidadChange(null)} // onMouseDown fires before onBlur
-                >
-                  Todos
-                </button>
-                {filteredOpcionesEntidad.length === 0 ? (
-                  <div className="px-3 py-4 text-center text-scale-sm text-text-muted">
-                    No se encontraron resultados
-                  </div>
-                ) : (
-                  filteredOpcionesEntidad.map(opt => (
-                    <button
-                      key={opt.dimensionId}
-                      className="w-full text-left px-3 py-2 text-scale-sm hover:bg-bg-elevated transition-colors"
-                      onMouseDown={() => handleEntidadChange(opt.dimensionId)}
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-text-primary truncate">{opt.nombre}</span>
-                        <span className="text-scale-xs text-text-muted truncate">{opt.codigo}</span>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  )
+  const selectBaseClasses = "w-full bg-bg-surface border rounded-lg px-3 min-h-[44px] text-scale-sm text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors appearance-none"
 
   return (
-    <div className="sticky top-0 z-40 bg-bg-base/90 backdrop-blur-md py-4 border-b border-border mb-8" ref={menuRef}>
-      {/* Mobile view */}
-      <div className="sm:hidden relative w-full">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 w-full custom-scrollbar">
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex-shrink-0 flex items-center gap-2 bg-bg-surface border border-border rounded-full px-4 min-h-[44px] text-scale-sm text-text-primary font-medium"
-          >
-            <Filter className="w-4 h-4" />
-            Filtros
-          </button>
-          {activeFiltersChips}
+    <div className="mb-8">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        
+        {/* Dimensión */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Dimensión</label>
+          <div className="relative">
+            <select
+              value={dimensionParam}
+              onChange={handleDimensionChange}
+              className={`${selectBaseClasses} border-border`}
+            >
+              {DIMENSIONES_OPCIONES.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </div>
         </div>
 
-        {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated border border-border rounded-lg shadow-xl p-4 flex flex-col gap-4 z-50">
-            {selectsContent}
+        {/* Canal */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Canal</label>
+          <div className="relative">
+            <select
+              value={canalParam || 'Todos'}
+              onChange={handleCanalChange}
+              className={`${selectBaseClasses} ${canalParam ? 'border-accent' : 'border-border'}`}
+            >
+              <option value="Todos">Todos</option>
+              {CANALES.filter(c => c !== 'interno').map(c => (
+                <option key={c} value={c}>{ETIQUETA_CANAL[c]}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Desktop view */}
-      <div className="hidden sm:flex flex-row items-center gap-4 w-full">
-        {selectsContent}
-        {activeCount > 0 && (
-          <div className="flex items-center gap-2 ml-auto">
-            {activeFiltersChips}
+        {/* Año */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Año</label>
+          <div className="relative">
+            <select
+              value={activeAnio}
+              onChange={handleAnioChange}
+              className={`${selectBaseClasses} ${activeAnio !== 'Todos' ? 'border-accent' : 'border-border'}`}
+            >
+              <option value="Todos">Todos</option>
+              {uniqueYears.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Mes */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs uppercase tracking-wide text-text-muted font-medium">Mes</label>
+          <div className="relative">
+            <select
+              value={activeMes}
+              onChange={handleMesChange}
+              className={`${selectBaseClasses} ${activeMes !== 'Todos' ? 'border-accent' : 'border-border'}`}
+            >
+              <option value="Todos">Todos</option>
+              {validMonthsForYear.map(m => (
+                <option key={m} value={m}>{MONTHS_ES[m] || m}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Entidad (Cliente/Vendedor) */}
+        {dimensionParam !== 'producto' && (
+          <div className="flex flex-col gap-1 z-50">
+            <label className="text-xs uppercase tracking-wide text-text-muted font-medium">
+              {dimensionParam === 'vendedor' ? 'Vendedor' : 'Cliente'}
+            </label>
+            <div className="relative w-full" ref={comboboxRef}>
+              <input
+                type="text"
+                value={entidadSearch}
+                onFocus={() => {
+                  setEntidadOpen(true)
+                  setComboboxFocused(true)
+                  if (entidadParam) setEntidadSearch('')
+                }}
+                onBlur={() => {
+                  setTimeout(() => setComboboxFocused(false), 200)
+                }}
+                onChange={(e) => {
+                  setEntidadSearch(e.target.value)
+                  setEntidadOpen(true)
+                }}
+                placeholder={`Todos`}
+                className={`w-full bg-bg-surface border rounded-lg px-3 min-h-[44px] text-scale-sm text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors ${entidadParam ? 'border-accent' : 'border-border'}`}
+              />
+              {entidadSearch && (
+                <button 
+                  onClick={() => {
+                    setEntidadSearch('')
+                    handleEntidadChange(null)
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              {!entidadSearch && (
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-muted">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              )}
+              
+              {entidadOpen && (
+                <div className="absolute top-[calc(100%+4px)] left-0 right-0 max-h-64 overflow-y-auto bg-bg-surface border border-border rounded-lg shadow-xl z-50">
+                  <button
+                    className="w-full text-left px-3 py-2 text-scale-sm text-text-primary hover:bg-bg-elevated border-b border-border transition-colors font-medium"
+                    onMouseDown={() => handleEntidadChange(null)}
+                  >
+                    Todos
+                  </button>
+                  {filteredOpcionesEntidad.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-scale-sm text-text-muted">
+                      No se encontraron resultados
+                    </div>
+                  ) : (
+                    filteredOpcionesEntidad.map(opt => (
+                      <button
+                        key={opt.dimensionId}
+                        className="w-full text-left px-3 py-2 text-scale-sm hover:bg-bg-elevated transition-colors"
+                        onMouseDown={() => handleEntidadChange(opt.dimensionId)}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-text-primary truncate">{opt.nombre}</span>
+                          <span className="text-scale-xs text-text-muted truncate">{opt.codigo}</span>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
+
+        {/* Limpiar todo */}
+        {hasActiveFilters && (
+          <div className="flex flex-col gap-1 justify-end">
+            <button
+              onClick={clearFilters}
+              className="flex items-center justify-center gap-2 min-h-[44px] w-full text-danger hover:bg-danger/10 border border-transparent hover:border-danger/20 rounded-lg transition-colors text-scale-sm font-medium"
+            >
+              Limpiar todo
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   )

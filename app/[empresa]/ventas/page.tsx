@@ -13,7 +13,7 @@ import { notFound, redirect } from 'next/navigation'
 import { SupabaseClient } from '@supabase/supabase-js'
 import type { FilaMensual, FilaRankingVista, VentaRow } from '@/lib/ventas'
 
-export const revalidate = 0
+export const revalidate = 900
 
 export async function generateMetadata({
   params,
@@ -49,23 +49,23 @@ function DashboardSkeleton() {
   )
 }
 
-async function traerTodo<T>(supabase: SupabaseClient, vista: string, empresa: string, dimensiones?: string[]) {
+async function traerTodo<T>(supabase: SupabaseClient, vista: string, columnas: string, empresa: string, dimensiones?: string[]) {
   const BLOQUE = 1000
   const filas: T[] = []
   for (let desde = 0; ; desde += BLOQUE) {
-    let query = supabase.from(vista).select('*').eq('empresa', empresa)
+    let query = supabase.from(vista).select(columnas).eq('empresa', empresa)
     if (dimensiones) {
       query = query.in('dimension', dimensiones)
     }
     const { data, error } = await query.range(desde, desde + BLOQUE - 1)
     if (error) throw error
-    filas.push(...((data ?? []) as T[]))
+    filas.push(...((data ?? []) as unknown as T[]))
     if (!data || data.length < BLOQUE) break
   }
   return filas
 }
 
-async function traerDetalleMes(supabase: SupabaseClient, empresa: string, anio: string, mes: string, dimension: string) {
+async function traerDetalleMes(supabase: SupabaseClient, columnas: string, empresa: string, anio: string, mes: string, dimension: string) {
   const BLOQUE = 1000
   const filas: VentaRow[] = []
   const fechaInicio = `${anio}-${mes}-01`
@@ -79,14 +79,14 @@ async function traerDetalleMes(supabase: SupabaseClient, empresa: string, anio: 
   for (let desde = 0; ; desde += BLOQUE) {
     const { data, error } = await supabase
       .from('ventas_agregado')
-      .select('*')
+      .select(columnas)
       .eq('empresa', empresa)
       .eq('dimension', dimension)
       .gte('fecha_cotizacion', fechaInicio)
       .lt('fecha_cotizacion', fechaFin)
       .range(desde, desde + BLOQUE - 1)
     if (error) throw error
-    filas.push(...((data ?? []) as VentaRow[]))
+    filas.push(...((data ?? []) as unknown as VentaRow[]))
     if (!data || data.length < BLOQUE) break
   }
   return filas
@@ -115,12 +115,19 @@ export default async function Page({
   const mesParam = typeof searchParams.mes === 'string' ? searchParams.mes : null
   const dimensionParam = typeof searchParams.dimension === 'string' ? searchParams.dimension : 'cliente'
 
-  const [mensualRes, rankingRes, etlRes] = await Promise.all([
-    supabase.from('v_ventas_mensual').select('*').eq('empresa', empresaId),
+  const esHistorico = anioParam === 'Todos' || mesParam === 'Todos'
+  const debePedirDetalle = (anioParam && mesParam && !esHistorico)
+
+  const colsMensual = 'empresa, anio_mes, canal, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, imp_reng_max, cant_reng_max'
+  const colsRanking = 'empresa, dimension, dimension_id, canal, dimension_codigo, dimension_nombre, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, imp_reng_max, cant_reng_max, ultima_actividad'
+  const colsDetalle = 'empresa, fecha_cotizacion, canal, dimension, dimension_id, dimension_codigo, dimension_nombre, reng_cotizados, reng_facturados, imp_cotizado, imp_facturado, imp_cot_convertido, imp_reng_max, cant_reng_max, cotizaciones, cotiz_sin_seguimiento, cotiz_suspendidas, cotiz_canceladas, actualizado_en'
+
+  const [mensualRes, rankingRes, etlRes, detalleRes] = await Promise.all([
+    supabase.from('v_ventas_mensual').select(colsMensual).eq('empresa', empresaId),
     Promise.all([
-      traerTodo<FilaRankingVista>(supabase, 'v_ventas_ranking', empresaId, ['cliente', 'vendedor']),
+      traerTodo<FilaRankingVista>(supabase, 'v_ventas_ranking', colsRanking, empresaId, ['cliente', 'vendedor']),
       supabase.from('v_ventas_ranking')
-        .select('*')
+        .select(colsRanking)
         .eq('empresa', empresaId)
         .eq('dimension', 'producto')
         .order('imp_reng_max', { ascending: false })
@@ -130,15 +137,27 @@ export default async function Page({
       return { data: [...base, ...(prod.data as FilaRankingVista[])], error: null }
     }).catch(error => ({ data: null, error })),
     supabase.from('etl_estado').select('*').eq('empresa', empresaId).eq('area', 'ventas').maybeSingle(),
+    debePedirDetalle 
+      ? traerDetalleMes(supabase, colsDetalle, empresaId, anioParam as string, mesParam as string, dimensionParam).then(data => ({ data, error: null })).catch(error => ({ data: null, error }))
+      : Promise.resolve({ data: null, error: null })
   ])
 
-  let detalleMes: VentaRow[] | null = null
-  let detalleError = null
-  if (anioParam && mesParam) {
-    try {
-      detalleMes = await traerDetalleMes(supabase, empresaId, anioParam, mesParam, dimensionParam)
-    } catch (e) {
-      detalleError = e
+  let detalleMes: VentaRow[] | null = detalleRes.data
+  let detalleError = detalleRes.error
+  let defaultAnio: string | null = null
+  let defaultMes: string | null = null
+
+  if (!anioParam && !mesParam && !esHistorico && mensualRes.data && mensualRes.data.length > 0) {
+    const maxAnioMes = mensualRes.data.reduce((max, r) => r.anio_mes > max ? r.anio_mes : max, '')
+    if (maxAnioMes) {
+      const [anio, mes] = maxAnioMes.split('-')
+      defaultAnio = anio
+      defaultMes = mes
+      try {
+        detalleMes = await traerDetalleMes(supabase, colsDetalle, empresaId, anio, mes, dimensionParam)
+      } catch (e) {
+        detalleError = e
+      }
     }
   }
 
@@ -188,8 +207,10 @@ export default async function Page({
               mensual={mensualRes.data as FilaMensual[]} 
               ranking={rankingRes.data as FilaRankingVista[]} 
               detalleMes={detalleMes}
-              anioParam={anioParam}
-              mesParam={mesParam}
+              anioParam={anioParam || defaultAnio}
+              mesParam={mesParam || defaultMes}
+              defaultAnio={defaultAnio}
+              defaultMes={defaultMes}
             />
           </Suspense>
 
