@@ -11,7 +11,6 @@ interface KpiRowProps {
   rankingVendedoresExterno?: FilaRanking[];
   canalParam?: string | null;
   isUltimoMes?: boolean;
-  partialMonth?: string | null;
 }
 
 export function KpiRow({ 
@@ -21,7 +20,6 @@ export function KpiRow({
   rankingVendedoresExterno,
   canalParam,
   isUltimoMes,
-  partialMonth 
 }: KpiRowProps) {
   if (!kpis) {
     return (
@@ -35,7 +33,6 @@ export function KpiRow({
     )
   }
 
-  const warningIncompleto = partialMonth ? <span className="text-warning font-normal text-scale-xs block mt-1 leading-tight text-center">Periodo incompleto, el % va a subir</span> : undefined;
   const footnoteEnProceso = !isUltimoMes ? <span className="text-text-muted font-normal text-scale-xs block mt-1 leading-tight text-center">Solo cotizaciones de los últimos días</span> : undefined;
 
   const abandonado = kpisExterno?.impSinSeguimiento || 0
@@ -43,7 +40,7 @@ export function KpiRow({
   const abandonadoPct = cotizadoExterno > 0 ? (abandonado / cotizadoExterno) * 100 : 0
   const footnoteAbandonado = (
     <span className="text-text-muted font-normal text-scale-xs block mt-1 leading-tight text-center">
-      {!canalParam || canalParam === 'Todos' ? "Solo cliente con ficha. " : ""}
+      {!canalParam || canalParam === 'Todos' ? "Solo clientes registrados, excluye mostrador. " : ""}
       {abandonadoPct > 0 ? `${formatPct(abandonadoPct)} del cotizado.` : ""}
     </span>
   )
@@ -73,7 +70,6 @@ export function KpiRow({
   const mostradorImpSinSeguimiento = kpisMostrador?.impSinSeguimiento || 0
 
   let txtPartidaStatus = ''
-  let unitario: number | undefined = undefined
   if (kpis.impRenglonMax > 0) {
     if (kpis.renglonMaxConvertido >= kpis.impRenglonMax) {
       txtPartidaStatus = 'Ya llegó a factura'
@@ -82,20 +78,8 @@ export function KpiRow({
     } else {
       txtPartidaStatus = 'Parcialmente facturado'
     }
-    if (kpis.cantRenglonMax > 0) {
-      unitario = kpis.impRenglonMax / kpis.cantRenglonMax
-    }
   }
 
-  const partidaMasGrandeSec = kpis.impRenglonMax > 0 ? (
-    <span className="text-text-muted font-normal text-scale-xs block mt-1 leading-tight text-center overflow-hidden text-ellipsis" title={`${kpis.artRenglonMax}\n${txtPartidaStatus}`}>
-      <span className="block truncate max-w-[200px] mx-auto">{kpis.artRenglonMax}</span>
-      {unitario !== undefined && (
-        <span className="block mt-0.5">{kpis.cantRenglonMax.toLocaleString('es-MX')} pzas · {formatMoneda(unitario)} c/u</span>
-      )}
-      <span className="block mt-0.5">{txtPartidaStatus}</span>
-    </span>
-  ) : undefined
   return (
     <div className="mb-8">
       {/* Primera fila: KPI Principales (4 tarjetas) */}
@@ -114,7 +98,7 @@ export function KpiRow({
         
         <div data-tour="kpi-sin-seguimiento" className="h-full">
           <KpiCard
-            title="Abandonado"
+            title="Sin seguimiento"
             value={formatMoneda(abandonado)}
             secondary={footnoteAbandonado}
             className="ring-1 ring-warning"
@@ -140,29 +124,28 @@ export function KpiRow({
         </div>
       )}
 
-      {/* Segunda fila: Contexto (3 tarjetas) */}
-      <div className="grid gap-3 sm:gap-4 mb-2 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
-        <KpiCard
-          title="Productos que se cierran"
-          value={formatPct(kpis.convRenglonesPct)}
-          secondary={warningIncompleto}
-          className={partialMonth ? "ring-1 ring-warning" : ""}
-          tooltip="De cada cien productos cotizados, cuántos terminaron facturados. Mide qué tan seguido se concreta una cotización."
-        />
-        <KpiCard
-          title="Dinero que se cierra"
-          value={formatPct(kpis.convImportePct)}
-          secondary={warningIncompleto}
-          className={partialMonth ? "ring-1 ring-warning" : ""}
-          tooltip="De cada cien pesos cotizados, cuántos terminaron facturados. Siempre es menor que el porcentaje de productos: las cotizaciones grandes cierran menos que las chicas. Si la brecha entre ambos crece, se está cotizando mucho que no aterriza."
-        />
-        <KpiCard
-          title="Partida más grande"
-          value={formatMoneda(kpis.impRenglonMax)}
-          secondary={partidaMasGrandeSec}
-          tooltip="El producto de mayor monto en una sola cotización del periodo. Sirve para detectar errores de captura: si un mes se dispara, casi siempre es un dedazo en la cantidad."
-        />
-      </div>
+      {/* Partida mas grande: contexto, no KPI. Es el unico dato concreto en un
+          tablero de agregados y sirve para cazar dedazos de captura, pero no
+          compite con los KPIs. Los KPIs de conversion que vivian aqui se
+          quitaron: la banda de fuga y el panel de concentracion contestan esa
+          misma pregunta con mas precision. */}
+      {kpis.impRenglonMax > 0 && (
+        <div className="mt-6 border-t border-border pt-4 text-scale-sm text-text-muted">
+          <span className="text-text-secondary">Partida más grande:</span>{' '}
+          <span className="tabular-nums text-text-primary">{formatMoneda(kpis.impRenglonMax)}</span>
+          {' — '}
+          {kpis.artRenglonMax}
+          {kpis.cantRenglonMax > 0 && (
+            <>
+              {' · '}
+              {kpis.cantRenglonMax.toLocaleString('es-MX')} pzas
+              {' · '}
+              {formatMoneda(kpis.impRenglonMax / kpis.cantRenglonMax)} c/u
+            </>
+          )}
+          {txtPartidaStatus && <>{' · '}{txtPartidaStatus}</>}
+        </div>
+      )}
 
       {/* Mensaje de Mostrador */}
       {(!canalParam || canalParam === 'mostrador') && mostradorImpSinSeguimiento > 0 && (

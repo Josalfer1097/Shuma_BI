@@ -63,11 +63,35 @@ function FormularioAcceso() {
         router.push(destino)
         router.refresh()
       }
-    } catch {
-      // Mensaje deliberadamente vago. Distinguir "correo no existe" de
-      // "contrasena incorrecta" convierte la pantalla en un verificador de
-      // cuentas para cualquiera que la visite.
-      setError('No pudimos validar esos datos. Revisa el correo y la contraseña.')
+    } catch (fallo) {
+      // Mensaje deliberadamente vago para el caso de credenciales. Distinguir
+      // "correo no existe" de "contrasena incorrecta" convierte la pantalla en
+      // un verificador de cuentas para cualquiera que la visite.
+      //
+      // Pero un fallo de INFRAESTRUCTURA no es un fallo de credenciales, y
+      // decirle al usuario que revise su contrasena cuando en modo enlace no
+      // hay ninguna lo manda a buscar un problema que no existe. Peor: en modo
+      // enlace no hay nada que el usuario pueda hacer, y el mensaje sugiere
+      // que si.
+      //
+      // Estos dos codigos no filtran nada sobre si la cuenta existe:
+      //   429 -> limite de envio de correos alcanzado
+      //   5xx -> el SMTP configurado rechazo o no respondio
+      const estado =
+        typeof fallo === 'object' && fallo !== null && 'status' in fallo
+          ? Number((fallo as { status?: unknown }).status)
+          : 0
+
+      if (estado === 429) {
+        setError('Ya se mandó un enlace hace poco. Espera un minuto y vuelve a intentar.')
+      } else if (estado >= 500) {
+        setError('No pudimos mandar el correo. No es tu cuenta: avisa a sistemas.')
+      } else if (modo === 'enlace') {
+        setError('No pudimos mandar el enlace. Revisa que el correo esté bien escrito.')
+      } else {
+        setError('No pudimos validar esos datos. Revisa el correo y la contraseña.')
+      }
+
       setCargando(false)
       return
     }

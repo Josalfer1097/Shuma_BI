@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.33.2] — 2026-08-24
+
+### Corregido
+- Cerrar sesion dejaba una cookie con un refresh token invalidado y la siguiente carga fallaba con `refresh_token_not_found`. `signOut()` corria en el navegador, que no puede borrar cookies escritas por el servidor. Ahora es una Server Action.
+- El login decia "Revisa el correo y la contrasena" ante cualquier fallo, incluso en modo enlace, donde no hay contrasena, y ante fallos de SMTP, donde el usuario no puede hacer nada.
+
+### Anadido
+- Mensajes distintos para el limite de envio (429) y para un fallo del servidor de correo (5xx). Ninguno de los dos filtra si la cuenta existe, asi que no comprometen la decision de mantener vago el error de credenciales.
+
+## [0.33.1] — 2026-08-24
+
+### Cambiado
+- El KPI "Abandonado" pasa a "Sin seguimiento". El título era el último lugar del módulo con la palabra vieja (regla 3).
+- La nota "Solo cliente con ficha" pasa a "Solo clientes registrados, excluye mostrador", que dice lo mismo sin jerga.
+- "Partida más grande" baja de KPI a línea de contexto. Sigue sirviendo para cazar dedazos de captura, pero no compite con los KPIs.
+
+### Quitado
+- KPIs "Productos que se cierran" y "Dinero que se cierra": la banda de fuga y el panel de concentración contestan esa pregunta con más precisión.
+- El último `title=` nativo del navegador que quedaba en `components/ventas/`, pendiente desde v0.32.3.
+- La prop `partialMonth` de `KpiRow`, sin consumidores tras el cambio.
+
 ## [0.33.0] — 2026-08-24
 
 ### Añadido

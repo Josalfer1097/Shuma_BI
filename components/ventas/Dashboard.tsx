@@ -291,7 +291,6 @@ export function Dashboard({
           kpisMostrador={kpisMostrador}
           canalParam={canalParam}
           isUltimoMes={isUltimoMes}
-          partialMonth={partialMonth} 
         />
       </div>
 

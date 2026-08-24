@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogIn, LogOut, Loader2 } from 'lucide-react'
-import { crearClienteNavegador } from '@/lib/supabase-browser'
+import { cerrarSesion } from '@/app/acciones/sesion'
 
 interface Props {
   /** Nulo cuando no hay sesion. */
@@ -18,14 +18,22 @@ interface Props {
  */
 export function BotonSesion({ nombre }: Props) {
   const router = useRouter()
-  const [saliendo, setSaliendo] = useState(false)
+  const [saliendo, iniciarSalida] = useTransition()
 
-  async function salir() {
-    setSaliendo(true)
-    const supabase = crearClienteNavegador()
-    await supabase.auth.signOut()
-    router.refresh()
-    setSaliendo(false)
+  /**
+   * El cierre de sesion corre en el servidor, no aqui.
+   *
+   * signOut() del cliente de navegador no puede borrar las cookies que
+   * escribio el servidor, asi que dejaba un refresh token muerto y la
+   * siguiente carga fallaba con `refresh_token_not_found`.
+   *
+   * useTransition da el estado de "saliendo" sin necesidad de un useState
+   * propio, y la Server Action se encarga del redirect a /login.
+   */
+  function salir() {
+    iniciarSalida(() => {
+      void cerrarSesion()
+    })
   }
 
   if (!nombre) {
