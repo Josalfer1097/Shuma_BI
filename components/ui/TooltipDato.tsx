@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 /**
@@ -19,9 +19,12 @@ type TooltipDatoProps = {
   contenido: ReactNode
   children: ReactNode
   className?: string
+  /** Estilos en linea del contenedor. Lo usa la banda de fuga para fijar el
+   *  ancho porcentual de cada tramo, que no se puede expresar con una clase. */
+  style?: CSSProperties
 }
 
-export function TooltipDato({ contenido, children, className }: TooltipDatoProps) {
+export function TooltipDato({ contenido, children, className, style }: TooltipDatoProps) {
   const [visible, setVisible] = useState(false)
   const [montado, setMontado] = useState(false)
   const [coords, setCoords] = useState({ top: 0, left: 0 })
@@ -59,6 +62,7 @@ export function TooltipDato({ contenido, children, className }: TooltipDatoProps
     <div
       ref={contenedorRef}
       className={className}
+      style={style}
       onMouseEnter={entrar}
       onMouseLeave={salir}
       onFocus={entrar}

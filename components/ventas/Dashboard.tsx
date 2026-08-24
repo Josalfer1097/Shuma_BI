@@ -278,6 +278,8 @@ export function Dashboard({
       />
       
       <div className={`transition-opacity duration-300 ease-in-out ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        <PanelEmbudo ranking={ranking} />
+
         <div className="flex justify-end mb-4">
         <PanelHallazgos hallazgos={hallazgos} />
       </div>
@@ -294,7 +296,7 @@ export function Dashboard({
       </div>
 
       {totalDormidos > 0 && (
-        <div className="mt-4 rounded-lg border border-border bg-bg-surface p-4 text-scale-sm">
+        <div className="mt-6 border-t border-border pt-4 text-scale-sm">
           <p className="text-text-secondary">
             <strong className="text-text-primary font-semibold">{totalDormidos} clientes dormido{totalDormidos !== 1 ? 's' : ''}, {formatMonedaCorta(dormidosMonto)}.</strong>{' '}
             {dormidosPerdidos} perdido{dormidosPerdidos !== 1 ? 's' : ''} con más de 180 días y {dormidosRiesgo} en riesgo. {txtMayores}
@@ -309,8 +311,6 @@ export function Dashboard({
         partialMonth={partialMonth}
         anclaTour="tendencia" 
       />
-      
-      <PanelEmbudo ranking={ranking} />
       
       <PanelConcentracion data={dataRanking} dimension={dimensionParam} />
       

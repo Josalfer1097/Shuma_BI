@@ -33,6 +33,7 @@ const config: Config = {
           DEFAULT: "var(--accent)",
           deep: "var(--accent-deep)",
         },
+        neutral: "var(--neutral)",
         success: "var(--success)",
         warning: "var(--warning)",
         danger: "var(--danger)",

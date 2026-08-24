@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.33.0] — 2026-08-24
+
+### Añadido
+- Token `--neutral` en ambos temas: un gris sin sesgo azul (6.35:1 en oscuro, 5.65:1 en claro). Toda la paleta era azul, así que apagar un elemento solo se podía haciéndolo más claro, no distinto.
+- `Rotulo`: rótulo de sección en versalitas con la tipografía Exo, que el módulo de ventas no usaba en ningún lado.
+- `TooltipDato` acepta `style` para anchos porcentuales calculados.
+
+### Cambiado
+- El embudo pasa de panel a banda protagonista al tope del módulo: barra única continua, la fuga en `scale-3xl`, y es la única cifra grande de la pantalla. El tablero estaba construido como reporte de ventas cuando su trabajo es mostrar dónde se fuga el dinero.
+- Tres niveles de densidad: la banda sin borde sobre superficie elevada, los paneles de análisis como estaban, y el aviso de clientes dormidos reducido a una línea fina.
+- Los tramos "Suspendida a mano" y "Cancelado" usan el neutro nuevo en vez de dos azules más.
+
 ## [0.32.3] — 2026-08-22
 
 ### Corregido

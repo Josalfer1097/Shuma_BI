@@ -34,6 +34,12 @@
   --warning:        #FBBF24;   /* 10.86:1 */
   --danger:         #F87171;   /*  6.55:1 */
 
+  /* Neutro sin sesgo azul. Todo el tema es azul (fondo, superficie, borde,
+     acento), asi que apagar algo aclarandolo lo dejaba compitiendo en el
+     mismo matiz. Este gris hace que el acento lea como activo y no como
+     ambiental. 6.35:1 sobre --bg-surface. */
+  --neutral:        #909AA6;
+
   /* Etapas del proceso.
      No es una escala de claro a oscuro: con seis pasos de luminosidad, los
      dos ultimos quedaban casi blancos y se leian como espacios vacios en la
@@ -92,6 +98,8 @@
   --success:        #047857;   /*  5.48:1 */
   --warning:        #B45309;   /*  5.02:1 */
   --danger:         #B91C1C;   /*  6.47:1 */
+
+  --neutral:        #5F6874;   /*  5.65:1 sobre --bg-surface */
 
   /* Mismo criterio en modo claro: luminosidad pareja (5.6:1 contra el blanco)
      y separacion por matiz. Sobre estos tonos el texto blanco si funciona. */

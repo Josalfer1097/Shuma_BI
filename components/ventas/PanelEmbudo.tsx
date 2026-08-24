@@ -7,21 +7,33 @@ import {
   formatPct,
   type FilaRankingVista,
 } from '@/lib/ventas'
+import { Rotulo } from '../ui/Rotulo'
 import { Tooltip } from '../ui/Tooltip'
 import { TooltipDato } from '../ui/TooltipDato'
 
 /**
- * Embudo de conversion. Panel de contexto: canal externo y periodo completo.
+ * Banda de fuga. Pieza protagonista del modulo: es lo primero que se ve al
+ * entrar y la unica que se permite volumen tipografico.
+ *
+ * POR QUE ES LO PRIMERO — el tablero estaba construido como reporte de ventas
+ * ("cuanto vendimos") cuando su trabajo real es "donde se esta fugando el
+ * dinero". Sin seguimiento es el 52.1% del embudo y hasta v0.32.3 se veia
+ * igual que una tarjeta de conteo sin comparacion.
  *
  * REGLA 1 — el tramo convertido usa imp_cot_convertido, NO imp_facturado.
  * imp_facturado esta a precio de factura y el cotizado a precio de cotizacion:
  * dividir uno entre otro da razones arriba del 100%. La etiqueta dice
- * "Cotizado que se facturo" justamente para que nadie lo confunda con la
- * tarjeta "Facturado" de KpiRow, que es otra cifra.
+ * "Cotizado que se facturo" para que nadie lo confunda con la tarjeta
+ * "Facturado" de KpiRow, que es otra cifra.
  *
  * REGLA 3 — "sin seguimiento" es el status F: el ERP suspende sola la
  * cotizacion a los diez dias sin actividad. No es venta perdida. Es distinto
- * de "suspendida a mano", que si fue una decision de alguien.
+ * de "suspendida a mano", que si fue una decision de alguien. Ninguna etiqueta
+ * emite juicio.
+ *
+ * REGLA 7 — canal externo unicamente, aunque el filtro este en "Todos".
+ * Mostrador abandona el 93.3% por naturaleza del canal: mezclarlo haria que la
+ * fuga se viera enorme por una razon que no es un problema.
  *
  * Los cinco tramos suman el cotizado. Si no suman, hay un estado nuevo en el
  * ERP y hay que reportarlo, no rellenar la diferencia.
@@ -32,13 +44,15 @@ type PanelEmbudoProps = {
 }
 
 const AYUDA_PANEL =
-  'Muestra en que termino cada peso cotizado del canal externo, sobre el periodo completo. ' +
-  'Los cinco tramos suman el total cotizado. El tramo convertido esta medido a precio de ' +
-  'cotizacion, no de factura, que es la unica forma de que las partes sumen el todo.'
+  'En que termino cada peso cotizado del canal externo, sobre el periodo completo. ' +
+  'Los cinco tramos suman el total cotizado. El tramo convertido esta medido a precio ' +
+  'de cotizacion, no de factura: es la unica forma de que las partes sumen el todo.'
+
+const TOLERANCIA = 0.001
 
 function EstadoVacio() {
   return (
-    <section className="mb-8 flex min-h-[260px] items-center justify-center rounded-lg border border-border bg-bg-surface p-5">
+    <section className="mb-8 flex min-h-[168px] items-center justify-center rounded-lg bg-bg-elevated px-6 py-8">
       <p className="text-scale-sm text-text-muted">
         No hay cotizaciones de canal externo en este periodo. Cambia el filtro de canal
         o de periodo para verlo.
@@ -89,48 +103,63 @@ export function PanelEmbudo({ ranking }: PanelEmbudoProps) {
     {
       label: ETIQUETA_SUSPENDIDA,
       valor: suma('imp_suspendido'),
-      color: 'bg-text-muted',
+      color: 'bg-neutral',
       ayuda: 'Alguien la suspendio deliberadamente. Es una decision, no un vencimiento.',
     },
     {
       label: 'Cancelado',
       valor: suma('imp_cancelado'),
-      color: 'bg-bg-elevated',
+      color: 'bg-neutral opacity-40',
       ayuda: 'Cotizaciones canceladas de forma explicita.',
     },
   ]
 
   const sumaTramos = tramos.reduce((acc, t) => acc + t.valor, 0)
   const diferencia = totalCotizado - sumaTramos
-  const descuadra = Math.abs(diferencia) > totalCotizado * 0.001
+  const descuadra = Math.abs(diferencia) > totalCotizado * TOLERANCIA
+
+  const fuga = tramos[1]
+  const fugaPct = (fuga.valor / totalCotizado) * 100
 
   return (
-    <section className="mb-8 min-h-[260px] rounded-lg border border-border bg-bg-surface p-5">
-      <header className="mb-6 flex items-start justify-between gap-4">
+    <section className="mb-8 rounded-lg bg-bg-elevated px-6 py-6">
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <h3 className="flex items-center gap-2 font-medium text-text-primary">
-            Embudo de conversión
-            <Tooltip text={AYUDA_PANEL} />
-          </h3>
-          <p className="mt-1 text-scale-xs text-text-muted">
-            Canal externo, periodo completo. Los cinco tramos suman el cotizado.
+          <Rotulo className="mb-1.5">Fuga del periodo</Rotulo>
+          <p className="flex items-baseline gap-3">
+            <span className="font-exo text-scale-3xl leading-none tabular-nums text-danger">
+              {formatMonedaCorta(fuga.valor)}
+            </span>
+            <span className="font-exo text-scale-xl leading-none tabular-nums text-text-secondary">
+              {formatPct(fugaPct)}
+            </span>
+          </p>
+          <p className="mt-2 max-w-md text-scale-xs text-text-muted">
+            Cotizaciones que el sistema suspendió solo a los diez días sin que nadie las
+            tocara. Canal externo, periodo completo.
           </p>
         </div>
-        <span className="shrink-0 text-right">
-          <span className="block text-scale-xs text-text-muted">Cotizado</span>
-          <span className="block text-scale-lg tabular-nums text-text-primary">
+
+        <div className="text-right">
+          <Rotulo className="mb-1.5 flex items-center justify-end gap-2">
+            Cotizado
+            <Tooltip text={AYUDA_PANEL} />
+          </Rotulo>
+          <span className="font-exo text-scale-xl leading-none tabular-nums text-text-primary">
             {formatMonedaCorta(totalCotizado)}
           </span>
-        </span>
+        </div>
       </header>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-bg-base">
         {tramos.map((tramo) => {
           const pct = (tramo.valor / totalCotizado) * 100
+          if (pct <= 0) return null
 
           return (
             <TooltipDato
               key={tramo.label}
+              className="h-full transition-all duration-500 ease-out"
               contenido={
                 <div className="space-y-1">
                   <p className="font-medium text-text-primary">{tramo.label}</p>
@@ -140,31 +169,32 @@ export function PanelEmbudo({ ranking }: PanelEmbudoProps) {
                   <p className="text-text-muted">{tramo.ayuda}</p>
                 </div>
               }
+              style={{ width: `${pct}%` }}
             >
-              <div className="flex flex-col gap-1 text-scale-sm">
-                <div className="flex justify-between font-medium">
-                  <span className="text-text-primary">{tramo.label}</span>
-                  <span className="text-text-primary tabular-nums">
-                    {formatMonedaCorta(tramo.valor)}{' '}
-                    <span className="ml-1 inline-block w-14 text-right font-normal tabular-nums text-text-muted">
-                      {formatPct(pct)}
-                    </span>
-                  </span>
-                </div>
-                <div className="relative h-2 w-full overflow-hidden rounded-full bg-bg-elevated">
-                  <div
-                    className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out ${tramo.color}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
+              <div className={`h-full w-full ${tramo.color}`} />
             </TooltipDato>
           )
         })}
       </div>
 
+      <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+        {tramos.map((tramo) => {
+          const pct = (tramo.valor / totalCotizado) * 100
+
+          return (
+            <li key={tramo.label} className="flex items-center gap-2">
+              <span className={`h-2 w-2 shrink-0 rounded-full ${tramo.color}`} />
+              <span className="text-scale-xs text-text-secondary">{tramo.label}</span>
+              <span className="text-scale-xs tabular-nums text-text-muted">
+                {formatPct(pct)}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+
       {descuadra && (
-        <p className="mt-4 text-right text-scale-xs text-warning">
+        <p className="mt-4 text-scale-xs text-warning">
           Los tramos no cuadran con el cotizado por {formatMonedaCorta(Math.abs(diferencia))}.
           Puede haber un estado nuevo en el ERP: repórtalo antes de usar estas cifras.
         </p>
