@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.34.4] — 2026-08-24
+
+### Corregido
+- El encabezado de la columna en la tabla de ranking que decía "Abandonado" ahora dice "Sin seguimiento", usando la constante centralizada para cumplir la regla de no emitir juicios.
+- Faltaban acentos en los cinco textos de ayuda (tooltips) de la banda de fuga. Se corrigieron (`cotización`, `está`, `días`, `volvió`, `última`, `suspendió`, `decisión`, `explícita`).
+
+### Cambiado
+- El hallazgo de "Clientes dormidos" deja de afirmar que un cliente está "perdido" o que "dejó de comprar" por voluntad propia, ya que el tablero no cuenta con datos de cobranza para distinguir a quienes tienen el crédito suspendido de quienes se fueron a la competencia. El texto ahora sugiere revisar el crédito en el SGE antes de asumirlos perdidos.
+- Se agregó el inciso correspondiente a esta limitación en la definición de "Clientes dormidos" del glosario.
+
 ## [0.34.3] — 2026-08-24
 
 ### Cambiado

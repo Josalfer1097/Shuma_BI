@@ -220,8 +220,8 @@ function hallazgoDormidos(ranking: FilaRankingVista[]): Hallazgo | null {
     return {
       tipo: 'atipico',
       tono: 'malo',
-      titulo: `${perdidos} cliente${perdidos > 1 ? 's' : ''} grande${perdidos > 1 ? 's' : ''} perdido${perdidos > 1 ? 's' : ''}`,
-      detalle: `Llevan más de 180 días sin comprar. El mayor de ellos es ${mayorPerdido.dimension_nombre} (${formatMonedaCorta(mayorPerdido.imp_facturado)} facturados históricamente).`
+      titulo: `${perdidos} cliente${perdidos > 1 ? 's' : ''} grande${perdidos > 1 ? 's' : ''} sin comprar`,
+      detalle: `Llevan más de 180 días sin facturar. El mayor es ${mayorPerdido.dimension_nombre} (${formatMonedaCorta(mayorPerdido.imp_facturado)} facturados históricamente). Antes de tratarlo como venta perdida, revisa en el SGE si tiene el crédito suspendido: hay casos en esta lista que dejaron de comprar por cobranza, no por falta de interés.`
     }
   }
 
@@ -230,7 +230,7 @@ function hallazgoDormidos(ranking: FilaRankingVista[]): Hallazgo | null {
       tipo: 'atipico',
       tono: 'malo',
       titulo: `${riesgo} cliente${riesgo > 1 ? 's' : ''} grande${riesgo > 1 ? 's' : ''} en riesgo`,
-      detalle: `Llevan entre 90 y 180 días sin comprar. El mayor es ${mayorRiesgo.dimension_nombre} (${formatMonedaCorta(mayorRiesgo.imp_facturado)} facturados históricamente).`
+      detalle: `Llevan entre 90 y 180 días sin facturar. El mayor es ${mayorRiesgo.dimension_nombre} (${formatMonedaCorta(mayorRiesgo.imp_facturado)} facturados históricamente). Revisa en el SGE si el crédito está suspendido antes de asumir que se fueron.`
     }
   }
 
@@ -475,6 +475,7 @@ export const GLOSARIO_VENTAS: EntradaGlosario[] = [
     termino: 'Clientes dormidos',
     definicion:
       'Clientes registrados que han facturado más de 500 mil pesos históricamente ' +
-      'y llevan más de 90 días sin comprar. Si superan los 180 días, se consideran perdidos.',
+      'y llevan más de 90 días sin comprar. Si superan los 180 días, se consideran perdidos. ' +
+      'No distingue entre quien se fue y quien tiene el crédito suspendido.',
   },
 ]

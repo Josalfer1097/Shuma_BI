@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FilaRanking, Dimension, formatMoneda, formatMonedaCorta, formatPct, formatEntero, cotizacionesSumables } from '@/lib/ventas'
+import { FilaRanking, Dimension, formatMoneda, formatMonedaCorta, formatPct, formatEntero, cotizacionesSumables, ETIQUETA_SIN_SEGUIMIENTO } from '@/lib/ventas'
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { Tooltip } from '../ui/Tooltip'
 import { TooltipDato } from '../ui/TooltipDato'
@@ -141,7 +141,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                     En la mesa <Tooltip text="Cotizaciones abiertas con actividad reciente al momento del corte." /> <SortIcon field="impEnProceso" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('impSinSeguimiento')}>
-                    Abandonado <Tooltip text="El SGE suspende sola la cotización a los diez días sin actividad. No es que el cliente dijera que no: es que nadie volvió a hablarle." /> <SortIcon field="impSinSeguimiento" />
+                    {ETIQUETA_SIN_SEGUIMIENTO} <Tooltip text="El SGE suspende sola la cotización a los diez días sin actividad. No es que el cliente dijera que no: es que nadie volvió a hablarle." /> <SortIcon field="impSinSeguimiento" />
                   </th>
                   {showCotizaciones && (
                     <>

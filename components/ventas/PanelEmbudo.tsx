@@ -84,33 +84,33 @@ export function PanelEmbudo({ ranking }: PanelEmbudoProps) {
       color: 'bg-accent',
       ayuda:
         'Importe cotizado de las lineas que llegaron a factura, medido a precio de ' +
-        'cotizacion. No es la cifra de la tarjeta "Facturado": esa esta a precio de factura.',
+        'cotización. No es la cifra de la tarjeta "Facturado": esa está a precio de factura.',
     },
     {
       label: ETIQUETA_SIN_SEGUIMIENTO,
       valor: suma('imp_sin_seguimiento'),
       color: 'bg-danger',
       ayuda:
-        'El SGE suspende sola la cotizacion a los diez dias sin actividad. No es que el ' +
-        'cliente dijera que no: es que nadie volvio a hablarle.',
+        'El SGE suspende sola la cotización a los diez días sin actividad. No es que el ' +
+        'cliente dijera que no: es que nadie volvió a hablarle.',
     },
     {
       label: 'Vivo al corte',
       valor: suma('imp_en_proceso'),
       color: 'bg-warning',
-      ayuda: 'Cotizaciones abiertas y con actividad reciente al momento de la ultima carga.',
+      ayuda: 'Cotizaciones abiertas y con actividad reciente al momento de la última carga.',
     },
     {
       label: ETIQUETA_SUSPENDIDA,
       valor: suma('imp_suspendido'),
       color: 'bg-neutral',
-      ayuda: 'Alguien la suspendio deliberadamente. Es una decision, no un vencimiento.',
+      ayuda: 'Alguien la suspendió deliberadamente. Es una decisión, no un vencimiento.',
     },
     {
       label: 'Cancelado',
       valor: suma('imp_cancelado'),
       color: 'bg-neutral opacity-40',
-      ayuda: 'Cotizaciones canceladas de forma explicita.',
+      ayuda: 'Cotizaciones canceladas de forma explícita.',
     },
   ]
 
