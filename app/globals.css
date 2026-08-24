@@ -461,46 +461,76 @@ body {
   opacity: 0.9;
 }
 
-/* ERROR — el trazo de cierre llega al vertice, no conecta y se retrae.
-   Es lo contrario del temblor rojo de todo formulario del mundo: dice
-   "no cerro" en el idioma del oficio, y no revela POR QUE fallo, que
-   es justo lo que el mensaje de texto tampoco puede decir.          */
+/* ERROR — el trazo de cierre INTENTA cerrar, no llega, y se retrae.
+   Vuelve a intentarlo cada 2.6 s.
+
+   La primera version era de un solo disparo de 900 ms: correcta en la idea
+   e ilegible en la practica. Si el usuario parpadea o mira el mensaje de
+   texto, se la pierde y ya no vuelve. Un estado que solo existe durante un
+   instante no es un estado: es un destello.
+
+   El bucle no es adorno. Un formulario en error SIGUE en error hasta que
+   alguien lo corrige, y la interfaz debe seguir diciendolo. Se detiene solo
+   cuando el usuario escribe, porque escribir ya es intentar de nuevo.       */
+
+/* El resto de la figura se apaga para que el hueco sea EL evento.
+   Sin esto todos los trazos compiten y el que falta no destaca.             */
 .plano[data-estado='error'] .plano-trazo {
   animation: none;
   stroke-dashoffset: 0;
-  opacity: 1;
+  opacity: 0.28;
+  transition: opacity 300ms ease-out;
+}
+
+.plano[data-estado='error'] .plano-reticula {
+  stroke-opacity: 0.06;
 }
 
 @keyframes plano-cierre-fallido {
-  0%   { stroke-dashoffset: 120; }
-  45%  { stroke-dashoffset: 34; }   /* llega cerca del vertice */
-  60%  { stroke-dashoffset: 34; }   /* se detiene: no alcanza */
-  100% { stroke-dashoffset: 82; }   /* y retrocede */
+  0%   { stroke-dashoffset: 120; opacity: 0.35; }
+  30%  { stroke-dashoffset: 46;  opacity: 1; }    /* se acerca al vertice */
+  42%  { stroke-dashoffset: 46;  opacity: 1; }    /* se detiene: no alcanza */
+  55%  { stroke-dashoffset: 88;  opacity: 0.9; }  /* y retrocede */
+  100% { stroke-dashoffset: 88;  opacity: 0.9; }  /* espera antes de reintentar */
 }
 
 .plano[data-estado='error'] .plano-cierre {
   stroke: var(--danger);
-  animation: plano-cierre-fallido 900ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  stroke-width: 3;
+  opacity: 1;
+  animation: plano-cierre-fallido 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-.plano[data-estado='error'] .plano-nodo {
-  animation: none;
-  opacity: 0.5;
-}
-
-/* El nodo del vertice que quedo sin conectar. Solo existe en error. */
+/* El vertice que quedo sin conectar. Anillo + punto: a 3 px de radio el
+   punto solo se perdia contra el fondo.                                     */
 @keyframes plano-nodo-roto-pulso {
-  0%, 100% { opacity: 0.25; }
-  50%      { opacity: 0.8; }
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50%      { opacity: 0.95; transform: scale(1.15); }
 }
 
-.plano-nodo-roto {
+.plano-nodo-roto,
+.plano-anillo-roto {
   opacity: 0;
-  fill: var(--danger);
 }
 
 .plano[data-estado='error'] .plano-nodo-roto {
-  animation: plano-nodo-roto-pulso 1.4s ease-in-out infinite 700ms;
+  fill: var(--danger);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: plano-nodo-roto-pulso 2.6s ease-in-out infinite;
+}
+
+.plano[data-estado='error'] .plano-anillo-roto {
+  stroke: var(--danger);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: plano-nodo-roto-pulso 2.6s ease-in-out infinite 200ms;
+}
+
+/* Los nodos buenos se apagan casi por completo: el ojo debe irse al que falla. */
+.plano[data-estado='error'] .plano-nodo {
+  animation: none;
+  opacity: 0.22;
 }
 
 /* Accesibilidad: sin movimiento, todo queda en su estado final legible. */
@@ -513,7 +543,8 @@ body {
   .plano-trazo,
   .plano-nodo,
   .plano-cierre,
-  .plano-nodo-roto {
+  .plano-nodo-roto,
+  .plano-anillo-roto {
     animation: none !important;
   }
 
@@ -521,8 +552,10 @@ body {
      movimiento el plano sigue diciendo en que estado esta. */
   .plano[data-estado='enviando'] .plano-trazo { stroke-dashoffset: 40; opacity: 0.6; }
   .plano[data-estado='exito'] .plano-trazo    { stroke-dashoffset: 0; opacity: 1; }
-  .plano[data-estado='error'] .plano-cierre   { stroke-dashoffset: 82; stroke: var(--danger); }
-  .plano[data-estado='error'] .plano-nodo-roto { opacity: 0.8; }
+  .plano[data-estado='error'] .plano-trazo    { opacity: 0.28; }
+  .plano[data-estado='error'] .plano-cierre   { stroke-dashoffset: 88; stroke: var(--danger); stroke-width: 3; opacity: 1; }
+  .plano[data-estado='error'] .plano-nodo-roto { opacity: 0.9; }
+  .plano[data-estado='error'] .plano-anillo-roto { opacity: 0.6; }
 
   .barra-ruta  { transform: scaleX(0.4); opacity: 1; }
   .carga-haz   { opacity: 0; }

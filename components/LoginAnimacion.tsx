@@ -86,11 +86,15 @@ export function LoginAnimacion({ tamano = 240, estado = 'reposo' }: LoginAnimaci
           <circle className="plano-nodo" style={{ animationDelay: '2900ms' }} cx="140" cy="70" r="2.5" />
         </g>
 
-        {/* Nodo del vertice que NO conecta. Solo aparece en estado de error,
-            justo donde el trazo de cierre se queda corto. */}
-        <g fill="currentColor" stroke="none">
-          <circle className="plano-nodo-roto" cx="140" cy="140" r="3" />
-        </g>
+        {/* El vertice que NO conecta. Solo existe en estado de error, justo
+            donde el trazo de cierre se queda corto.
+
+            Anillo mas punto, no solo punto: a 3 px de radio contra un fondo
+            azul oscuro el punto se perdia. El anillo le da area sin engordar
+            la figura, y entra 200 ms despues para que se lea como una onda
+            saliendo del vertice y no como un boton. */}
+        <circle className="plano-anillo-roto" cx="140" cy="140" r="9" fill="none" strokeWidth="1.5" />
+        <circle className="plano-nodo-roto" cx="140" cy="140" r="3.5" stroke="none" />
 
       </g>
     </svg>

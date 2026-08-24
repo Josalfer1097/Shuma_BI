@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.34.1] — 2026-08-24
+
+### Corregido
+- El estado de error del plano duraba 900 ms una sola vez y era invisible en la práctica. Ahora reintenta cerrar cada 2.6 s hasta que el usuario escribe, el trazo engorda a 3 px y el resto de la figura se apaga para que el hueco sea el evento.
+- El vértice roto gana un anillo: a 3 px de radio el punto se perdía contra el fondo.
+- Tres textos del login habían quedado sin acentos: "mandó" y "contraseña".
+
+### Cambiado
+- `signInWithOtp` usa `shouldCreateUser: false`. Antes, cualquier correo válido creaba una cuenta y recibía éxito, así que el estado de error nunca se disparaba en modo enlace y la tabla de usuarios acumulaba cuentas sin permisos.
+- El mensaje de fallo en modo enlace pasa a "Ese correo no tiene acceso al tablero. Escribe a sistemas.", que le da al usuario algo que hacer.
+
 ## [0.34.0] — 2026-08-24
 
 ### Anadido

@@ -84,6 +84,18 @@ function FormularioAcceso() {
           email: correo.trim(),
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destino)}`,
+            // Sin esto, Supabase CREA la cuenta de cualquier correo valido y
+            // responde exito. Es antienumeracion por diseno: evita que alguien
+            // averigue que correos estan registrados probando en el login.
+            //
+            // Para un tablero interno esa defensa protege de un ataque que no
+            // existe —el atacante ya sabe que los correos son @shuma.mx— y a
+            // cambio deja abierta la creacion libre de cuentas. Se paga con
+            // una tabla de usuarios llena de gente que nunca debio existir.
+            //
+            // Efecto secundario deseado: el estado de error del plano por fin
+            // se dispara cuando el correo no esta dado de alta.
+            shouldCreateUser: false,
           },
         })
         if (fallo) throw fallo
@@ -124,16 +136,20 @@ function FormularioAcceso() {
         // numero porque la cuenta regresiva se pinta aparte y se mueve.
         setTonoError('aviso')
         setEspera(60)
-        setError('Ya se mando un enlace hace poco.')
+        setError('Ya se mandó un enlace hace poco.')
       } else if (estado >= 500) {
         setTonoError('falla')
         setError('No pudimos mandar el correo. No es tu cuenta: avisa a sistemas.')
       } else if (modo === 'enlace') {
+        // Con shouldCreateUser:false, el fallo tipico en modo enlace ya no es
+        // un correo mal escrito: es un correo que no esta dado de alta. Decirlo
+        // asi le da al usuario algo que hacer en vez de mandarlo a revisar una
+        // ortografia que probablemente esta bien.
         setTonoError('falla')
-        setError('No pudimos mandar el enlace. Revisa que el correo este bien escrito.')
+        setError('Ese correo no tiene acceso al tablero. Escribe a sistemas.')
       } else {
         setTonoError('falla')
-        setError('No pudimos validar esos datos. Revisa el correo y la contrasena.')
+        setError('No pudimos validar esos datos. Revisa el correo y la contraseña.')
       }
 
       setCargando(false)
