@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.34.0] — 2026-08-24
+
+### Anadido
+- El plano del login deja de ser decoracion y pasa a ser el estado de la aplicacion: reposo, escribiendo, enviando, exito y error. En estado de error el trazo de cierre llega al vertice, no conecta y se retrae.
+- Cuenta regresiva de 60 s tras el limite de envio, con el boton bloqueado mientras corre.
+- Los errores distinguen aviso de falla: un limite de envio se resuelve esperando y no debe verse igual de rojo que un fallo de servidor.
+- Version estatica de cada estado del plano bajo `prefers-reduced-motion`: se pierde la animacion, no la informacion.
+
+### Cambiado
+- Escribir en cualquier campo limpia el error. Antes el plano seguia roto mientras el usuario corregia.
+- El trazo de cierre de la figura se separo de los otros cuatro para poder fallar por si solo.
+
 ## [0.33.2] — 2026-08-24
 
 ### Corregido

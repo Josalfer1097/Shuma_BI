@@ -1,11 +1,11 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, KeyRound, ArrowRight, Check } from 'lucide-react'
 import { crearClienteNavegador } from '@/lib/supabase-browser'
 import { FondoAcceso } from '@/components/FondoAcceso'
-import { LoginAnimacion } from '@/components/LoginAnimacion'
+import { LoginAnimacion, type EstadoPlano } from '@/components/LoginAnimacion'
 import { PantallaCarga } from '@/components/ui/PantallaCarga'
 
 type Modo = 'enlace' | 'password'
@@ -29,6 +29,43 @@ function FormularioAcceso() {
   const [entrando, setEntrando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [enviado, setEnviado] = useState(false)
+  /**
+   * Tono del error, no solo su texto.
+   *
+   * "Espera un minuto" y "no es tu cuenta, avisa a sistemas" no son la misma
+   * clase de problema y no deben verse igual de rojos. `aviso` es algo que se
+   * resuelve solo con tiempo; `falla` no depende del usuario.
+   */
+  const [tonoError, setTonoError] = useState<'falla' | 'aviso'>('falla')
+  /** Segundos que faltan para poder reintentar tras un 429. */
+  const [espera, setEspera] = useState(0)
+
+  /**
+   * Cuenta regresiva del limite de envio.
+   *
+   * Supabase impone 60 s entre correos al mismo usuario. Mostrar el numero
+   * corriendo convierte una espera opaca en una espera entendida: el usuario
+   * deja de darle al boton cada dos segundos.
+   */
+  useEffect(() => {
+    if (espera <= 0) return
+    const t = setTimeout(() => setEspera((s) => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [espera])
+
+  /**
+   * Corregir es intentar de nuevo.
+   *
+   * Sin esto el plano se queda roto mientras el usuario reescribe su correo,
+   * y la pantalla sigue senalando un fallo que ya esta corrigiendo. La espera
+   * del 429 NO se limpia aqui: esa no depende de lo que el usuario escriba.
+   */
+  function alEscribir(fn: (v: string) => void) {
+    return (v: string) => {
+      if (error) setError(null)
+      fn(v)
+    }
+  }
 
   function cambiarModo(nuevo: Modo) {
     setModo(nuevo)
@@ -83,13 +120,20 @@ function FormularioAcceso() {
           : 0
 
       if (estado === 429) {
-        setError('Ya se mandó un enlace hace poco. Espera un minuto y vuelve a intentar.')
+        // Aviso, no falla: se resuelve solo con esperar. El texto no lleva el
+        // numero porque la cuenta regresiva se pinta aparte y se mueve.
+        setTonoError('aviso')
+        setEspera(60)
+        setError('Ya se mando un enlace hace poco.')
       } else if (estado >= 500) {
+        setTonoError('falla')
         setError('No pudimos mandar el correo. No es tu cuenta: avisa a sistemas.')
       } else if (modo === 'enlace') {
-        setError('No pudimos mandar el enlace. Revisa que el correo esté bien escrito.')
+        setTonoError('falla')
+        setError('No pudimos mandar el enlace. Revisa que el correo este bien escrito.')
       } else {
-        setError('No pudimos validar esos datos. Revisa el correo y la contraseña.')
+        setTonoError('falla')
+        setError('No pudimos validar esos datos. Revisa el correo y la contrasena.')
       }
 
       setCargando(false)
@@ -97,6 +141,25 @@ function FormularioAcceso() {
     }
     setCargando(false)
   }
+
+  /**
+   * El estado del plano se DERIVA, no se guarda aparte.
+   *
+   * Un useState propio para la animacion podria desincronizarse del estado
+   * real del formulario y mostrar un plano cerrado sobre un error, o al reves.
+   * Derivarlo hace imposible esa clase de bug.
+   *
+   * El orden importa: exito y fallo mandan sobre todo lo demas.
+   */
+  const estadoPlano: EstadoPlano = enviado
+    ? 'exito'
+    : error
+      ? 'error'
+      : cargando || entrando
+        ? 'enviando'
+        : correo.length > 0 || password.length > 0
+          ? 'escribiendo'
+          : 'reposo'
 
   const listo =
     modo === 'enlace' ? correo.includes('@') : correo.includes('@') && password.length > 0
@@ -117,7 +180,7 @@ function FormularioAcceso() {
             <span className="text-accent">{'//'}</span> acceso
           </p>
           <div className="flex justify-center mb-6">
-            <LoginAnimacion tamano={200} />
+            <LoginAnimacion tamano={200} estado={estadoPlano} />
           </div>
           <h1 className="font-neuropol text-scale-4xl tracking-[0.18em] text-text-primary drop-shadow-[0_2px_20px_var(--accent)]">
             SHUMA
@@ -208,7 +271,7 @@ function FormularioAcceso() {
                   autoComplete="email"
                   placeholder="nombre@shuma.mx"
                   value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
+                  onChange={(e) => alEscribir(setCorreo)(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && listo && !cargando) enviar()
                   }}
@@ -238,7 +301,7 @@ function FormularioAcceso() {
                     autoComplete="current-password"
                     tabIndex={modo === 'password' ? 0 : -1}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => alEscribir(setPassword)(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && listo && !cargando) enviar()
                     }}
@@ -248,15 +311,28 @@ function FormularioAcceso() {
               </div>
 
               {error && (
-                <p role="alert" className="animar-entrada text-scale-sm text-danger">
+                <p
+                  role="alert"
+                  className={`animar-entrada text-scale-sm ${
+                    tonoError === 'aviso' ? 'text-warning' : 'text-danger'
+                  }`}
+                >
                   {error}
+                  {espera > 0 && (
+                    <>
+                      {' '}
+                      <span className="tabular-nums text-text-muted">
+                        Puedes reintentar en {espera} s.
+                      </span>
+                    </>
+                  )}
                 </p>
               )}
 
               <button
                 type="button"
                 onClick={enviar}
-                disabled={!listo || cargando || entrando}
+                disabled={!listo || cargando || entrando || espera > 0}
                 className="boton-acceso animar-entrada group mt-1 flex w-full items-center justify-center gap-2 rounded-lg py-3.5 text-scale-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 style={{ animationDelay: '0.4s' }}
               >

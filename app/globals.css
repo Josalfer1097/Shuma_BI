@@ -380,6 +380,23 @@ body {
   animation: pantalla-carga-entrada 0.25s ease-out both;
 }
 
+/* ── El plano del login: cinco estados ────────────────────────
+   Toda la animacion se selecciona por [data-estado] en el <svg>.
+   El componente no conoce ningun tiempo: un cambio de ritmo se hace
+   aqui y no obliga a recompilar React.                            */
+
+.plano-reticula {
+  stroke-opacity: 0.12;
+  transition: stroke-opacity 400ms ease-out;
+}
+
+/* ESCRIBIENDO — la reticula se aviva. Es la unica senal de que el
+   sistema esta atento antes de que el usuario envie nada.          */
+.plano[data-estado='escribiendo'] .plano-reticula {
+  stroke-opacity: 0.3;
+}
+
+/* REPOSO — se traza, respira, se desvanece. Ciclo de 9 s. */
 @keyframes plano-trazo-dibujo {
   0%   { stroke-dashoffset: 120; opacity: 0; }
   10%  { opacity: 1; }
@@ -405,6 +422,87 @@ body {
   animation: plano-nodo-aparicion 9s ease-in-out infinite;
 }
 
+/* ENVIANDO — el trazo se acelera y NO cierra: la obra sigue.
+   3 s en vez de 9, y el ciclo termina antes del desvanecido para que
+   nunca se lea como "terminado".                                   */
+@keyframes plano-trazo-obra {
+  0%   { stroke-dashoffset: 120; opacity: 0.2; }
+  60%  { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -120; opacity: 0.2; }
+}
+
+.plano[data-estado='enviando'] .plano-trazo {
+  animation: plano-trazo-obra 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.plano[data-estado='enviando'] .plano-nodo {
+  animation: none;
+  opacity: 0.35;
+}
+
+/* EXITO — el plano CIERRA y se aquieta. No hay sello ni paloma: la
+   figura terminada es el mensaje. La reticula se apaga para que solo
+   quede la obra.                                                    */
+@keyframes plano-cerrar {
+  from { stroke-dashoffset: 120; opacity: 0.3; }
+  to   { stroke-dashoffset: 0; opacity: 1; }
+}
+
+.plano[data-estado='exito'] .plano-trazo {
+  animation: plano-cerrar 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.plano[data-estado='exito'] .plano-reticula {
+  stroke-opacity: 0.05;
+}
+
+.plano[data-estado='exito'] .plano-nodo {
+  animation: none;
+  opacity: 0.9;
+}
+
+/* ERROR — el trazo de cierre llega al vertice, no conecta y se retrae.
+   Es lo contrario del temblor rojo de todo formulario del mundo: dice
+   "no cerro" en el idioma del oficio, y no revela POR QUE fallo, que
+   es justo lo que el mensaje de texto tampoco puede decir.          */
+.plano[data-estado='error'] .plano-trazo {
+  animation: none;
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
+
+@keyframes plano-cierre-fallido {
+  0%   { stroke-dashoffset: 120; }
+  45%  { stroke-dashoffset: 34; }   /* llega cerca del vertice */
+  60%  { stroke-dashoffset: 34; }   /* se detiene: no alcanza */
+  100% { stroke-dashoffset: 82; }   /* y retrocede */
+}
+
+.plano[data-estado='error'] .plano-cierre {
+  stroke: var(--danger);
+  animation: plano-cierre-fallido 900ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.plano[data-estado='error'] .plano-nodo {
+  animation: none;
+  opacity: 0.5;
+}
+
+/* El nodo del vertice que quedo sin conectar. Solo existe en error. */
+@keyframes plano-nodo-roto-pulso {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.8; }
+}
+
+.plano-nodo-roto {
+  opacity: 0;
+  fill: var(--danger);
+}
+
+.plano[data-estado='error'] .plano-nodo-roto {
+  animation: plano-nodo-roto-pulso 1.4s ease-in-out infinite 700ms;
+}
+
 /* Accesibilidad: sin movimiento, todo queda en su estado final legible. */
 @media (prefers-reduced-motion: reduce) {
   .barra-ruta,
@@ -413,9 +511,18 @@ body {
   .carga-texto,
   .pantalla-carga,
   .plano-trazo,
-  .plano-nodo {
+  .plano-nodo,
+  .plano-cierre,
+  .plano-nodo-roto {
     animation: none !important;
   }
+
+  /* Cada estado conserva su version estatica, no su ausencia: sin
+     movimiento el plano sigue diciendo en que estado esta. */
+  .plano[data-estado='enviando'] .plano-trazo { stroke-dashoffset: 40; opacity: 0.6; }
+  .plano[data-estado='exito'] .plano-trazo    { stroke-dashoffset: 0; opacity: 1; }
+  .plano[data-estado='error'] .plano-cierre   { stroke-dashoffset: 82; stroke: var(--danger); }
+  .plano[data-estado='error'] .plano-nodo-roto { opacity: 0.8; }
 
   .barra-ruta  { transform: scaleX(0.4); opacity: 1; }
   .carga-haz   { opacity: 0; }
