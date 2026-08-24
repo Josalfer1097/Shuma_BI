@@ -26,7 +26,7 @@ import { TooltipDato } from '../ui/TooltipDato'
  * "Cotizado que se facturo" para que nadie lo confunda con la tarjeta
  * "Facturado" de KpiRow, que es otra cifra.
  *
- * REGLA 3 — "sin seguimiento" es el status F: el ERP suspende sola la
+ * REGLA 3 — "sin seguimiento" es el status F: el SGE suspende sola la
  * cotizacion a los diez dias sin actividad. No es venta perdida. Es distinto
  * de "suspendida a mano", que si fue una decision de alguien. Ninguna etiqueta
  * emite juicio.
@@ -36,7 +36,7 @@ import { TooltipDato } from '../ui/TooltipDato'
  * fuga se viera enorme por una razon que no es un problema.
  *
  * Los cinco tramos suman el cotizado. Si no suman, hay un estado nuevo en el
- * ERP y hay que reportarlo, no rellenar la diferencia.
+ * SGE y hay que reportarlo, no rellenar la diferencia.
  */
 
 type PanelEmbudoProps = {
@@ -91,7 +91,7 @@ export function PanelEmbudo({ ranking }: PanelEmbudoProps) {
       valor: suma('imp_sin_seguimiento'),
       color: 'bg-danger',
       ayuda:
-        'El ERP suspende sola la cotizacion a los diez dias sin actividad. No es que el ' +
+        'El SGE suspende sola la cotizacion a los diez dias sin actividad. No es que el ' +
         'cliente dijera que no: es que nadie volvio a hablarle.',
     },
     {
@@ -196,7 +196,7 @@ export function PanelEmbudo({ ranking }: PanelEmbudoProps) {
       {descuadra && (
         <p className="mt-4 text-scale-xs text-warning">
           Los tramos no cuadran con el cotizado por {formatMonedaCorta(Math.abs(diferencia))}.
-          Puede haber un estado nuevo en el ERP: repórtalo antes de usar estas cifras.
+          Puede haber un estado nuevo en el SGE: repórtalo antes de usar estas cifras.
         </p>
       )}
     </section>

@@ -102,7 +102,7 @@ export function KpiRow({
             value={formatMoneda(abandonado)}
             secondary={footnoteAbandonado}
             className="ring-1 ring-warning"
-            tooltip="Cotizado a clientes con ficha que nadie volvió a tocar en diez días y el sistema suspendió solo. No son ventas perdidas: son ventas que nadie persiguió. Es lo único de esta fila sobre lo que se puede actuar hoy."
+            tooltip="Cotizado a clientes registrados que nadie volvió a tocar en diez días y el sistema suspendió solo. No son ventas perdidas: son ventas que nadie persiguió. Es lo único de esta fila sobre lo que se puede actuar hoy."
           />
         </div>
 

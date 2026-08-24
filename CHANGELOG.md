@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.34.3] — 2026-08-24
+
+### Cambiado
+- El ETL de ventas incluye a Arkirámica (400, 1643, 1686) como venta de intercompañía, para no falsear el ingreso consolidado del grupo.
+- La clasificación de mostrador ya no usa una lista estática de tres cuentas, sino el campo `ES_MOSTRADOR = 'S'` del SGE, que cubre 45 cuentas históricas y las futuras.
+- El log del ETL ahora reporta cuántas cuentas distintas caen en mostrador en cada corrida para detectar rápidamente si alguien mueve la bandera de un cliente en el SGE.
+
+## [0.34.2] — 2026-08-24
+
+### Cambiado
+- "ERP" pasa a ser "SGE" en textos de pantalla y código, adaptando el vocabulario a cómo se le conoce en la empresa.
+- El canal "Cliente con ficha" se renombra a "Cliente Registrado".
+
 ## [0.34.1] — 2026-08-24
 
 ### Corregido

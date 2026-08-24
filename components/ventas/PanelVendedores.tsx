@@ -25,7 +25,7 @@ import { TooltipDato } from '../ui/TooltipDato'
  * `convImportePct`, que lib/ventas.ts calcula con impCotConvertido de
  * numerador y entrega en escala 0-100.
  *
- * REGLA 3 — "sin seguimiento" es el status F: el ERP suspende sola la
+ * REGLA 3 — "sin seguimiento" es el status F: el SGE suspende sola la
  * cotizacion a los diez dias sin actividad. No es venta perdida y la interfaz
  * no emite juicio. Nada de "olvidado", "perdido" ni "riesgo".
  *

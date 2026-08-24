@@ -135,10 +135,14 @@ renglones AS (
         END                           AS convertido,
         NVL(fac.importe_facturado, 0) AS importe_facturado,
         CASE
-            WHEN cli.CODIGO_CLIENTE IN ('1403', '3064')      THEN 'intercompania'
-            WHEN cli.CODIGO_CLIENTE IN ('688', '1276')       THEN 'interno'
-            WHEN cli.CODIGO_CLIENTE IN ('2520', '3', '3567') THEN 'mostrador'
-            ELSE                                                  'externo'
+            WHEN cli.CODIGO_CLIENTE IN ('1403', '3064', '400', '1643', '1686')
+                THEN 'intercompania'
+            WHEN cli.CODIGO_CLIENTE IN ('688', '1276')
+                THEN 'interno'
+            WHEN cli.ES_MOSTRADOR = 'S'
+                THEN 'mostrador'
+            ELSE
+                'externo'
         END                           AS canal
     FROM
         SHUMA.VTATD_RENG_COTIZACION rc
@@ -399,7 +403,7 @@ def aplicar_alias(filas: list[dict], mapa: dict) -> list[dict]:
     reagrupa. Solo toca dimension = 'cliente'; producto y vendedor
     pasan intactos.
 
-    El ERP no puede fusionar clientes porque un CFDI timbrado no cambia
+    El SGE no puede fusionar clientes porque un CFDI timbrado no cambia
     de receptor, asi que la consolidacion vive aqui.
     """
     if not mapa:
@@ -558,6 +562,12 @@ def resumen(filas: list[dict], empresa: str) -> None:
             por_canal[r["canal"]] += r["imp_cotizado"]
     for canal, imp in sorted(por_canal.items(), key=lambda x: -x[1]):
         log.info(f"   canal {canal:<14} {imp:>18,.2f}")
+
+    cuentas_mostrador = len({
+        r["dimension_id"] for r in filas
+        if r["canal"] == "mostrador" and r["dimension"] == "cliente"
+    })
+    log.info(f"   cuentas distintas en mostrador: {cuentas_mostrador}")
 
 
 def main() -> int:

@@ -141,7 +141,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                     En la mesa <Tooltip text="Cotizaciones abiertas con actividad reciente al momento del corte." /> <SortIcon field="impEnProceso" />
                   </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('impSinSeguimiento')}>
-                    Abandonado <Tooltip text="El ERP suspende sola la cotización a los diez días sin actividad. No es que el cliente dijera que no: es que nadie volvió a hablarle." /> <SortIcon field="impSinSeguimiento" />
+                    Abandonado <Tooltip text="El SGE suspende sola la cotización a los diez días sin actividad. No es que el cliente dijera que no: es que nadie volvió a hablarle." /> <SortIcon field="impSinSeguimiento" />
                   </th>
                   {showCotizaciones && (
                     <>
@@ -149,7 +149,7 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
                         Cotizaciones <Tooltip text="Número total de cotizaciones en el periodo." /> <SortIcon field="cotizaciones" />
                       </th>
                       <th className={thClass + " text-right"} onClick={() => handleSort('sinSeguimientoPct')}>
-                        Sin Seg. % <Tooltip text="El ERP suspende sola la cotización a los diez días sin actividad; no es que el cliente dijera que no." /> <SortIcon field="sinSeguimientoPct" />
+                        Sin Seg. % <Tooltip text="El SGE suspende sola la cotización a los diez días sin actividad; no es que el cliente dijera que no." /> <SortIcon field="sinSeguimientoPct" />
                       </th>
                     </>
                   )}

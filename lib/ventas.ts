@@ -13,7 +13,7 @@ import { formatDecimal, formatNumber } from './format'
  * opcional.
  *
  * Cada regla trae la evidencia de por que existe. Salieron de auditar
- * 20 meses de datos reales contra el ERP.
+ * 20 meses de datos reales contra el SGE.
  */
 
 // ------------------------------------------------------------------
@@ -29,7 +29,7 @@ export type Dimension = (typeof DIMENSIONES)[number]
 
 /** Etiquetas de canal para pantalla. */
 export const ETIQUETA_CANAL: Record<Canal, string> = {
-  externo: 'Cliente con ficha',
+  externo: 'Cliente Registrado',
   mostrador: 'Mostrador',
   intercompania: 'Intercompañía',
   interno: 'Interno',
@@ -164,7 +164,7 @@ export interface KpisVentas {
 /**
  * REGLA — 'interno' se excluye siempre, en toda vista y todo calculo.
  *
- * Son cuentas comodin del ERP (688 COTIZACIONES SHUMA, 1276 SHUMA
+ * Son cuentas comodin del SGE (688 COTIZACIONES SHUMA, 1276 SHUMA
  * AJUSCO) con RFC vacio y cero movimiento. Estan etiquetadas para que
  * si alguien las revive no entren como venta externa.
  */
@@ -191,7 +191,7 @@ export function soloVentaExterna<T extends { canal: Canal }>(rows: T[]): T[] {
  *
  * Mostrador son cuentas genericas de piso: detras hay 3,705 RFC
  * distintos que solo se identifican al facturar. Es venta a cliente
- * ocasional, no a cliente con ficha, y hay dias sueltos donde una
+ * ocasional, no a cliente registrado, y hay dias sueltos donde una
  * cuenta generica cotiza decenas de millones y factura miles.
  *
  * Devuelve las series separadas. Usala en lugar de agregar por encima.
@@ -231,7 +231,7 @@ export function cotizacionesSumables(dimension: Dimension | null): boolean {
  * REGLA — la conversion por importe NUNCA se calcula como
  * imp_facturado / imp_cotizado.
  *
- * El precio puede subir entre la cotizacion y la factura: el ERP
+ * El precio puede subir entre la cotizacion y la factura: el SGE
  * suspende sola una cotizacion a los 10 dias, y al revivirla toma lista
  * de precios nueva. Esa razon pasa del 100% y ya hay un vendedor con
  * 115%. El unico numerador valido es imp_cot_convertido, que es el
@@ -646,7 +646,7 @@ export function formatEntero(n: number | null | undefined): string {
 /**
  * REGLA — 'sin seguimiento' jamas se etiqueta como venta perdida.
  *
- * Es el status F: el ERP suspende sola la cotizacion a los 10 dias sin
+ * Es el status F: el SGE suspende sola la cotizacion a los 10 dias sin
  * que nadie la toque, para que no arrastre precios viejos. Al revivirla
  * toma precios nuevos. No es que el cliente dijera que no: es que nadie
  * volvio a hablarle. Es la metrica mas accionable del modulo y llamarla

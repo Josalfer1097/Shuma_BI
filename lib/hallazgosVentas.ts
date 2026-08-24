@@ -279,7 +279,7 @@ function hallazgoRenglonAtipico(ranking: FilaRankingVista[]): Hallazgo | null {
   }
 }
 
-/** Peso de los canales que no son venta a cliente con ficha. */
+/** Peso de los canales que no son venta a cliente registrado. */
 function hallazgoCanales(rows: FilaMensual[]): Hallazgo | null {
   const dimension: Dimension = 'cliente'
   const filas = excluirInterno(rows)
@@ -302,7 +302,7 @@ function hallazgoCanales(rows: FilaMensual[]): Hallazgo | null {
   return {
     tipo: 'dato',
     tono: 'neutro',
-    titulo: 'Qué parte del cotizado no es venta a cliente con ficha',
+    titulo: 'Qué parte del cotizado no es venta a cliente registrado',
     detalle:
       `Mostrador: ${formatPct((mostrador / total) * 100)} del importe cotizado. ` +
       `Intercompañía: ${formatPct((inter / total) * 100)}` +
@@ -421,7 +421,7 @@ export const GLOSARIO_VENTAS: EntradaGlosario[] = [
       'eso va en su propia cuenta.',
   },
   {
-    termino: 'Cliente con ficha',
+    termino: 'Cliente Registrado',
     definicion:
       'Venta a un cliente dado de alta, con su vendedor y sus condiciones.',
   },
@@ -474,7 +474,7 @@ export const GLOSARIO_VENTAS: EntradaGlosario[] = [
   {
     termino: 'Clientes dormidos',
     definicion:
-      'Clientes con ficha que han facturado más de 500 mil pesos históricamente ' +
+      'Clientes registrados que han facturado más de 500 mil pesos históricamente ' +
       'y llevan más de 90 días sin comprar. Si superan los 180 días, se consideran perdidos.',
   },
 ]
