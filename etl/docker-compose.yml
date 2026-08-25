@@ -1,11 +1,15 @@
 services:
-  etl-tiempos-entrega:
-    build: .
-    container_name: etl-tiempos-entrega
+  etl-shuma:
+    build:
+      context: .
+    container_name: etl-shuma
     restart: unless-stopped
     volumes:
-      # Monta tu .env real (no el .example) como archivo dentro del
-      # contenedor -- asi etl.py lo puede leer aunque cron no herede
-      # variables de entorno del proceso padre.
-      - ./.env:/app/.env:ro
+      # OJO: se monta como .env.host, NO como .env.
+      #
+      # El entrypoint genera /app/.env a partir de este, cambiando
+      # solo ORACLE_CLIENT_DIR, porque la ruta de Windows que trae
+      # el archivo de la casa no existe dentro del contenedor.
+      # Asi las credenciales viven en un solo lugar.
+      - ./.env:/app/.env.host:ro
       - ./logs:/var/log

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.35.0] — 2026-08-25
+
+### Cambiado
+- Migración de infraestructura del contenedor de ETL a Debian 12 (bookworm) para resolver incompatibilidades con libaio.
+- Soporte para arquitecturas multi-plataforma (x86-64 y ARM64 para Apple Silicon) con descarga dinámica de Oracle Instant Client 19c.
+- Inclusión del script `etl_ventas.py` en el contenedor, permitiendo la ejecución de las tareas de ventas.
+- Configuración de cron actualizada para incluir logísitica y ventas escalonados, evitando saturar el SGE.
+- El `entrypoint.sh` genera un `.env` en tiempo de ejecución para sobreescribir dinámicamente la variable `ORACLE_CLIENT_DIR`.
+- El servicio en `docker-compose.yml` cambia de nombre de `etl-tiempos-entrega` a `etl-shuma`.
+
 ## [0.34.4] — 2026-08-24
 
 ### Corregido
