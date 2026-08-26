@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.36.1] — 2026-08-26
+
+### Corregido
+- Se añadieron las columnas `dimension_grupo` y `dimension_activo` a la lista de campos solicitados a Supabase en la página de ventas. Esto soluciona un error donde el panel de vendedores aparecía vacío debido a que dichas columnas llegaban como nulas al cliente.
+
 ## [0.36.0] — 2026-08-26
 
 ### Añadido
