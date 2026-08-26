@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.36.0] — 2026-08-26
+
+### Añadido
+- El panel de seguimiento por vendedor ahora excluye por omisión a los empleados que no pertenecen al área de ventas (cobranza, surtido, caja, compras) y a los dados de baja. Esto evita que personas que solo registran facturación de cotizaciones cerradas monopolicen la cima de la tabla.
+- Interruptor "Ver todos los empleados" en el panel de vendedores para incluir al personal excluido, marcando a dichos empleados explícitamente con su grupo.
+- Los hallazgos automáticos de "Sin seguimiento" y concentración del abandono ahora operan exclusivamente sobre vendedores reales, ignorando en todos los casos a las demás áreas.
+
+## [0.35.1] — 2026-08-26
+
+### Añadido
+- Se agregaron las columnas `dimension_grupo` y `dimension_activo` a la extracción de ventas en `etl_ventas.py`. Esto permite distinguir en el tablero a los vendedores reales de otros empleados (ej. cobranza o surtido) que registran operaciones cerradas en el SGE.
+
 ## [0.35.0] — 2026-08-25
 
 ### Cambiado

@@ -5,6 +5,7 @@ import {
   construirRankingDesdeVista,
   formatMonedaCorta,
   formatPct,
+  esVendedor,
   type FilaRanking,
   type FilaRankingVista,
 } from '@/lib/ventas'
@@ -71,6 +72,7 @@ function ordenar(filas: FilaRanking[], orden: MetricaOrden): FilaRanking[] {
 
 export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps) {
   const [orden, setOrden] = useState<MetricaOrden>('seguimiento')
+  const [mostrarTodos, setMostrarTodos] = useState(false)
 
   if (!ranking || ranking.length === 0) return null
 
@@ -81,7 +83,7 @@ export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps)
   if (soloExterno.length === 0) return null
 
   const activos = construirRankingDesdeVista(soloExterno, 'vendedor').filter(
-    (f) => f.impCotizado >= PISO_COTIZADO,
+    (f) => f.impCotizado >= PISO_COTIZADO && (mostrarTodos || esVendedor(f)),
   )
 
   const filas = ordenar(activos, orden).slice(0, MAXIMO_FILAS)
@@ -100,16 +102,29 @@ export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps)
             <Tooltip text="Canal externo por regla de negocio. La conversión usa importe convertido como numerador. 'Sin seguimiento' es la suspensión automática a los diez días." />
           </h3>
           <p className="mt-1 text-scale-xs text-text-muted">
-            Canal externo, periodo completo. La barra clara es lo cotizado; la
-            sólida, lo facturado.
+            Canal externo, periodo completo.{' '}
+            {mostrarTodos
+              ? 'Todos los empleados con cotizaciones.'
+              : 'Solo vendedores activos.'}
           </p>
         </div>
-        <Select
-          value={orden}
-          onChange={(e) => setOrden(e.target.value as MetricaOrden)}
-          options={OPCIONES_ORDEN}
-          className="shrink-0 py-1 text-scale-xs"
-        />
+        <div className="flex items-center gap-4 shrink-0">
+          <label className="flex items-center gap-2 text-scale-xs text-text-muted cursor-pointer hover:text-text-primary transition-colors">
+            <input
+              type="checkbox"
+              checked={mostrarTodos}
+              onChange={(e) => setMostrarTodos(e.target.checked)}
+              className="accent-accent"
+            />
+            Ver todos los empleados
+          </label>
+          <Select
+            value={orden}
+            onChange={(e) => setOrden(e.target.value as MetricaOrden)}
+            options={OPCIONES_ORDEN}
+            className="py-1 text-scale-xs"
+          />
+        </div>
       </header>
 
       {filas.length === 0 ? (
@@ -152,7 +167,7 @@ export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps)
                 >
                   <div className="mb-1.5 flex items-baseline justify-between gap-4">
                     <span className="truncate text-scale-sm font-medium text-text-primary">
-                      {f.nombre}
+                      {mostrarTodos && !esVendedor(f) ? `${f.nombre} · ${f.grupo}` : f.nombre}
                     </span>
                     <span className="shrink-0 font-mono text-scale-xs text-text-muted">
                       {formatPct(f.convImportePct)} conv.

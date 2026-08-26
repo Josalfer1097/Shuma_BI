@@ -45,6 +45,13 @@ export interface VentaRow {
   dimension_id: string
   dimension_codigo: string
   dimension_nombre: string
+  /**
+   * Clave del tipo de empleado del SGE. Solo en dimension
+   * 'vendedor'; null en producto y cliente.
+   */
+  dimension_grupo: string | null
+  /** 1 si el empleado esta activo. null en producto y cliente. */
+  dimension_activo: number | null
 
   reng_cotizados: number
   reng_facturados: number
@@ -109,6 +116,13 @@ export interface FilaRankingVista {
   canal: Canal
   dimension_codigo: string
   dimension_nombre: string
+  /**
+   * Clave del tipo de empleado del SGE. Solo en dimension
+   * 'vendedor'; null en producto y cliente.
+   */
+  dimension_grupo: string | null
+  /** 1 si el empleado esta activo. null en producto y cliente. */
+  dimension_activo: number | null
   reng_cotizados: number
   reng_facturados: number
   imp_cotizado: number
@@ -423,6 +437,8 @@ export interface FilaRanking {
   renglonMaxConvertido: number
   ultimaActividad: string
   ultimaFactura: string | null
+  grupo: string | null
+  activo: boolean
 }
 
 export type OrdenRanking = 'impFacturado' | 'impCotizado' | 'sinSeguimientoPct'
@@ -481,6 +497,8 @@ export function construirRankingDesdeVista(
       codigo: dominante.dimension_codigo,
       nombre: dominante.dimension_nombre,
       canal: dominante.canal,
+      grupo: dominante.dimension_grupo,
+      activo: dominante.dimension_activo === 1,
       impFacturado: k.impFacturado,
       impCotizado: k.impCotizado,
       impEnProceso: k.impEnProceso,
@@ -540,6 +558,8 @@ export function construirRanking(
       codigo: ultimo.dimension_codigo,
       nombre: ultimo.dimension_nombre,
       canal,
+      grupo: ultimo.dimension_grupo,
+      activo: ultimo.dimension_activo === 1,
       impFacturado: k.impFacturado,
       impCotizado: k.impCotizado,
       impEnProceso: k.impEnProceso,
@@ -656,3 +676,20 @@ export function formatEntero(n: number | null | undefined): string {
  */
 export const ETIQUETA_SIN_SEGUIMIENTO = 'Sin seguimiento'
 export const ETIQUETA_SUSPENDIDA = 'Suspendida a mano'
+
+/**
+ * Tipos de empleado del SGE que cuentan como vendedor:
+ * VMA vendedor mayoreo, VMO vendedor mostrador, TEL telemarketing.
+ *
+ * Los demas tipos aparecen en las cotizaciones porque alguien de
+ * esa area capturo la operacion, no porque la haya vendido.
+ * Crédito y cobranza encabeza el panel con 97% a 100% de
+ * conversion justamente por eso: registra lo que ya venia cerrado.
+ */
+export const TIPOS_VENDEDOR = ['VMA', 'VMO', 'TEL'] as const
+
+/** Un empleado cuenta como vendedor si es de esos tipos y esta activo. */
+export function esVendedor(fila: { grupo: string | null; activo: boolean }): boolean {
+  return fila.activo && TIPOS_VENDEDOR.includes(fila.grupo as never)
+}
+

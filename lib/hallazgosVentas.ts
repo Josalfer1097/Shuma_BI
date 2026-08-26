@@ -9,6 +9,7 @@ import {
   formatMonedaCorta,
   formatPct,
   formatEntero,
+  esVendedor,
   ETIQUETA_SIN_SEGUIMIENTO,
 } from './ventas'
 
@@ -118,7 +119,7 @@ function hallazgoCambioMensual(
  */
 function hallazgoSinSeguimiento(ranking0: FilaRankingVista[]): Hallazgo | null {
   const ranking = construirRankingDesdeVista(ranking0, 'vendedor')
-    .filter((f) => (f.cotizaciones ?? 0) >= 100 && f.sinSeguimientoPct !== null)
+    .filter((f) => esVendedor(f) && (f.cotizaciones ?? 0) >= 100 && f.sinSeguimientoPct !== null)
   if (ranking.length < 3) return null
 
   const orden = [...ranking].sort(
@@ -146,6 +147,7 @@ function hallazgoSinSeguimiento(ranking0: FilaRankingVista[]): Hallazgo | null {
 function hallazgoAbandonado(ranking0: FilaRankingVista[]): Hallazgo | null {
   const rankingExterno = ranking0.filter((r) => r.canal === 'externo')
   const ranking = construirRankingDesdeVista(rankingExterno, 'vendedor')
+    .filter(esVendedor)
   if (ranking.length < 2) return null
 
   const orden = [...ranking].sort(
