@@ -11,26 +11,43 @@ function Indicador({
   nota,
   tono = 'neutro',
   ancla,
+  incompleto = false,
 }: {
   etiqueta: string
   valor: string
   nota: string
   tono?: 'neutro' | 'bueno' | 'alerta'
   ancla?: string
+  incompleto?: boolean
 }) {
   const colorValor =
     tono === 'bueno' ? 'text-success' : tono === 'alerta' ? 'text-danger' : 'text-text-primary'
 
   return (
-    <div data-tour={ancla} className="flex flex-col gap-1 rounded-md border border-border bg-bg-base/40 p-4">
+    <div data-tour={ancla} className="flex flex-col gap-1 rounded-md border border-border bg-bg-base/40 p-4 relative">
       <span className="text-scale-xs uppercase tracking-wide text-text-muted">{etiqueta}</span>
       <span className={`text-scale-2xl font-semibold font-exo ${colorValor}`}>{valor}</span>
       <span className="text-scale-xs text-text-muted">{nota}</span>
+      {incompleto && (
+        <span className="text-warning text-scale-xs mt-2 block font-normal leading-tight">
+          Periodo incompleto, en curso
+        </span>
+      )}
     </div>
   )
 }
 
-export function PanelLogistica({ resumen, empresa }: { resumen: ResumenLogistica | null, empresa: Empresa }) {
+export function PanelLogistica({ 
+  resumen, 
+  empresa,
+  nombreMes,
+  isUltimoMes = false,
+}: { 
+  resumen: ResumenLogistica | null
+  empresa: Empresa
+  nombreMes: string
+  isUltimoMes?: boolean
+}) {
   return (
     <section data-tour="panel-logistica" className="mb-10 rounded-lg border border-border bg-bg-surface p-5 sm:p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -70,8 +87,9 @@ export function PanelLogistica({ resumen, empresa }: { resumen: ResumenLogistica
             <Indicador
               etiqueta="Tiempo típico de entrega"
               valor={`${formatDecimal(resumen.medianaDias)} d`}
-              nota={`Meta: ${empresa.metaDias} días`}
+              nota={nombreMes}
               tono={resumen.cumpleMeta ? 'bueno' : 'alerta'}
+              incompleto={isUltimoMes}
             />
             <Indicador
               etiqueta="Meses dentro de meta"

@@ -9,6 +9,11 @@ import { useEmpresa } from '@/lib/empresaContext'
 
 interface FilterBarProps {
   rawData: ReporteRow[];
+  activeAnio?: string | null;
+  activeMes?: string | null;
+  avisoMesAnterior?: boolean;
+  mesAvisoActual?: string;
+  mesAvisoAnterior?: string;
 }
 
 const MONTHS_ES: Record<string, string> = {
@@ -17,7 +22,7 @@ const MONTHS_ES: Record<string, string> = {
   '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
 }
 
-export function FilterBar({ rawData }: FilterBarProps) {
+export function FilterBar({ rawData, activeAnio, activeMes, avisoMesAnterior, mesAvisoActual, mesAvisoAnterior }: FilterBarProps) {
   const router = useRouter()
   // Ruta actual en vez de '/' escrito a mano: el modulo puede vivir en
   // cualquier ruta y los filtros deben quedarse dentro de ella.
@@ -34,7 +39,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
   
   const validMonthsForYear = Array.from(new Set(
     rawData
-      .filter(r => !anioParam || r.anio_mes.startsWith(`${anioParam}-`))
+      .filter(r => !activeAnio || r.anio_mes.startsWith(`${activeAnio}-`))
       .map(r => r.anio_mes.split('-')[1])
   )).sort()
 
@@ -72,22 +77,23 @@ export function FilterBar({ rawData }: FilterBarProps) {
     const val = e.target.value
     const params = new URLSearchParams(searchParams.toString())
     if (val === 'Todos') {
-      params.delete('anio')
+      params.set('anio', 'Todos')
+      params.set('mes', 'Todos')
     } else {
       params.set('anio', val)
-    }
-
-    if (val !== 'Todos' && mesParam) {
-      const monthsInNewYear = new Set(
-        rawData
-          .filter(r => r.anio_mes.startsWith(`${val}-`))
-          .map(r => r.anio_mes.split('-')[1])
-      )
-      if (!monthsInNewYear.has(mesParam)) {
-        params.delete('mes')
+      if (activeMes) {
+        const monthsInNewYear = new Set(
+          rawData
+            .filter(r => r.anio_mes.startsWith(`${val}-`))
+            .map(r => r.anio_mes.split('-')[1])
+        )
+        if (!monthsInNewYear.has(activeMes)) {
+          params.set('mes', 'Todos')
+        } else {
+          params.set('mes', activeMes)
+        }
       }
     }
-
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
     setMobileMenuOpen(false)
   }
@@ -96,9 +102,14 @@ export function FilterBar({ rawData }: FilterBarProps) {
     const val = e.target.value
     const params = new URLSearchParams(searchParams.toString())
     if (val === 'Todos') {
-      params.delete('mes')
+      params.set('mes', 'Todos')
     } else {
       params.set('mes', val)
+      if (!activeAnio && uniqueYears.length > 0) {
+        params.set('anio', uniqueYears[0])
+      } else if (activeAnio) {
+        params.set('anio', activeAnio)
+      }
     }
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
     setMobileMenuOpen(false)
@@ -117,13 +128,14 @@ export function FilterBar({ rawData }: FilterBarProps) {
 
   const removeYear = () => {
     const params = new URLSearchParams(searchParams.toString())
-    params.delete('anio')
+    params.set('anio', 'Todos')
+    params.set('mes', 'Todos')
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   const removeMonth = () => {
     const params = new URLSearchParams(searchParams.toString())
-    params.delete('mes')
+    params.set('mes', 'Todos')
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
@@ -193,7 +205,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
         <span className="text-text-muted text-scale-sm whitespace-nowrap">Año:</span>
         <Select
           className="w-full sm:w-32"
-          value={anioParam || 'Todos'}
+          value={activeAnio || 'Todos'}
           onChange={handleAnioChange}
           options={[
             { label: 'Todos', value: 'Todos' },
@@ -205,7 +217,7 @@ export function FilterBar({ rawData }: FilterBarProps) {
         <span className="text-text-muted text-scale-sm whitespace-nowrap">Mes:</span>
         <Select
           className="w-full sm:w-40"
-          value={mesParam || 'Todos'}
+          value={activeMes || 'Todos'}
           onChange={handleMesChange}
           options={[
             { label: 'Todos', value: 'Todos' },
@@ -234,6 +246,11 @@ export function FilterBar({ rawData }: FilterBarProps) {
 
         {mobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated border border-border rounded-lg shadow-xl p-4 flex flex-col gap-4 z-50">
+            {avisoMesAnterior && (
+              <div className="text-scale-sm text-text-muted italic bg-bg-surface p-2 rounded border border-border">
+                Sin datos de {mesAvisoActual}. Mostrando {mesAvisoAnterior}.
+              </div>
+            )}
             {selectsContent}
           </div>
         )}
@@ -242,6 +259,11 @@ export function FilterBar({ rawData }: FilterBarProps) {
       {/* Desktop view */}
       <div className="hidden sm:flex flex-row items-center gap-4 w-full">
         {selectsContent}
+        {avisoMesAnterior && (
+          <span className="text-scale-sm text-text-muted italic bg-bg-elevated px-3 py-1 rounded-full border border-border">
+            Sin datos de {mesAvisoActual}. Mostrando {mesAvisoAnterior}.
+          </span>
+        )}
         {activeCount > 0 && (
           <div className="flex items-center gap-2 ml-auto">
             {activeFiltersChips}

@@ -34,15 +34,45 @@ export function Dashboard({ initialData }: DashboardProps) {
   const zoneParam = searchParams.get('zona')
   const anioParam = searchParams.get('anio')
   const mesParam = searchParams.get('mes')
-
   const validZones = new Set(initialData.map(r => r.zona))
   const validYears = new Set(initialData.map(r => r.anio_mes.split('-')[0]))
   const validMonths = new Set(initialData.map(r => r.anio_mes.split('-')[1]))
   
+  let activeAnio = anioParam && validYears.has(anioParam) ? anioParam : null
+  let activeMes = mesParam && validMonths.has(mesParam) ? mesParam : null
+  let avisoMesAnterior = false
+  let mesAvisoActual = ''
+  let mesAvisoAnterior = ''
+
+  if (!anioParam && !mesParam && initialData.length > 0) {
+    const now = new Date()
+    const anioActual = now.getFullYear().toString()
+    const mesActualStr = String(now.getMonth() + 1).padStart(2, '0')
+    const actualCompleto = `${anioActual}-${mesActualStr}`
+    
+    const tieneActual = initialData.some(r => r.anio_mes === actualCompleto)
+    
+    if (tieneActual) {
+      activeAnio = anioActual
+      activeMes = mesActualStr
+    } else {
+      const ultimo = initialData.reduce((max, r) => r.anio_mes > max ? r.anio_mes : max, '')
+      if (ultimo) {
+        const [uAnio, uMes] = ultimo.split('-')
+        activeAnio = uAnio
+        activeMes = uMes
+        avisoMesAnterior = true
+        mesAvisoActual = `${MONTHS_ES[mesActualStr].toLowerCase()} ${anioActual}`
+        mesAvisoAnterior = `${MONTHS_ES[uMes].toLowerCase()} ${uAnio}`
+      }
+    }
+  }
+
+  if (activeAnio === 'Todos') activeAnio = null
+  if (activeMes === 'Todos') activeMes = null
+
   // If invalid params are passed, fallback to 'Todos' by ignoring it
   const activeZone = zoneParam && validZones.has(zoneParam) ? zoneParam : null
-  const activeAnio = anioParam && validYears.has(anioParam) ? anioParam : null
-  const activeMes = mesParam && validMonths.has(mesParam) ? mesParam : null
 
   const filteredData = useMemo(() => {
     return initialData.filter(row => {
@@ -199,7 +229,14 @@ export function Dashboard({ initialData }: DashboardProps) {
     <div>
       <div data-tour="filtros" className="mb-8 flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
-          <FilterBar rawData={initialData} />
+          <FilterBar 
+            rawData={initialData} 
+            activeAnio={activeAnio} 
+            activeMes={activeMes} 
+            avisoMesAnterior={avisoMesAnterior} 
+            mesAvisoActual={mesAvisoActual} 
+            mesAvisoAnterior={mesAvisoAnterior} 
+          />
         </div>
         <PanelHallazgos hallazgos={hallazgos} />
       </div>

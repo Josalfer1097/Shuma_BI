@@ -21,6 +21,31 @@ export const revalidate = 0
 // los datos quedarian congelados en el momento de compilar. Son dos empresas,
 // no hay nada que ganar generandolas de antemano.
 
+function obtenerPeriodoPorDefecto(filas: { anio_mes: string }[]) {
+  const now = new Date()
+  const anioActual = now.getFullYear().toString()
+  const mesActualStr = String(now.getMonth() + 1).padStart(2, '0')
+  const actualCompleto = `${anioActual}-${mesActualStr}`
+
+  const tieneActual = filas.some(r => r.anio_mes === actualCompleto)
+  if (tieneActual) return actualCompleto
+
+  return filas.reduce((max, r) => r.anio_mes > max ? r.anio_mes : max, '')
+}
+
+function nombreMesEs(anioMes: string): string {
+  if (!anioMes) return ''
+  const [a, m] = anioMes.split('-').map(Number)
+  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+  return `${meses[m - 1]} ${a}`
+}
+
+function esMesEnCurso(anioMes: string): boolean {
+  if (!anioMes) return false
+  const now = new Date()
+  return anioMes === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -65,30 +90,33 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
     supabase.from('v_ventas_mensual').select('*').eq('empresa', empresa.id),
   ])
 
-  const filas = reporteRes.error ? [] : ((reporteRes.data as ReporteRow[]) ?? [])
-  const resumen = filas.length > 0 ? resumenLogistica(filas, empresa.metaDias) : null
+  const filasRaw = reporteRes.error ? [] : ((reporteRes.data as ReporteRow[]) ?? [])
+  let resumen = null
+  let nombreMesLogistica = ''
+  let isUltimoMesLogistica = false
+
+  if (filasRaw.length > 0) {
+    const ultimoMes = obtenerPeriodoPorDefecto(filasRaw)
+    const filasUltimoMes = filasRaw.filter(r => r.anio_mes === ultimoMes)
+    resumen = resumenLogistica(filasUltimoMes, empresa.metaDias)
+    nombreMesLogistica = nombreMesEs(ultimoMes)
+    isUltimoMesLogistica = esMesEnCurso(ultimoMes)
+  }
+
   const etlStatus = etlRes.error ? null : ((etlRes.data as EtlStatus | null) ?? null)
 
   // Datos de Ventas para el Panel
   const ventasRows = mensualVentasRes.error ? [] : ((mensualVentasRes.data as FilaMensual[]) ?? [])
   let ventasKpis = null
   let nombreMesVentas = ''
-  
   let isUltimoMesVentas = false
   
   if (ventasRows.length > 0) {
-    const ultimoMes = ventasRows.reduce((a, b) => b.anio_mes > a.anio_mes ? b : a).anio_mes
+    const ultimoMes = obtenerPeriodoPorDefecto(ventasRows)
     const filasUltimoMes = soloVentaExterna(ventasRows.filter(r => r.anio_mes === ultimoMes))
     ventasKpis = calcularKpis(filasUltimoMes, 'cliente')
-    
-    // Obtener nombre del mes
-    const [a, m] = ultimoMes.split('-').map(Number)
-    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-    nombreMesVentas = `${meses[m - 1]} ${a}`
-
-    const now = new Date()
-    const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-    isUltimoMesVentas = ultimoMes === currentYearMonth
+    nombreMesVentas = nombreMesEs(ultimoMes)
+    isUltimoMesVentas = esMesEnCurso(ultimoMes)
   }
 
   return (
@@ -105,7 +133,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
         volverTexto="Empresas"
       />
 
-      <PanelLogistica resumen={resumen} empresa={empresa} />
+      <PanelLogistica resumen={resumen} empresa={empresa} nombreMes={nombreMesLogistica} isUltimoMes={isUltimoMesLogistica} />
       {ventasDisponible && (
         <PanelVentas kpis={ventasKpis} empresa={empresa} nombreMes={nombreMesVentas} isUltimoMes={isUltimoMesVentas} />
       )}

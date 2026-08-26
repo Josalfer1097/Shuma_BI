@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.37.0] — 2026-08-26
+
+### Añadido
+- El módulo de logística y su respectiva tarjeta de resumen ahora se abren por omisión mostrando el mes en curso, en lugar del histórico completo. Si el mes actual todavía no tiene datos cargados, caen automáticamente al último mes disponible y muestran un aviso explícito en pantalla ("Sin datos de [mes actual]. Mostrando [mes anterior].").
+- La tarjeta de resumen de logística adoptó el mismo formato que la de ventas: ahora su indicador principal lleva como nota el mes del que habla y muestra una alerta amarilla ("Periodo incompleto, en curso") si pertenece al mes actual.
+
 ## [0.36.2] — 2026-08-26
 
 ### Corregido
