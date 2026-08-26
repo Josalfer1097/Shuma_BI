@@ -38,7 +38,7 @@ echo "[entrypoint]   05:00 logistica cfs   |  05:15 logistica acabados"
 echo "[entrypoint]   05:30 ventas cfs      |  05:45 ventas acabados"
 
 echo "[entrypoint] Corriendo una vez ahora mismo para validar que todo funciona..."
-cd /app && python /app/etl.py 2>&1 | tee -a /var/log/etl.log
+cd /app && python /app/etl.py --empresa cfs 2>&1 | tee -a /var/log/etl.log
 
 echo "[entrypoint] Arrancando cron en primer plano..."
 cron -f &

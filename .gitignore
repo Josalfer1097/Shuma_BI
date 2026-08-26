@@ -54,4 +54,4 @@ __pycache__/
 
 extract*.py
 extracted_prompt.txt
-prompt_*.txt
+prompt_*.txtetl/logs/

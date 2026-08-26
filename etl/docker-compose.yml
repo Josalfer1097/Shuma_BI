@@ -11,5 +11,5 @@ services:
       # solo ORACLE_CLIENT_DIR, porque la ruta de Windows que trae
       # el archivo de la casa no existe dentro del contenedor.
       # Asi las credenciales viven en un solo lugar.
-      - ./.env:/app/.env.host:ro
+      - ../.env:/app/.env.host:ro
       - ./logs:/var/log
