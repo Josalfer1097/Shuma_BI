@@ -174,6 +174,8 @@ SELECT
     TO_CHAR(c.id_articulo)                 AS dimension_id,
     NVL(TO_CHAR(art.CODIGO), 'S/C')        AS dimension_codigo,
     NVL(art.DESCRIPCION, 'SIN NOMBRE')     AS dimension_nombre,
+    CAST(NULL AS VARCHAR2(10))             AS dimension_grupo,
+    CAST(NULL AS NUMBER)                   AS dimension_activo,
     c.canal                                AS canal,
     TRUNC(c.fecha_cotizacion, 'MM')        AS fecha_cotizacion,
     COUNT(*)                               AS reng_cotizados,
@@ -230,6 +232,8 @@ SELECT
     TO_CHAR(c.id_cliente)                     AS dimension_id,
     NVL(TO_CHAR(cli.CODIGO_CLIENTE), 'S/C')   AS dimension_codigo,
     NVL(cli.NOMBRE_RAZONSOCIAL, 'SIN NOMBRE') AS dimension_nombre,
+    CAST(NULL AS VARCHAR2(10))                AS dimension_grupo,
+    CAST(NULL AS NUMBER)                      AS dimension_activo,
     c.canal                                   AS canal,
     c.fecha_cotizacion                        AS fecha_cotizacion,
     COUNT(*)                                  AS reng_cotizados,
@@ -293,6 +297,11 @@ SELECT
         ),
         'SIN NOMBRE'
     )                                       AS dimension_nombre,
+    NVL(tip.CLAVE, 'S/T')                   AS dimension_grupo,
+    CASE
+        WHEN emp.STATUS = 'ACTIVO' THEN 1
+        ELSE 0
+    END                                     AS dimension_activo,
     c.canal                                 AS canal,
     c.fecha_cotizacion                      AS fecha_cotizacion,
     COUNT(*)                                AS reng_cotizados,
@@ -335,6 +344,8 @@ FROM
     clasificado c
     LEFT JOIN SHUMA.VTATC_EMPLEADO emp
       ON emp.ID_EMPLEADO = c.id_empleado
+    LEFT JOIN SHUMA.UTITC_TIPO_EMPLEADO tip
+      ON tip.ID_TIPO_EMPLEADO = emp.ID_TIPO_EMPLEADO
 GROUP BY
     c.id_empleado,
     NVL(TO_CHAR(emp.CLAVE_EMPLEADO), 'S/C'),
@@ -346,6 +357,11 @@ GROUP BY
         ),
         'SIN NOMBRE'
     ),
+    NVL(tip.CLAVE, 'S/T'),
+    CASE
+        WHEN emp.STATUS = 'ACTIVO' THEN 1
+        ELSE 0
+    END,
     c.canal,
     c.fecha_cotizacion
 """
