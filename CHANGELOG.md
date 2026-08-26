@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.36.2] — 2026-08-26
+
+### Corregido
+- El filtro de vendedores (que excluye a empleados de otras áreas y bajas) se aplica ahora también a la tabla de ranking y al panel de concentración, manteniendo consistencia en toda la pantalla de ventas.
+- El interruptor "Ver todos los empleados" ahora controla globalmente la visualización en los tres paneles al mismo tiempo.
+
 ## [0.36.1] — 2026-08-26
 
 ### Corregido

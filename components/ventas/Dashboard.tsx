@@ -16,7 +16,8 @@ import {
   Canal,
   PuntoSerie,
   formatMonedaCorta,
-  enriquecerConUltimaFactura
+  enriquecerConUltimaFactura,
+  esVendedor
 } from '@/lib/ventas'
 import { construirHallazgos } from '@/lib/hallazgosVentas'
 import { FilterBar } from './FilterBar'
@@ -55,6 +56,7 @@ export function Dashboard({
   defaultMes
 }: DashboardProps) {
   const [isPending, startTransition] = React.useTransition()
+  const [mostrarTodos, setMostrarTodos] = React.useState(false)
   
   const searchParams = useSearchParams()
   const canalParam = searchParams.get('canal') as Canal | null
@@ -65,6 +67,15 @@ export function Dashboard({
   let rowsMensual = mensual
   let rowsRanking = ranking
   let rowsDetalle = detalleMes
+
+  if (dimensionParam === 'vendedor' && !mostrarTodos) {
+    const checkVendedor = (r: { dimension_grupo: string | null; dimension_activo: number | null }) =>
+      esVendedor({ grupo: r.dimension_grupo, activo: r.dimension_activo === 1 })
+    rowsRanking = rowsRanking.filter(checkVendedor)
+    if (rowsDetalle) {
+      rowsDetalle = rowsDetalle.filter(checkVendedor)
+    }
+  }
 
   if (canalParam) {
     rowsMensual = rowsMensual.filter(r => r.canal === canalParam)
@@ -313,7 +324,12 @@ export function Dashboard({
       
       <PanelConcentracion data={dataRanking} dimension={dimensionParam} />
       
-      <PanelVendedores ranking={ranking} entidadParam={entidadParam} />
+      <PanelVendedores 
+        ranking={ranking} 
+        entidadParam={entidadParam} 
+        mostrarTodos={mostrarTodos}
+        setMostrarTodos={setMostrarTodos}
+      />
       
       <RankingTable 
         data={dataRanking} 

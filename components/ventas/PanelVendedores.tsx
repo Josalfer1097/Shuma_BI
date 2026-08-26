@@ -51,6 +51,8 @@ const OPCIONES_ORDEN: { label: string; value: MetricaOrden }[] = [
 type PanelVendedoresProps = {
   ranking: FilaRankingVista[] | null | undefined
   entidadParam?: string | null
+  mostrarTodos: boolean
+  setMostrarTodos: (valor: boolean) => void
 }
 
 function ordenar(filas: FilaRanking[], orden: MetricaOrden): FilaRanking[] {
@@ -70,9 +72,8 @@ function ordenar(filas: FilaRanking[], orden: MetricaOrden): FilaRanking[] {
   }
 }
 
-export function PanelVendedores({ ranking, entidadParam }: PanelVendedoresProps) {
+export function PanelVendedores({ ranking, entidadParam, mostrarTodos, setMostrarTodos }: PanelVendedoresProps) {
   const [orden, setOrden] = useState<MetricaOrden>('seguimiento')
-  const [mostrarTodos, setMostrarTodos] = useState(false)
 
   if (!ranking || ranking.length === 0) return null
 
