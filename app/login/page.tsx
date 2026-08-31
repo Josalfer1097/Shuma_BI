@@ -7,6 +7,7 @@ import { crearClienteNavegador } from '@/lib/supabase-browser'
 import { FondoAcceso } from '@/components/FondoAcceso'
 import { LoginAnimacion, type EstadoPlano } from '@/components/LoginAnimacion'
 import { PantallaCarga } from '@/components/ui/PantallaCarga'
+import { OjoPlano } from '@/components/OjoPlano'
 
 type Modo = 'enlace' | 'password'
 
@@ -39,6 +40,17 @@ function FormularioAcceso() {
   const [tonoError, setTonoError] = useState<'falla' | 'aviso'>('falla')
   /** Segundos que faltan para poder reintentar tras un 429. */
   const [espera, setEspera] = useState(0)
+  /** La contrasena se ve en claro. Arranca oculta siempre. */
+  const [verPassword, setVerPassword] = useState(false)
+  /**
+   * Mayusculas activas.
+   *
+   * Es la causa mas comun de contrasena rechazada y el navegador no la avisa.
+   * Sin esto el usuario reintenta tres veces, se topa con el limite de 60 s de
+   * Supabase y termina escribiendole a sistemas por algo que resolvia una
+   * tecla.
+   */
+  const [mayusculas, setMayusculas] = useState(false)
 
   /**
    * Cuenta regresiva del limite de envio.
@@ -180,6 +192,15 @@ function FormularioAcceso() {
   const listo =
     modo === 'enlace' ? correo.includes('@') : correo.includes('@') && password.length > 0
 
+  // Cambiar de modo devuelve la contrasena a oculta: dejarla en claro al
+  // volver de Enlace expondria el campo sin que nadie lo pidiera.
+  useEffect(() => {
+    if (modo !== 'password') {
+      setVerPassword(false)
+      setMayusculas(false)
+    }
+  }, [modo])
+
   const claseCampo =
     'campo-acceso w-full rounded-lg border border-border/70 bg-bg-base/50 px-3.5 py-3 text-scale-base text-text-primary backdrop-blur placeholder:text-text-muted'
 
@@ -311,18 +332,51 @@ function FormularioAcceso() {
                   >
                     Contraseña
                   </label>
-                  <input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    tabIndex={modo === 'password' ? 0 : -1}
-                    value={password}
-                    onChange={(e) => alEscribir(setPassword)(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && listo && !cargando) enviar()
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={verPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      tabIndex={modo === 'password' ? 0 : -1}
+                      value={password}
+                      onChange={(e) => alEscribir(setPassword)(e.target.value)}
+                      onKeyDown={(e) => {
+                        setMayusculas(e.getModifierState('CapsLock'))
+                        if (e.key === 'Enter' && listo && !cargando) enviar()
+                      }}
+                      onKeyUp={(e) => setMayusculas(e.getModifierState('CapsLock'))}
+                      onBlur={() => setMayusculas(false)}
+                      className={`${claseCampo} pr-12`}
+                    />
+                    {/* El boton nunca entra al orden de tabulacion cuando el
+                        campo esta plegado: seria un foco invisible. */}
+                    <button
+                      type="button"
+                      onClick={() => setVerPassword((v) => !v)}
+                      tabIndex={modo === 'password' ? 0 : -1}
+                      aria-label={verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-pressed={verPassword}
+                      className="boton-ojo absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md"
+                    >
+                      <OjoPlano oculto={!verPassword} tamano={18} />
+                    </button>
+                  </div>
+
+                  {/* Aviso de mayusculas. Ocupa su lugar con la misma rejilla
+                      animada del campo: no empuja el boton de golpe. */}
+                  <div
+                    className="grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none"
+                    style={{
+                      gridTemplateRows: mayusculas ? '1fr' : '0fr',
+                      opacity: mayusculas ? 1 : 0,
                     }}
-                    className={claseCampo}
-                  />
+                  >
+                    <div className="overflow-hidden">
+                      <p className="mt-1.5 font-mono text-scale-xs uppercase tracking-[0.14em] text-warning">
+                        Mayúsculas activadas
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 

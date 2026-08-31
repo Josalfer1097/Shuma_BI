@@ -561,5 +561,76 @@ body {
   .carga-haz   { opacity: 0; }
   .carga-renglon { stroke-opacity: 0.35; }
   .plano-trazo { stroke-dashoffset: 0; opacity: 1; }
-  .plano-nodo  { opacity: 0.9; }
+}
+
+/* ------------------------------------------------------------------
+   El ojo de plano del campo de contrasena.
+
+   La linea de corte se traza de vertice a vertice en vez de aparecer.
+   El largo del trazo diagonal es ~24.3 en el viewBox de 24; se redondea
+   a 26 para que el dasharray cubra el trazo completo con holgura.
+
+   Se anima stroke-dashoffset y no opacity a proposito: un corte de plano
+   se dibuja, no se enciende.
+   ------------------------------------------------------------------ */
+.ojo-plano .ojo-corte {
+  stroke-dasharray: 26;
+  stroke-dashoffset: 26;
+  transition: stroke-dashoffset 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ojo-plano[data-oculto='si'] .ojo-corte {
+  stroke-dashoffset: 0;
+}
+
+/* El iris se contrae cuando el corte esta puesto: el ojo se cierra. */
+.ojo-plano .ojo-iris,
+.ojo-plano .ojo-marcas {
+  transform-origin: 12px 12px;
+  transition:
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.24s ease;
+}
+.ojo-plano[data-oculto='si'] .ojo-iris {
+  transform: scale(0.62);
+}
+.ojo-plano[data-oculto='si'] .ojo-marcas {
+  opacity: 0.35;
+}
+
+/* Al pasar el cursor las marcas giran un octavo: el compas se ajusta. */
+.boton-ojo:hover .ojo-marcas {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ojo-plano .ojo-corte,
+  .ojo-plano .ojo-iris,
+  .ojo-plano .ojo-marcas {
+    transition: none;
+  }
+  .boton-ojo:hover .ojo-marcas {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Boton del ojo dentro del campo.
+
+   Area de toque de 40px sin agrandar el icono: en movil un boton de
+   18px es imposible de acertar con el pulgar.
+   ------------------------------------------------------------------ */
+.boton-ojo {
+  color: var(--text-muted);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+.boton-ojo:hover {
+  color: var(--text-primary);
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.boton-ojo:focus-visible {
+  outline: none;
+  color: var(--text-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent);
 }
