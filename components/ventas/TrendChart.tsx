@@ -236,7 +236,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
               fontSize={Math.round(11 * scale)} 
               tickLine={false}
               axisLine={false}
-              width={Math.round(64 * scale)}
+              width={Math.round(84 * scale)}
               tickFormatter={(val) => formatMonedaCorta(val)}
             />
             <YAxis
@@ -246,7 +246,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
               fontSize={Math.round(11 * scale)}
               tickLine={false}
               axisLine={false}
-              width={Math.round(70 * scale)}
+              width={Math.round(92 * scale)}
               tickFormatter={(val) => formatMonedaCorta(val)}
             />
             
