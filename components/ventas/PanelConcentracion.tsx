@@ -7,9 +7,18 @@ import { TooltipDato } from '../ui/TooltipDato'
 type PanelConcentracionProps = {
   data: FilaRanking[]
   dimension: Dimension
+  /** Importe facturado de las cuentas de mostrador excluidas del calculo. */
+  mostradorFacturado?: number
+  /** Cuantas cuentas de mostrador se excluyeron. */
+  mostradorCuentas?: number
 }
 
-export function PanelConcentracion({ data, dimension }: PanelConcentracionProps) {
+export function PanelConcentracion({
+  data,
+  dimension,
+  mostradorFacturado = 0,
+  mostradorCuentas = 0,
+}: PanelConcentracionProps) {
   const EmptyState = () => (
     <section className="mb-8 flex min-h-[160px] items-center justify-center rounded-lg border border-border bg-bg-surface p-5">
       <p className="text-scale-sm text-text-muted">
@@ -123,6 +132,16 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-bg-elevated brightness-90 border border-border" /> <span className="text-text-primary">Resto</span></div>
           </div>
         </div>
+
+        {mostradorCuentas > 0 && (
+          <p className="mt-3 text-scale-xs text-text-muted">
+            Fuera del cálculo: {mostradorCuentas}{' '}
+            {mostradorCuentas === 1 ? 'cuenta genérica' : 'cuentas genéricas'} de mostrador por{' '}
+            <span className="tabular-nums">{formatMonedaCorta(mostradorFacturado)}</span>{' '}
+            facturados. Son tráfico de piso con miles de RFC detrás, no un cliente
+            del que se dependa.
+          </p>
+        )}
 
         {top1.length > 0 && (
           <p className="mt-3 text-scale-sm text-text-secondary">

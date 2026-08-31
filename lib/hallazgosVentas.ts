@@ -2,8 +2,10 @@ import {
   FilaMensual,
   FilaRankingVista,
   Dimension,
+  Canal,
   calcularKpis,
   excluirInterno,
+  excluirMostradorDeCliente,
   construirRankingDesdeVista,
   formatMoneda,
   formatMonedaCorta,
@@ -316,8 +318,14 @@ function hallazgoCanales(rows: FilaMensual[]): Hallazgo | null {
 }
 
 /** Concentracion de la facturacion en los cinco clientes mayores. */
-function hallazgoConcentracion(ranking0: FilaRankingVista[]): Hallazgo | null {
-  const ranking = construirRankingDesdeVista(ranking0, 'cliente')
+function hallazgoConcentracion(
+  ranking0: FilaRankingVista[],
+  canal: Canal | null,
+): Hallazgo | null {
+  // Misma regla que la tabla: una cuenta de mostrador no es un cliente
+  // y no puede encabezar la concentracion.
+  const { visibles } = excluirMostradorDeCliente(ranking0, 'cliente', canal)
+  const ranking = construirRankingDesdeVista(visibles, 'cliente')
   if (ranking.length < 10) return null
 
   const total = ranking.reduce((s, f) => s + f.impFacturado, 0)
@@ -353,6 +361,7 @@ export function construirHallazgos(
   mensual: FilaMensual[],
   ranking: FilaRankingVista[],
   mesActual: string | null,
+  canal: Canal | null = null,
 ): Hallazgo[] {
   const lista: (Hallazgo | null)[] = [
     hallazgoDormidos(ranking),
@@ -360,7 +369,7 @@ export function construirHallazgos(
     mesActual ? hallazgoCambioMensual(mensual, mesActual) : null,
     hallazgoBrechaConversion(mensual),
     hallazgoSinSeguimiento(ranking),
-    hallazgoConcentracion(ranking),
+    hallazgoConcentracion(ranking, canal),
     hallazgoCanales(mensual),
     hallazgoRenglonAtipico(ranking),
   ]

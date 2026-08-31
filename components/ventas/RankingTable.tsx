@@ -11,12 +11,23 @@ interface RankingTableProps {
   dimension: Dimension
   cargando?: boolean
   periodoLabel?: string
+  /** Importe facturado de las cuentas de mostrador retiradas de la tabla. */
+  mostradorFacturado?: number
+  /** Cuantas cuentas de mostrador se retiraron. */
+  mostradorCuentas?: number
 }
 
 type SortField = keyof FilaRanking
 type SortDirection = 'asc' | 'desc'
 
-export function RankingTable({ data, dimension, cargando, periodoLabel }: RankingTableProps) {
+export function RankingTable({
+  data,
+  dimension,
+  cargando,
+  periodoLabel,
+  mostradorFacturado = 0,
+  mostradorCuentas = 0,
+}: RankingTableProps) {
   const [sortField, setSortField] = useState<SortField>('impFacturado')
   const [sortDir, setSortDir] = useState<SortDirection>('desc')
   const [isOpen, setIsOpen] = useState(false)
@@ -93,6 +104,14 @@ export function RankingTable({ data, dimension, cargando, periodoLabel }: Rankin
           <p className="mt-1 text-scale-xs text-text-muted">
             {periodoLabel ? periodoLabel : 'Histórico completo'}
           </p>
+          {mostradorCuentas > 0 && (
+            <p className="mt-1 text-scale-xs text-text-muted">
+              No incluye mostrador: {mostradorCuentas}{' '}
+              {mostradorCuentas === 1 ? 'cuenta genérica' : 'cuentas genéricas'} de piso por{' '}
+              <span className="tabular-nums">{formatMonedaCorta(mostradorFacturado)}</span>{' '}
+              facturados. Cámbiate al canal Mostrador para verlas.
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <span className="text-scale-sm text-text-muted">{data.length} registros</span>

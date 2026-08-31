@@ -17,7 +17,8 @@ import {
   PuntoSerie,
   formatMonedaCorta,
   enriquecerConUltimaFactura,
-  esVendedor
+  esVendedor,
+  excluirMostradorDeCliente
 } from '@/lib/ventas'
 import { construirHallazgos } from '@/lib/hallazgosVentas'
 import { FilterBar } from './FilterBar'
@@ -185,12 +186,19 @@ export function Dashboard({
   }, [dimensionParam, rowsDetalle, productosRanking, cargandoProductos, empresaId])
 
   // Ranking
+  //
+  // Las cuentas de mostrador salen de la tabla y de la concentracion
+  // cuando la dimension es cliente. La regla vive en lib/ventas.ts y el
+  // importe retirado se declara aparte, no se esconde.
+  const corteRanking = excluirMostradorDeCliente(rowsRanking, dimensionParam, canalParam)
+  const corteDetalle = excluirMostradorDeCliente(rowsDetalle ?? [], dimensionParam, canalParam)
+
   let dataRanking: FilaRanking[] = []
   let cargandoRanking = false
 
   if (rowsDetalle) {
-    const rawRanking = construirRanking(rowsDetalle, dimensionParam)
-    dataRanking = enriquecerConUltimaFactura(rawRanking, rowsRanking, dimensionParam)
+    const rawRanking = construirRanking(corteDetalle.visibles, dimensionParam)
+    dataRanking = enriquecerConUltimaFactura(rawRanking, corteRanking.visibles, dimensionParam)
   } else {
     if (dimensionParam === 'producto') {
       if (!productosRanking) {
@@ -203,10 +211,14 @@ export function Dashboard({
         dataRanking = construirRankingDesdeVista(rankingFiltrado, dimensionParam)
       }
     } else {
-      const rankingFiltrado = rowsRanking
-      dataRanking = construirRankingDesdeVista(rankingFiltrado, dimensionParam)
+      dataRanking = construirRankingDesdeVista(corteRanking.visibles, dimensionParam)
     }
   }
+
+  // Lo que se retiro, para declararlo en pantalla.
+  const excluidasMostrador = rowsDetalle ? corteDetalle.excluidas : corteRanking.excluidas
+  const mostradorFacturado = excluidasMostrador.reduce((s, r) => s + r.imp_facturado, 0)
+  const mostradorCuentas = new Set(excluidasMostrador.map(r => r.dimension_id)).size
 
   // Opciones para el selector de entidad en FilterBar
   // Usamos el `ranking` original pasado en props (filtrado solo por canal) para tener todas las opciones.
@@ -275,7 +287,7 @@ export function Dashboard({
   if (entidadParam && dimensionParam !== 'producto') {
     rankingParaHallazgos = rankingParaHallazgos.filter(r => r.dimension_id === entidadParam)
   }
-  const hallazgos = construirHallazgos(mensualParaHallazgos, rankingParaHallazgos, mesSeleccionado)
+  const hallazgos = construirHallazgos(mensualParaHallazgos, rankingParaHallazgos, mesSeleccionado, canalParam)
 
   return (
     <>
@@ -322,7 +334,12 @@ export function Dashboard({
         anclaTour="tendencia" 
       />
       
-      <PanelConcentracion data={dataRanking} dimension={dimensionParam} />
+      <PanelConcentracion 
+        data={dataRanking} 
+        dimension={dimensionParam} 
+        mostradorFacturado={mostradorFacturado}
+        mostradorCuentas={mostradorCuentas}
+      />
       
       <PanelVendedores 
         ranking={ranking} 
@@ -336,6 +353,8 @@ export function Dashboard({
         dimension={dimensionParam} 
         cargando={cargandoRanking}
         periodoLabel={periodoLabel}
+        mostradorFacturado={mostradorFacturado}
+        mostradorCuentas={mostradorCuentas}
       />
       
       <Glossary />

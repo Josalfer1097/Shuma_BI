@@ -187,6 +187,42 @@ export function excluirInterno<T extends { canal: Canal }>(rows: T[]): T[] {
 }
 
 /**
+ * REGLA — la dimension 'cliente' no lista cuentas de mostrador.
+ *
+ * Mostrador son cuentas genericas de piso: detras hay miles de RFC que
+ * solo se identifican al facturar. En el ranking por cliente compiten
+ * contra personas y ganan siempre, porque acumulan el trafico de un
+ * mes entero en una sola fila. En CFS, la cuenta 2520 MOSTRADOR
+ * VENDEDORES encabezaba el ranking con el 17.5% del cotizado y 480
+ * dias de actividad en 20 meses: ningun contratista trabaja asi.
+ *
+ * Se excluyen de la tabla y del calculo de concentracion, y el importe
+ * retirado se declara aparte para no esconderlo.
+ *
+ * Dos casos NO aplican:
+ *   - otras dimensiones: en producto y vendedor la cuenta de mostrador
+ *     no es la entidad, es el canal de la fila. Filtrar ahi borraria
+ *     venta real de un vendedor de piso.
+ *   - canal fijado en 'mostrador': si el usuario lo pidio, se muestra.
+ */
+export function excluirMostradorDeCliente<T extends { canal: Canal }>(
+  filas: T[],
+  dimension: Dimension,
+  canal: Canal | null,
+): { visibles: T[]; excluidas: T[] } {
+  if (dimension !== 'cliente' || canal === 'mostrador') {
+    return { visibles: filas, excluidas: [] }
+  }
+  const visibles: T[] = []
+  const excluidas: T[] = []
+  for (const f of filas) {
+    if (f.canal === 'mostrador') excluidas.push(f)
+    else visibles.push(f)
+  }
+  return { visibles, excluidas }
+}
+
+/**
  * REGLA — 'intercompania' se muestra con su etiqueta, nunca suma al
  * consolidado del grupo.
  *
