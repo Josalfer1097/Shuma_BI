@@ -19,6 +19,7 @@ log = logging.getLogger("etl")
 
 MESES_HISTORIA = int(os.environ.get("ETL_MESES_HISTORIA", "25"))
 ETL_DIAS_DORMANCIA = int(os.environ.get("ETL_DIAS_DORMANCIA", "30"))
+AREA = "logistica"
 
 
 def calcular_fecha_inicio() -> str:
@@ -317,18 +318,19 @@ def limpiar_obsoletos(client, rows: list[dict], empresa: str) -> int:
     return len(obsoletos)
 
 
-def actualizar_status(client, filas: int, duracion: float,
+def actualizar_estado(client, filas: int, duracion: float,
                       estado: str, empresa: str, error: str = None) -> None:
-    """Registra el resultado de la corrida en etl_status haciendo upsert por empresa."""
-    client.table("etl_status").upsert({
+    """Registra el resultado de la corrida en etl_estado haciendo upsert por empresa y area."""
+    client.table("etl_estado").upsert({
         "empresa": empresa,
+        "area": AREA,
         "ultima_corrida": datetime.now(timezone.utc).isoformat(),
         "fecha_corte": date.today().isoformat(),
         "filas_procesadas": filas,
         "duracion_segundos": round(duracion, 2),
         "estado": estado,
         "mensaje_error": error,
-    }, on_conflict="empresa").execute()
+    }, on_conflict="empresa,area").execute()
 
 
 def verificar_conexiones(empresa: str) -> int:
@@ -419,7 +421,7 @@ def verificar_conexiones(empresa: str) -> int:
     try:
         c = create_client(os.environ["SUPABASE_URL"],
                           os.environ["SUPABASE_SERVICE_KEY"])
-        c.table("etl_status").select("empresa").limit(1).execute()
+        c.table("etl_estado").select("empresa").limit(1).execute()
         c.table("reporte_tiempos_zona_mes").select("empresa").limit(1).execute()
         log.info(f"[{empresa}]   Supabase OK — conecta y ve las dos tablas")
     except Exception as exc:
@@ -534,7 +536,7 @@ def main() -> int:
         eliminadas = limpiar_obsoletos(client, rows, empresa)
 
         duracion = time.time() - inicio
-        actualizar_status(client, len(rows), duracion, "OK", empresa) 
+        actualizar_estado(client, len(rows), duracion, "OK", empresa) 
         log.info(
             f"[{empresa}] ETL completado en {duracion:.1f}s. "
             f"Filas: {len(rows)}, obsoletas eliminadas: {eliminadas}"
@@ -547,9 +549,9 @@ def main() -> int:
 
         if client is not None:
             try:
-                actualizar_status(client, 0, duracion, "ERROR", empresa, str(exc)[:500])
+                actualizar_estado(client, 0, duracion, "ERROR", empresa, str(exc)[:500])
             except Exception:
-                log.exception(f"[{empresa}] Tampoco se pudo registrar el error en etl_status")
+                log.exception(f"[{empresa}] Tampoco se pudo registrar el error en etl_estado")
         return 1
 
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.39.0] — 2026-08-31
+
+### Cambiado
+- El ETL de logística ahora registra su estado y tiempo de corrida en `etl_estado` en lugar de `etl_status`, unificando su comportamiento con el módulo de ventas y permitiendo que cada área reporte de forma independiente.
+
 ## [0.38.1] — 2026-08-31
 
 ### Corregido
