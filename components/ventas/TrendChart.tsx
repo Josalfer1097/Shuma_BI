@@ -203,7 +203,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
 
       <div className="w-full" style={{ height: Math.max(240, 320 * scale) }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 5, right: Math.round(30 + (scale - 1) * 10), left: Math.round(-10 + (scale - 1) * -10), bottom: Math.round(5 + (scale - 1) * 15) }}>
+          <ComposedChart data={data} margin={{ top: 5, right: Math.round(8 + (scale - 1) * 8), left: 0, bottom: Math.round(5 + (scale - 1) * 15) }}>
             <defs>
               <linearGradient id="degradadoFacturado" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.28} />
@@ -221,13 +221,22 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
               tickFormatter={formatXAxis}
               minTickGap={30}
             />
+            {/*
+              width explicito y margen izquierdo en 0.
+              Antes el margen era -10 y el dx otro -10: la etiqueta se
+              dibujaba 20 px fuera del area y el SVG le cortaba el inicio.
+              "$45.0 M" se leia "$5.0 M" y "$500.0 k" se leia "00.0 k".
+              Un eje recortado sigue pareciendo un numero valido, asi que
+              nadie lo nota. Cualquier cambio aqui se revisa con la escala
+              tipografica en 1.5, que es donde las etiquetas son mas anchas.
+            */}
             <YAxis 
               yAxisId="facturado"
               stroke="var(--text-muted)" 
               fontSize={Math.round(11 * scale)} 
               tickLine={false}
               axisLine={false}
-              dx={Math.round(-10 * scale)}
+              width={Math.round(64 * scale)}
               tickFormatter={(val) => formatMonedaCorta(val)}
             />
             <YAxis
@@ -237,7 +246,7 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
               fontSize={Math.round(11 * scale)}
               tickLine={false}
               axisLine={false}
-              dx={Math.round(10 * scale)}
+              width={Math.round(70 * scale)}
               tickFormatter={(val) => formatMonedaCorta(val)}
             />
             
