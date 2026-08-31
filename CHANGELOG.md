@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.38.0] — 2026-08-31
+
+### Cambiado
+- El ETL de ventas ahora reporta el facturado neto: descuenta las devoluciones y elimina de la suma las facturas canceladas.
+- Las cotizaciones ligadas a facturas canceladas ya no cuentan como convertidas.
+
 ## [0.37.0] — 2026-08-26
 
 ### Añadido

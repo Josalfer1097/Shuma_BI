@@ -102,18 +102,41 @@ METRICAS_MAX = [
 # serie diaria sale completa de la dimension cliente, que suma igual.
 # ------------------------------------------------------------------
 QUERY = """
-WITH factura_por_renglon AS (
+WITH devuelto_por_renglon AS (
+    SELECT /*+ MATERIALIZE */
+        ad.ID_RENGLON_FACTURA         AS id_renglon_factura,
+        SUM(ad.SUBTOTAL)              AS importe_devuelto
+    FROM
+        SHUMA.INVTD_ARTICULO_DEVUELTO ad
+        JOIN SHUMA.VTATD_DEVOLUCION_VENTAS dv
+          ON dv.ID_DEVOLUCION = ad.ID_DEVOLUCION
+    WHERE
+        ad.ID_RENGLON_FACTURA IS NOT NULL
+        AND dv.FECHA_CANCELACION IS NULL
+        AND ad.SUBTOTAL > 0
+    GROUP BY
+        ad.ID_RENGLON_FACTURA
+),
+
+factura_por_renglon AS (
     SELECT /*+ MATERIALIZE */
         rp.ID_RENGLON_COTIZACION      AS id_renglon_cotizacion,
-        NVL(SUM(rf.IMPORTE), 0)       AS importe_facturado
+        NVL(SUM(
+            GREATEST(rf.IMPORTE - NVL(dev.importe_devuelto, 0), 0)
+        ), 0)                         AS importe_facturado
     FROM
         SHUMA.VTATD_RENG_PEDIDO rp
         JOIN SHUMA.VTATD_RENG_REMISION rr
           ON rr.ID_RENGLON_PEDIDO = rp.ID_RENGLON_PEDIDO
         JOIN SHUMA.VTATD_RENG_FACTURA rf
           ON rf.ID_RENGLON_REMISION = rr.ID_RENGLON_REMISION
+        JOIN SHUMA.VTATD_FACTURA fac
+          ON fac.ID_FACTURA = rf.ID_FACTURA
+        LEFT JOIN devuelto_por_renglon dev
+          ON dev.id_renglon_factura = rf.ID_RENGLON_FACTURA
     WHERE
         rp.ID_RENGLON_COTIZACION IS NOT NULL
+        AND fac.FECHA_CANCELACION_INTERNA IS NULL
     GROUP BY
         rp.ID_RENGLON_COTIZACION
 ),
