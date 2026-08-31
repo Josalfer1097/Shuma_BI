@@ -9,9 +9,11 @@ import { EmpresaSelector } from './EmpresaSelector'
 import { BotonSesion } from './BotonSesion'
 import { LogoEmpresa } from './LogoEmpresa'
 
+import { TooltipDato } from './ui/TooltipDato'
+
 interface HeaderProps {
   /** Opcional: la portada no depende del estado de la actualizacion. */
-  etlStatus?: EtlStatus | null
+  etlStatus?: EtlStatus | EtlStatus[] | null
   titulo?: string
   subtitulo?: string
   /** Ruta de regreso. Si no se pasa, no se dibuja el enlace. */
@@ -47,17 +49,42 @@ export function Header({
 }: HeaderProps) {
   let statusText = ''
   let statusColor = ''
+  
+  let activeStatus: EtlStatus | null = null
+  let isMultiple = false
+  let statusArray: EtlStatus[] = []
 
-  if (!etlStatus) {
+  if (etlStatus) {
+    statusArray = Array.isArray(etlStatus) ? etlStatus : [etlStatus]
+    isMultiple = statusArray.length > 1
+    
+    if (statusArray.length > 0) {
+      const badStatus = statusArray.find(s => s.estado === 'ERROR' || s.estado === 'NUNCA_CORRIO')
+      if (badStatus) {
+        activeStatus = badStatus
+      } else {
+        activeStatus = statusArray.reduce((oldest, current) => {
+          const oldestTime = new Date(oldest.ultima_corrida).getTime()
+          const currentTime = new Date(current.ultima_corrida).getTime()
+          return currentTime < oldestTime ? current : oldest
+        })
+      }
+    }
+  }
+
+  if (!activeStatus) {
     statusText = ''
-  } else if (etlStatus.estado === 'SEED_DESARROLLO') {
+  } else if (activeStatus.estado === 'SEED_DESARROLLO') {
     statusText = 'Datos de desarrollo'
     statusColor = 'text-warning'
-  } else if (etlStatus.estado === 'ERROR') {
+  } else if (activeStatus.estado === 'ERROR') {
     statusText = 'Fallo en la actualización'
     statusColor = 'text-danger'
+  } else if (activeStatus.estado === 'NUNCA_CORRIO') {
+    statusText = 'Datos desactualizados'
+    statusColor = 'text-warning'
   } else {
-    const hoursSince = Math.max(0, (Date.now() - new Date(etlStatus.ultima_corrida).getTime()) / (1000 * 60 * 60))
+    const hoursSince = Math.max(0, (Date.now() - new Date(activeStatus.ultima_corrida).getTime()) / (1000 * 60 * 60))
     if (hoursSince < 1) {
       statusText = 'Actualizado hace unos minutos'
       statusColor = 'text-success'
@@ -73,8 +100,36 @@ export function Header({
     }
   }
 
-  const dateStr = etlStatus?.fecha_corte ? new Date(etlStatus.fecha_corte).toLocaleDateString('es-MX', { timeZone: 'UTC', day: 'numeric', month: 'short' }) : ''
-  const subText = etlStatus?.estado === 'ERROR' && dateStr ? `(datos hasta el ${dateStr})` : dateStr ? `(hasta el ${dateStr})` : ''
+  const dateStr = activeStatus?.fecha_corte ? new Date(activeStatus.fecha_corte).toLocaleDateString('es-MX', { timeZone: 'UTC', day: 'numeric', month: 'short' }) : ''
+  const subText = activeStatus?.estado === 'ERROR' && dateStr ? `(datos hasta el ${dateStr})` : dateStr ? `(hasta el ${dateStr})` : ''
+
+  const tooltipContent = isMultiple ? (
+    <div className="space-y-1">
+      {statusArray.map((s, i) => {
+        const nombre = s.area === 'ventas' ? 'Ventas' : s.area === 'logistica' ? 'Logística' : (s.area ? s.area.charAt(0).toUpperCase() + s.area.slice(1) : 'Desconocido');
+        let antiguedad = '';
+        if (s.estado === 'NUNCA_CORRIO') {
+          antiguedad = 'sin datos';
+        } else if (s.estado === 'ERROR') {
+          antiguedad = 'fallo';
+        } else if (s.estado === 'SEED_DESARROLLO') {
+          antiguedad = 'datos de prueba';
+        } else {
+          const hours = Math.max(0, (Date.now() - new Date(s.ultima_corrida).getTime()) / (1000 * 60 * 60));
+          if (hours < 1) antiguedad = 'hace unos minutos';
+          else if (hours < 2) antiguedad = 'hace 1 hora';
+          else if (hours < 24) antiguedad = `hace ${Math.floor(hours)} horas`;
+          else antiguedad = `hace ${Math.floor(hours / 24)} días`;
+        }
+        return (
+          <div key={i} className="flex justify-between gap-4">
+            <span className="font-medium text-text-primary">{nombre}</span>
+            <span className="text-text-secondary">{antiguedad}</span>
+          </div>
+        );
+      })}
+    </div>
+  ) : null;
 
   // Dos filas, no dos columnas.
   //
@@ -100,13 +155,25 @@ export function Header({
         )}
         <div className="flex items-center gap-3">
           {statusText && (
-            <div className="flex items-center space-x-2 bg-bg-surface px-3 min-h-[44px] rounded-full border border-border w-fit">
-              <div className={`w-2 h-2 rounded-full ${statusColor === 'text-success' ? 'bg-success' : statusColor === 'text-danger' ? 'bg-danger' : 'bg-warning'}`} />
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className={`text-scale-xs sm:text-scale-sm ${statusColor}`}>{statusText}</span>
-                {subText && <span className="text-scale-xs sm:text-scale-sm text-text-muted">{subText}</span>}
+            isMultiple ? (
+              <TooltipDato contenido={tooltipContent}>
+                <div className="flex items-center space-x-2 bg-bg-surface px-3 min-h-[44px] rounded-full border border-border w-fit cursor-default">
+                  <div className={`w-2 h-2 rounded-full ${statusColor === 'text-success' ? 'bg-success' : statusColor === 'text-danger' ? 'bg-danger' : 'bg-warning'}`} />
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-scale-xs sm:text-scale-sm ${statusColor}`}>{statusText}</span>
+                    {subText && <span className="text-scale-xs sm:text-scale-sm text-text-muted">{subText}</span>}
+                  </div>
+                </div>
+              </TooltipDato>
+            ) : (
+              <div className="flex items-center space-x-2 bg-bg-surface px-3 min-h-[44px] rounded-full border border-border w-fit">
+                <div className={`w-2 h-2 rounded-full ${statusColor === 'text-success' ? 'bg-success' : statusColor === 'text-danger' ? 'bg-danger' : 'bg-warning'}`} />
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`text-scale-xs sm:text-scale-sm ${statusColor}`}>{statusText}</span>
+                  {subText && <span className="text-scale-xs sm:text-scale-sm text-text-muted">{subText}</span>}
+                </div>
               </div>
-            </div>
+            )
           )}
           <div className="flex items-center gap-2">
             {conSelectorEmpresa && <EmpresaSelector />}

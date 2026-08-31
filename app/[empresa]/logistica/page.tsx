@@ -63,7 +63,7 @@ export default async function Page({ params }: { params: { empresa: string } }) 
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresaId),
     // maybeSingle y no single: una empresa sin corridas registradas devuelve
     // cero filas, y con single eso seria un error.
-    supabase.from('etl_status').select('*').eq('empresa', empresaId).maybeSingle()
+    supabase.from('etl_estado').select('*').eq('empresa', empresaId).eq('area', 'logistica').maybeSingle()
   ])
 
   // Solo el reporte es indispensable. Que falte el estado de la actualizacion

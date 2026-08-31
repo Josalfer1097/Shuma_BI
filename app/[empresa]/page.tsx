@@ -86,7 +86,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
 
   const [reporteRes, etlRes, mensualVentasRes] = await Promise.all([
     supabase.from('reporte_tiempos_zona_mes').select('*').eq('empresa', empresa.id),
-    supabase.from('etl_status').select('*').eq('empresa', empresa.id).maybeSingle(),
+    supabase.from('etl_estado').select('*').eq('empresa', empresa.id),
     supabase.from('v_ventas_mensual').select('*').eq('empresa', empresa.id),
   ])
 
@@ -103,7 +103,7 @@ export default async function AreasDeEmpresa({ params }: { params: { empresa: st
     isUltimoMesLogistica = esMesEnCurso(ultimoMes)
   }
 
-  const etlStatus = etlRes.error ? null : ((etlRes.data as EtlStatus | null) ?? null)
+  const etlStatus = etlRes.error ? null : ((etlRes.data as EtlStatus[]) ?? null)
 
   // Datos de Ventas para el Panel
   const ventasRows = mensualVentasRes.error ? [] : ((mensualVentasRes.data as FilaMensual[]) ?? [])

@@ -29,10 +29,12 @@ export interface ReporteRow {
 
 export interface EtlStatus {
   id: number;
+  area: string;
   ultima_corrida: string;
   fecha_corte: string;
   filas_procesadas: number;
-  estado: 'OK' | 'ERROR' | 'SEED_DESARROLLO';
+  estado: 'OK' | 'ERROR' | 'NUNCA_CORRIO' | 'SEED_DESARROLLO';
+  mensaje_error?: string | null;
 }
 
 export interface DashboardMetrics {

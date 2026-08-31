@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.40.0] — 2026-08-31
+
+### Cambiado
+- El indicador de actualización del encabezado general ahora reporta la frescura considerando todos los módulos disponibles (Ventas y Logística). Muestra la fecha del módulo más desactualizado.
+- Al pasar el cursor sobre el indicador del encabezado, se muestra un desglose con los días que lleva cada módulo sin actualizar.
+- El estado `NUNCA_CORRIO` ahora es reportado de manera explícita y visible, mostrándose como "Datos desactualizados".
+
 ## [0.39.0] — 2026-08-31
 
 ### Cambiado
