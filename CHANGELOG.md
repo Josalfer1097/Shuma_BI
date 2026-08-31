@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.38.1] — 2026-08-31
+
+### Corregido
+- Se reparó la barra del panel de concentración que aparecía completamente gris. Los segmentos vuelven a mostrar sus colores en proporción al aplicar la regla de ancho directamente sobre su envoltorio (`TooltipDato`).
+
 ## [0.38.0] — 2026-08-31
 
 ### Cambiado

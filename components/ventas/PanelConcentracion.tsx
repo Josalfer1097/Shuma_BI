@@ -58,7 +58,9 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
       <div className="flex flex-col gap-3">
         <div className="h-4 w-full overflow-hidden rounded-full bg-bg-elevated flex">
           {pctTop1 > 0 && (
-            <TooltipDato contenido={
+            <TooltipDato
+              style={{ width: `${pctTop1}%` }}
+              contenido={
               <div className="space-y-1">
                 <p className="font-medium text-text-primary">Top 1</p>
                 <p className="tabular-nums text-text-secondary">
@@ -66,11 +68,13 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
                 </p>
               </div>
             }>
-              <div className="h-full transition-all duration-500 ease-out bg-accent" style={{ width: `${pctTop1}%` }} />
+              <div className="h-full w-full transition-all duration-500 ease-out bg-accent" />
             </TooltipDato>
           )}
           {pctTop2to5 > 0 && (
-            <TooltipDato contenido={
+            <TooltipDato
+              style={{ width: `${pctTop2to5}%` }}
+              contenido={
               <div className="space-y-1">
                 <p className="font-medium text-text-primary">Top 2–5</p>
                 <p className="tabular-nums text-text-secondary">
@@ -78,11 +82,13 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
                 </p>
               </div>
             }>
-              <div className="h-full transition-all duration-500 ease-out bg-accent-deep" style={{ width: `${pctTop2to5}%` }} />
+              <div className="h-full w-full transition-all duration-500 ease-out bg-accent-deep" />
             </TooltipDato>
           )}
           {pctTop6to20 > 0 && (
-            <TooltipDato contenido={
+            <TooltipDato
+              style={{ width: `${pctTop6to20}%` }}
+              contenido={
               <div className="space-y-1">
                 <p className="font-medium text-text-primary">Top 6–20</p>
                 <p className="tabular-nums text-text-secondary">
@@ -90,11 +96,13 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
                 </p>
               </div>
             }>
-              <div className="h-full transition-all duration-500 ease-out bg-text-muted opacity-80" style={{ width: `${pctTop6to20}%` }} />
+              <div className="h-full w-full transition-all duration-500 ease-out bg-text-muted opacity-80" />
             </TooltipDato>
           )}
           {pctResto > 0 && (
-            <TooltipDato contenido={
+            <TooltipDato
+              style={{ width: `${pctResto}%` }}
+              contenido={
               <div className="space-y-1">
                 <p className="font-medium text-text-primary">Resto</p>
                 <p className="tabular-nums text-text-secondary">
@@ -102,7 +110,7 @@ export function PanelConcentracion({ data, dimension }: PanelConcentracionProps)
                 </p>
               </div>
             }>
-              <div className="h-full transition-all duration-500 ease-out bg-bg-elevated brightness-90" style={{ width: `${pctResto}%` }} />
+              <div className="h-full w-full transition-all duration-500 ease-out bg-bg-elevated brightness-90" />
             </TooltipDato>
           )}
         </div>
