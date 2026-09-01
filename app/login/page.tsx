@@ -201,23 +201,48 @@ function FormularioAcceso() {
     }
   }, [modo])
 
+  /**
+   * Pantalla angosta. Se resuelve con matchMedia y no con clases de Tailwind
+   * porque LoginAnimacion recibe el tamano como numero, no como clase.
+   *
+   * Arranca en false para que el render del servidor y el primer render del
+   * cliente coincidan: partir de true provocaria un desajuste de hidratacion.
+   */
+  const [anchoChico, setAnchoChico] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    const aplicar = () => setAnchoChico(mq.matches)
+    aplicar()
+    mq.addEventListener('change', aplicar)
+    return () => mq.removeEventListener('change', aplicar)
+  }, [])
+
   const claseCampo =
     'campo-acceso w-full rounded-lg border border-border/70 bg-bg-base/50 px-3.5 py-3 text-scale-base text-text-primary backdrop-blur placeholder:text-text-muted'
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-bg-base p-4">
+    <main
+      /*
+        100dvh y no min-h-screen: en iOS Safari la barra de direcciones entra
+        en el 100vh, asi que con el teclado abierto la tarjeta se empujaba
+        fuera de la pantalla y el boton quedaba inalcanzable.
+      */
+      className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-bg-base p-4 sm:p-6"
+    >
       <FondoAcceso />
 
       <div className="w-full max-w-md">
         <div
-          className="animar-entrada mb-9 text-center"
+          className="animar-entrada mb-6 text-center sm:mb-9"
           style={{ animationDelay: '0.05s' }}
         >
           <p className="mb-3 font-mono text-scale-xs uppercase tracking-[0.3em] text-text-muted">
             <span className="text-accent">{'//'}</span> acceso
           </p>
-          <div className="flex justify-center mb-6">
-            <LoginAnimacion tamano={200} estado={estadoPlano} />
+          <div className="mb-4 flex justify-center sm:mb-6">
+            {/* El plano baja a 150 en movil: a 200 empujaba el formulario
+                debajo del pliegue en pantallas de 360x640. */}
+            <LoginAnimacion tamano={anchoChico ? 150 : 200} estado={estadoPlano} />
           </div>
           <h1 className="font-neuropol text-scale-4xl tracking-[0.18em] text-text-primary drop-shadow-[0_2px_20px_var(--accent)]">
             SHUMA
@@ -234,7 +259,7 @@ function FormularioAcceso() {
         </div>
 
         <div
-          className="vidrio animar-entrada relative rounded-2xl p-8"
+          className="vidrio animar-entrada relative rounded-2xl p-6 sm:p-8"
           style={{ animationDelay: '0.18s' }}
         >
           {ESQUINAS.map((pos, i) => (
