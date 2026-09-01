@@ -561,6 +561,7 @@ body {
   .carga-haz   { opacity: 0; }
   .carga-renglon { stroke-opacity: 0.35; }
   .plano-trazo { stroke-dashoffset: 0; opacity: 1; }
+  .plano-nodo  { opacity: 0.9; }
 }
 
 /* ------------------------------------------------------------------
