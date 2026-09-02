@@ -101,11 +101,26 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
     chartTitle = `Tendencia — ${label} en contexto`;
     chartTooltip = "Se muestran los últimos doce meses para ubicar el mes seleccionado en contexto. El punto resaltado es el mes que elegiste.";
 
-    const current = data[data.length - 1];
+    const seriesToSearch = dataFull || data;
+
+    /*
+      El mes que se compara es el SELECCIONADO, no el ultimo de la serie.
+      Antes esto era data[data.length - 1] y funcionaba solo porque el mes
+      elegido por defecto era siempre el ultimo con datos. En cuanto el ETL
+      cargo el primer dia del mes siguiente, la serie crecio y la cabecera
+      empezo a mostrar el importe de un mes con los rotulos de otro: un dia
+      de septiembre titulado agosto y comparado contra julio.
+
+      El respaldo al ultimo punto se queda para el caso en que el mes
+      seleccionado no exista en la serie, que pasa al filtrar por canal.
+    */
+    const current =
+      data.find(d => d.anioMes === selectedMonth) ||
+      seriesToSearch.find(d => d.anioMes === selectedMonth) ||
+      data[data.length - 1];
+
     let prev = null;
     let pLabel = '';
-
-    const seriesToSearch = dataFull || data;
 
     if (compMode === 'anterior') {
       const pAnio = mes === '01' ? String(Number(anio) - 1) : anio;
