@@ -13,7 +13,13 @@ import { createPortal } from 'react-dom'
  * Va en portal para que no lo recorte el `overflow-hidden` de las barras.
  */
 
-const RETRASO_MS = 120
+/*
+  40 ms y no 120. El retraso existe para que el tooltip no parpadee al cruzar
+  la barra de fuga de un tramo a otro, pero 120 ms se sienten como que no
+  responde: al pasar el cursor de corrido no alcanza a salir y el usuario
+  concluye que el elemento no tiene informacion.
+*/
+const RETRASO_MS = 40
 
 type TooltipDatoProps = {
   contenido: ReactNode

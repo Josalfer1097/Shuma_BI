@@ -269,10 +269,15 @@ export function TrendChart({ data, dataFull, selectedMonth, partialMonth, anclaT
               <ReferenceLine yAxisId="facturado" x={selectedMonth} stroke="var(--warning)" strokeDasharray="3 3" />
             )}
             
+            {/*
+              trigger por defecto es 'hover'. Estaba en 'click', que en tactil
+              es lo correcto pero en escritorio apaga el cursor: el tooltip
+              existia y nadie lo veia. Recharts ya atiende el toque con el
+              hover, asi que dejarlo por defecto sirve a los dos.
+            */}
             <RechartsTooltip 
               content={<CustomTooltip />} 
               cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} 
-              trigger="click"
             />
             <Area
               type="monotone"
