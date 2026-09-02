@@ -150,6 +150,12 @@ export function RankingTable({
                   <th className={thClass + " text-right"} onClick={() => handleSort('impCotizado')}>
                     Cotizado <Tooltip text="Importe cotizado en el periodo, a precio de cotización." /> <SortIcon field="impCotizado" />
                   </th>
+                  <th className={thClass + " text-right"} onClick={() => handleSort('impDevuelto')}>
+                    Devuelto <Tooltip text="Mercancía que regresó, atribuida al mes de la cotización original. Ya está descontada del facturado." /> <SortIcon field="impDevuelto" />
+                  </th>
+                  <th className={thClass + " text-right"} onClick={() => handleSort('tasaDevueltoPct')}>
+                    Tasa dev. <Tooltip text="Devuelto sobre el facturado antes de descontarlo. Es la columna que sirve para ordenar: por pesos, arriba solo salen los clientes grandes." /> <SortIcon field="tasaDevueltoPct" />
+                  </th>
                   <th className={thClass + " text-right"} onClick={() => handleSort('convImportePct')}>
                     Conv. Importe <Tooltip text="Porcentaje del importe cotizado que llegó a factura." /> <SortIcon field="convImportePct" />
                   </th>
@@ -213,6 +219,23 @@ export function RankingTable({
                         <TooltipDato contenido={formatMoneda(row.impCotizado)}>
                           {formatMonedaCorta(row.impCotizado)}
                         </TooltipDato>
+                      </td>
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
+                        {row.impDevuelto > 0 ? (
+                          <TooltipDato contenido={formatMoneda(row.impDevuelto)}>
+                            {formatMonedaCorta(row.impDevuelto)}
+                          </TooltipDato>
+                        ) : (
+                          <span className="text-text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
+                        {/* Un guion y no un cero: cero devuelto y cliente sin
+                            factura son cosas distintas y la tasa solo existe
+                            en el primer caso. */}
+                        {row.tasaDevueltoPct === null
+                          ? <span className="text-text-muted">—</span>
+                          : formatPct(row.tasaDevueltoPct)}
                       </td>
                       <td className="py-3 px-4 text-right tabular-nums text-scale-sm text-text-secondary">
                         {formatPct(row.convImportePct)}

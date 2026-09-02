@@ -5,6 +5,7 @@ import {
   ETIQUETA_SUSPENDIDA,
   formatMonedaCorta,
   formatPct,
+  tasaDevuelto,
   type FilaRankingVista,
 } from '@/lib/ventas'
 import { Rotulo } from '../ui/Rotulo'
@@ -118,6 +119,21 @@ export function PanelEmbudo({ ranking }: PanelEmbudoProps) {
   const diferencia = totalCotizado - sumaTramos
   const descuadra = Math.abs(diferencia) > totalCotizado * TOLERANCIA
 
+  /**
+   * Devoluciones NO es un tramo de la barra.
+   *
+   * La barra descompone el cotizado y sus cinco tramos cuadran contra
+   * el. Una devolucion ocurre DESPUES de la factura: la cotizacion si
+   * se convirtio. Meterla como sexto tramo dispararia el aviso de
+   * descuadre en cada carga.
+   *
+   * Va como renglon aparte, con su denominador propio: el facturado
+   * bruto, no el cotizado.
+   */
+  const devuelto = suma('imp_devuelto')
+  const facturado = suma('imp_facturado')
+  const devueltoPct = tasaDevuelto(devuelto, facturado)
+
   const fuga = tramos[1]
   const fugaPct = (fuga.valor / totalCotizado) * 100
 
@@ -192,6 +208,18 @@ export function PanelEmbudo({ ranking }: PanelEmbudoProps) {
           )
         })}
       </ul>
+
+      {devuelto > 0 && (
+        <p className="mt-4 text-scale-xs text-text-muted">
+          <span className="text-text-secondary">Mercancía devuelta:</span>{' '}
+          <span className="tabular-nums">{formatMonedaCorta(devuelto)}</span>
+          {devueltoPct !== null && (
+            <> ({formatPct(devueltoPct)} de lo facturado)</>
+          )}
+          . Ya está descontada del facturado. Va aparte de la barra porque la
+          cotización sí se convirtió: la devolución es un evento posterior.
+        </p>
+      )}
 
       {descuadra && (
         <p className="mt-4 text-scale-xs text-warning">

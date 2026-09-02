@@ -62,6 +62,8 @@ export interface VentaRow {
   imp_sin_seguimiento: number
   imp_suspendido: number
   imp_cancelado: number
+  /** Devuelto atribuido a la fecha de la cotizacion original. */
+  imp_devuelto: number
   imp_reng_max: number
   cant_reng_max: number
   cotizaciones: number
@@ -91,6 +93,8 @@ export interface FilaMensual {
   imp_sin_seguimiento: number
   imp_suspendido: number
   imp_cancelado: number
+  /** Devuelto atribuido a la fecha de la cotizacion original. */
+  imp_devuelto: number
   cotizaciones: number
   cotiz_sin_seguimiento: number
   cotiz_suspendidas: number
@@ -132,6 +136,8 @@ export interface FilaRankingVista {
   imp_sin_seguimiento: number
   imp_suspendido: number
   imp_cancelado: number
+  /** Devuelto atribuido a la fecha de la cotizacion original. */
+  imp_devuelto: number
   cotizaciones: number
   cotiz_sin_seguimiento: number
   cotiz_suspendidas: number
@@ -154,6 +160,14 @@ export interface KpisVentas {
   impSinSeguimiento: number
   impSuspendido: number
   impCancelado: number
+  /**
+   * Mercancia que regreso, atribuida al mes de la cotizacion.
+   *
+   * NO es un tramo del cotizado: la cotizacion si se convirtio y la
+   * devolucion es un evento posterior. Sumarla a la barra de fuga
+   * romperia el cuadre contra imp_cotizado.
+   */
+  impDevuelto: number
   /** Renglones que llegaron a factura / renglones cotizados. */
   convRenglonesPct: number
   /** Importe cotizado de lo que si se facturo / importe cotizado. */
@@ -324,6 +338,7 @@ export function calcularKpis(
   const impSinSeguimiento = sum('imp_sin_seguimiento')
   const impSuspendido = sum('imp_suspendido')
   const impCancelado = sum('imp_cancelado')
+  const impDevuelto = sum('imp_devuelto')
 
   const sumables = cotizacionesSumables(dimension) && dimension !== null
   const cotizaciones = sumables ? sum('cotizaciones') : null
@@ -336,6 +351,7 @@ export function calcularKpis(
     impSinSeguimiento,
     impSuspendido,
     impCancelado,
+    impDevuelto,
     convRenglonesPct: conversionRenglones(
       sum('reng_facturados'),
       sum('reng_cotizados'),
@@ -452,6 +468,23 @@ export function serieMensual(
 // Rankings
 // ------------------------------------------------------------------
 
+/**
+ * Tasa de devolucion sobre el facturado bruto.
+ *
+ * El denominador lleva impDevuelto sumado porque impFacturado ya viene
+ * neto: sin eso, un cliente que devolvio todo daria una tasa infinita.
+ *
+ * Es mas util que el importe para ordenar. Por pesos el ranking solo
+ * devuelve a los clientes grandes: LUIS SOTO MONTOYA encabeza con
+ * $1.18 M devueltos, que son el 1.2% de lo suyo. REVESTIR ACABADOS
+ * devuelve $308 k y es el 15.6%.
+ */
+export function tasaDevuelto(devuelto: number, facturadoNeto: number): number | null {
+  const bruto = facturadoNeto + devuelto
+  if (bruto <= 0) return null
+  return (devuelto / bruto) * 100
+}
+
 export interface FilaRanking {
   dimensionId: string
   codigo: string
@@ -463,6 +496,9 @@ export interface FilaRanking {
   impSinSeguimiento: number
   impSuspendido: number
   impCancelado: number
+  impDevuelto: number
+  /** impDevuelto / (impFacturado + impDevuelto). null si no facturo nada. */
+  tasaDevueltoPct: number | null
   convRenglonesPct: number
   convImportePct: number
   cotizaciones: number | null
@@ -541,6 +577,8 @@ export function construirRankingDesdeVista(
       impSinSeguimiento: k.impSinSeguimiento,
       impSuspendido: k.impSuspendido,
       impCancelado: k.impCancelado,
+      impDevuelto: k.impDevuelto,
+      tasaDevueltoPct: tasaDevuelto(k.impDevuelto, k.impFacturado),
       convRenglonesPct: k.convRenglonesPct,
       convImportePct: k.convImportePct,
       cotizaciones: k.cotizaciones,
@@ -602,6 +640,8 @@ export function construirRanking(
       impSinSeguimiento: k.impSinSeguimiento,
       impSuspendido: k.impSuspendido,
       impCancelado: k.impCancelado,
+      impDevuelto: k.impDevuelto,
+      tasaDevueltoPct: tasaDevuelto(k.impDevuelto, k.impFacturado),
       convRenglonesPct: k.convRenglonesPct,
       convImportePct: k.convImportePct,
       cotizaciones: k.cotizaciones,
