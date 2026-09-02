@@ -51,10 +51,19 @@ log = logging.getLogger("etl_ventas")
 
 AREA = "ventas"
 TABLA = "ventas_agregado"
+TABLA_DEV = "devoluciones_agregado"
 CHUNK_UPSERT = 500
 MIN_FILAS_ESPERADAS = int(os.environ.get("ETL_VENTAS_MIN_FILAS", "1000"))
 
 LLAVE = ("empresa", "fecha_cotizacion", "canal", "dimension", "dimension_id")
+LLAVE_DEV = ("empresa", "fecha_devolucion", "canal", "dimension",
+             "dimension_id", "motivo_id")
+
+# Motivo 2 = CANCELACION DE FACTURA. No es mercancia que volvio: es un
+# ajuste contable sobre una factura que el ETL ya excluyo por
+# FECHA_CANCELACION_INTERNA. Contarlo aqui inventaria una devolucion de
+# una venta que nunca entro. Son 9 documentos por $715,840.
+MOTIVO_CANCELACION_FACTURA = 2
 
 # Los tipos importan: PostgREST manda el JSON tal cual y una columna
 # INTEGER rechaza "0.0" con 22P02. Oracle devuelve todo como Decimal,
@@ -76,6 +85,7 @@ METRICAS_DECIMALES = [
     "imp_suspendido",
     "imp_cancelado",
     "imp_en_proceso",
+    "imp_devuelto",
     "imp_reng_max",
     "cant_reng_max",
 ]
@@ -88,6 +98,7 @@ METRICAS_SUMA = METRICAS_ENTERAS + [
     "imp_suspendido",
     "imp_cancelado",
     "imp_en_proceso",
+    "imp_devuelto",
 ]
 METRICAS_MAX = [
     "imp_reng_max",
@@ -123,7 +134,15 @@ factura_por_renglon AS (
         rp.ID_RENGLON_COTIZACION      AS id_renglon_cotizacion,
         NVL(SUM(
             GREATEST(rf.IMPORTE - NVL(dev.importe_devuelto, 0), 0)
-        ), 0)                         AS importe_facturado
+        ), 0)                         AS importe_facturado,
+        -- LEAST y no el bruto: arriba se topa la resta con GREATEST,
+        -- asi que lo que de verdad se descuenta es el minimo entre la
+        -- devolucion y el renglon. Hay 13 renglones donde la devolucion
+        -- excede a la factura por $382,036 en total; sumando el bruto,
+        -- imp_facturado + imp_devuelto no cerraria contra el bruto.
+        NVL(SUM(
+            LEAST(NVL(dev.importe_devuelto, 0), rf.IMPORTE)
+        ), 0)                         AS importe_devuelto
     FROM
         SHUMA.VTATD_RENG_PEDIDO rp
         JOIN SHUMA.VTATD_RENG_REMISION rr
@@ -157,6 +176,7 @@ renglones AS (
             ELSE 0
         END                           AS convertido,
         NVL(fac.importe_facturado, 0) AS importe_facturado,
+        NVL(fac.importe_devuelto, 0)  AS importe_devuelto,
         CASE
             WHEN cli.CODIGO_CLIENTE IN ('1403', '3064', '400', '1643', '1686')
                 THEN 'intercompania'
@@ -205,6 +225,7 @@ SELECT
     SUM(c.convertido)                      AS reng_facturados,
     NVL(SUM(c.importe_cotizado), 0)        AS imp_cotizado,
     NVL(SUM(c.importe_facturado), 0)       AS imp_facturado,
+    NVL(SUM(c.importe_devuelto), 0)        AS imp_devuelto,
     NVL(SUM(CASE WHEN c.convertido = 1
                  THEN c.importe_cotizado END), 0)  AS imp_cot_convertido,
     -- Los cuatro importes de abajo mas imp_cot_convertido parten
@@ -263,6 +284,7 @@ SELECT
     SUM(c.convertido)                         AS reng_facturados,
     NVL(SUM(c.importe_cotizado), 0)           AS imp_cotizado,
     NVL(SUM(c.importe_facturado), 0)          AS imp_facturado,
+    NVL(SUM(c.importe_devuelto), 0)           AS imp_devuelto,
     NVL(SUM(CASE WHEN c.convertido = 1
                  THEN c.importe_cotizado END), 0)  AS imp_cot_convertido,
     -- Los cuatro importes de abajo mas imp_cot_convertido parten
@@ -331,6 +353,7 @@ SELECT
     SUM(c.convertido)                       AS reng_facturados,
     NVL(SUM(c.importe_cotizado), 0)         AS imp_cotizado,
     NVL(SUM(c.importe_facturado), 0)        AS imp_facturado,
+    NVL(SUM(c.importe_devuelto), 0)         AS imp_devuelto,
     NVL(SUM(CASE WHEN c.convertido = 1
                  THEN c.importe_cotizado END), 0)  AS imp_cot_convertido,
     -- Los cuatro importes de abajo mas imp_cot_convertido parten
@@ -388,6 +411,114 @@ GROUP BY
     c.canal,
     c.fecha_cotizacion
 """
+
+
+# ------------------------------------------------------------------
+# Devoluciones por SU PROPIA fecha.
+#
+# Va aparte de ventas_agregado porque la granularidad es otra: el 50%
+# del importe devuelto cae en un mes distinto al de la cotizacion
+# ($3.15 M de $6.31 M a mas de 30 dias, y hasta mas de 180). Meter las
+# dos fechas en la misma fila obligaria a mentir en una de ellas.
+#
+# El cliente sale del ENCABEZADO de la devolucion y no de la cadena
+# factura -> remision -> pedido -> cotizacion. Se verifico sobre 1,026
+# renglones: cero nulos y cero discrepancias contra el cliente de la
+# cotizacion. La cadena son cinco joins que no aportan nada aqui.
+#
+# No hay dimension vendedor: el vendedor solo existe en la cotizacion y
+# llegar a el si obligaria a recorrer la cadena completa. Queda
+# pendiente, no olvidado.
+# ------------------------------------------------------------------
+QUERY_DEVOLUCIONES = """
+WITH devuelto AS (
+    SELECT /*+ MATERIALIZE */
+        TRUNC(dv.FECHA_DEVOLUCION)    AS fecha_devolucion,
+        dv.ID_DEVOLUCION              AS id_devolucion,
+        dv.ID_CLIENTE                 AS id_cliente,
+        dv.ID_MOTIVO_DEVOLUCION       AS id_motivo,
+        ad.ID_ARTICULO                AS id_articulo,
+        ad.SUBTOTAL                   AS importe,
+        ad.CANTIDAD                   AS cantidad
+    FROM
+        SHUMA.VTATD_DEVOLUCION_VENTAS dv
+        JOIN SHUMA.INVTD_ARTICULO_DEVUELTO ad
+          ON ad.ID_DEVOLUCION = dv.ID_DEVOLUCION
+    WHERE
+        dv.FECHA_CANCELACION IS NULL
+        AND ad.SUBTOTAL > 0
+        AND dv.ID_MOTIVO_DEVOLUCION <> :motivo_excluido
+        AND dv.FECHA_DEVOLUCION >= TO_DATE(:fecha_inicio, 'YYYY-MM-DD')
+        AND dv.FECHA_DEVOLUCION < TRUNC(SYSDATE)
+),
+
+clasificado AS (
+    SELECT
+        d.*,
+        NVL(mot.DESCRIPCION, 'SIN MOTIVO')  AS motivo_nombre,
+        CASE
+            WHEN cli.CODIGO_CLIENTE IN ('1403', '3064', '400', '1643', '1686')
+                THEN 'intercompania'
+            WHEN cli.CODIGO_CLIENTE IN ('688', '1276')
+                THEN 'interno'
+            WHEN cli.ES_MOSTRADOR = 'S'
+                THEN 'mostrador'
+            ELSE
+                'externo'
+        END                                 AS canal,
+        NVL(TO_CHAR(cli.CODIGO_CLIENTE), 'S/C') AS cliente_codigo,
+        NVL(cli.NOMBRE_RAZONSOCIAL, 'SIN NOMBRE') AS cliente_nombre
+    FROM
+        devuelto d
+        LEFT JOIN SHUMA.COBTC_CLIENTE cli
+          ON cli.ID_CLIENTE = d.id_cliente
+        LEFT JOIN SHUMA.VTATC_MOTIVO_DEVOLUCION mot
+          ON mot.ID_MOTIVO_DEVOLUCION = d.id_motivo
+)
+
+SELECT
+    'cliente'                              AS dimension,
+    TO_CHAR(c.id_cliente)                  AS dimension_id,
+    MAX(c.cliente_codigo)                  AS dimension_codigo,
+    MAX(c.cliente_nombre)                  AS dimension_nombre,
+    c.canal                                AS canal,
+    c.fecha_devolucion                     AS fecha_devolucion,
+    TO_CHAR(c.id_motivo)                   AS motivo_id,
+    MAX(c.motivo_nombre)                   AS motivo_nombre,
+    COUNT(DISTINCT c.id_devolucion)        AS devoluciones,
+    COUNT(*)                               AS renglones,
+    NVL(SUM(c.importe), 0)                 AS imp_devuelto
+FROM
+    clasificado c
+GROUP BY
+    c.id_cliente, c.canal, c.fecha_devolucion, c.id_motivo
+
+UNION ALL
+
+SELECT
+    'producto'                             AS dimension,
+    TO_CHAR(c.id_articulo)                 AS dimension_id,
+    NVL(MAX(TO_CHAR(art.CODIGO)), 'S/C')   AS dimension_codigo,
+    NVL(MAX(art.DESCRIPCION), 'SIN NOMBRE') AS dimension_nombre,
+    c.canal                                AS canal,
+    -- Producto va a grano MENSUAL, igual que en ventas: a grano diario
+    -- es una cola larga que nadie consulta por dia.
+    TRUNC(c.fecha_devolucion, 'MM')        AS fecha_devolucion,
+    TO_CHAR(c.id_motivo)                   AS motivo_id,
+    MAX(c.motivo_nombre)                   AS motivo_nombre,
+    COUNT(DISTINCT c.id_devolucion)        AS devoluciones,
+    COUNT(*)                               AS renglones,
+    NVL(SUM(c.importe), 0)                 AS imp_devuelto
+FROM
+    clasificado c
+    LEFT JOIN SHUMA.INVTC_ARTICULO art
+      ON art.ID_ARTICULO = c.id_articulo
+GROUP BY
+    c.id_articulo, c.canal, TRUNC(c.fecha_devolucion, 'MM'), c.id_motivo
+"""
+
+METRICAS_DEV_ENTERAS = ["devoluciones", "renglones"]
+METRICAS_DEV_DECIMALES = ["imp_devuelto"]
 
 
 def fetch_from_oracle(empresa: str) -> list[dict]:
@@ -495,7 +626,7 @@ def aplicar_alias(filas: list[dict], mapa: dict) -> list[dict]:
             fila[k] = int(sum(g[k] for g in grupo))
         for k in ("imp_cotizado", "imp_facturado", "imp_cot_convertido",
                   "imp_sin_seguimiento", "imp_suspendido",
-                  "imp_cancelado", "imp_en_proceso"):
+                  "imp_cancelado", "imp_en_proceso", "imp_devuelto"):
             fila[k] = round(sum(g[k] for g in grupo), 2)
         fila["imp_reng_max"] = round(max(g["imp_reng_max"] for g in grupo), 2)
         # cant, articulo y convertido describen UN renglon concreto: el
@@ -516,7 +647,107 @@ def aplicar_alias(filas: list[dict], mapa: dict) -> list[dict]:
     return resto + fusionadas
 
 
-def push_to_supabase(client, filas: list[dict], marca: str) -> None:
+def fetch_devoluciones(empresa: str) -> list[dict]:
+    """Devoluciones por su propia fecha, dimensiones cliente y producto."""
+    emp = empresa.upper()
+    log.info(f"[{empresa}] Consultando devoluciones...")
+
+    with oracledb.connect(
+        user=os.environ[f"ORACLE_{emp}_USER"],
+        password=os.environ[f"ORACLE_{emp}_PASSWORD"],
+        dsn=construir_dsn(empresa),
+        tcp_connect_timeout=30,
+    ) as conn:
+        conn.call_timeout = 600_000
+        with conn.cursor() as cur:
+            cur.execute(SOLO_LECTURA)
+            cur.execute(
+                QUERY_DEVOLUCIONES,
+                fecha_inicio=calcular_fecha_inicio(),
+                motivo_excluido=MOTIVO_CANCELACION_FACTURA,
+            )
+            cols = [c[0].lower() for c in cur.description]
+            filas = [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    for r in filas:
+        r["empresa"] = empresa
+        f = r["fecha_devolucion"]
+        r["fecha_devolucion"] = f.date().isoformat() if hasattr(f, "date") else str(f)
+        for k in METRICAS_DEV_ENTERAS:
+            r[k] = int(r[k] or 0)
+        for k in METRICAS_DEV_DECIMALES:
+            r[k] = round(float(r[k] or 0), 2)
+
+    log.info(f"[{empresa}]   {len(filas):,} filas de devoluciones.")
+    return filas
+
+
+def aplicar_alias_dev(filas: list[dict], mapa: dict) -> list[dict]:
+    """
+    Mismo colapso por codigo canonico, sobre la tabla de devoluciones.
+
+    Va aparte de aplicar_alias porque la llave incluye motivo_id y la
+    fecha se llama distinto. Sin esto, el ranking de devoluciones no
+    cuadraria contra el de ventas: la misma cuenta gemela aparecerea
+    partida en uno y fusionada en el otro.
+    """
+    if not mapa:
+        return filas
+
+    afectadas = [r for r in filas
+                 if r["dimension"] == "cliente" and r["dimension_codigo"] in mapa]
+    if not afectadas:
+        return filas
+
+    identidad = {}
+    for r in filas:
+        if r["dimension"] != "cliente":
+            continue
+        canon = mapa.get(r["dimension_codigo"], r["dimension_codigo"])
+        actual = identidad.get(canon)
+        propio = r["dimension_codigo"] == canon
+        if actual is None or (propio and not actual["propio"]):
+            identidad[canon] = {
+                "propio": propio,
+                "dimension_id": r["dimension_id"],
+                "dimension_nombre": r["dimension_nombre"],
+            }
+
+    resto = [r for r in filas if r["dimension"] != "cliente"]
+    grupos: dict = defaultdict(list)
+    for r in filas:
+        if r["dimension"] != "cliente":
+            continue
+        canon = mapa.get(r["dimension_codigo"], r["dimension_codigo"])
+        grupos[(r["empresa"], r["fecha_devolucion"], r["canal"],
+                canon, r["motivo_id"])].append(r)
+
+    fusionadas = []
+    for (empresa, fecha, canal, canon, motivo), grupo in grupos.items():
+        ident = identidad[canon]
+        fila = {
+            "empresa": empresa,
+            "fecha_devolucion": fecha,
+            "canal": canal,
+            "dimension": "cliente",
+            "dimension_id": ident["dimension_id"],
+            "dimension_codigo": canon,
+            "dimension_nombre": ident["dimension_nombre"],
+            "motivo_id": motivo,
+            "motivo_nombre": grupo[0]["motivo_nombre"],
+        }
+        for k in METRICAS_DEV_ENTERAS:
+            fila[k] = int(sum(g[k] for g in grupo))
+        for k in METRICAS_DEV_DECIMALES:
+            fila[k] = round(sum(g[k] for g in grupo), 2)
+        fusionadas.append(fila)
+
+    log.info(f"   Alias en devoluciones: {len(afectadas):,} filas colapsadas.")
+    return resto + fusionadas
+
+
+def push_to_supabase(client, filas: list[dict], marca: str,
+                     tabla: str = TABLA, llave: tuple = LLAVE) -> None:
     """
     Upsert por lotes sobre la restriccion uq_ventas_grano.
 
@@ -529,29 +760,30 @@ def push_to_supabase(client, filas: list[dict], marca: str) -> None:
     total = len(filas)
     for i in range(0, total, CHUNK_UPSERT):
         lote = filas[i:i + CHUNK_UPSERT]
-        client.table(TABLA).upsert(
-            lote, on_conflict=",".join(LLAVE)
+        client.table(tabla).upsert(
+            lote, on_conflict=",".join(llave)
         ).execute()
         hechas = min(i + CHUNK_UPSERT, total)
         if hechas % 10_000 < CHUNK_UPSERT or hechas == total:
             log.info(f"   Upsert {hechas:,}/{total:,}")
 
 
-def barrer_obsoletos(client, empresa: str, marca: str) -> int:
+def barrer_obsoletos(client, empresa: str, marca: str,
+                     tabla: str = TABLA) -> int:
     """
     Borra lo que no toco esta corrida, comparando la marca de agua.
 
     Se llama SOLO despues de que todos los lotes pasaron. Si alguno
     fallo, esta funcion no corre: borrar aqui dejaria huecos reales.
     """
-    res = client.table(TABLA) \
+    res = client.table(tabla) \
         .delete() \
         .eq("empresa", empresa) \
         .lt("actualizado_en", marca) \
         .execute()
     n = len(res.data or [])
     if n:
-        log.info(f"[{empresa}] Barridas {n:,} filas obsoletas.")
+        log.info(f"[{empresa}] Barridas {n:,} filas obsoletas de {tabla}.")
     return n
 
 
@@ -644,16 +876,34 @@ def main() -> int:
             os.environ["SUPABASE_SERVICE_KEY"],
         )
 
-        filas = aplicar_alias(filas, cargar_alias(client, empresa))
+        mapa = cargar_alias(client, empresa)
+        filas = aplicar_alias(filas, mapa)
         resumen(filas, empresa)
 
         marca = datetime.now(timezone.utc).isoformat()
         push_to_supabase(client, filas, marca)
         barrer_obsoletos(client, empresa, marca)
 
+        # Devoluciones va DESPUES y con su propia marca. Si esta parte
+        # falla, ventas_agregado ya quedo completa: el tablero pierde el
+        # detalle de devoluciones, no la venta.
+        #
+        # Sin piso minimo de filas aqui: una empresa puede tener cero
+        # devoluciones legitimamente, y abortar por eso seria tratar una
+        # buena noticia como un fallo de origen.
+        dev = aplicar_alias_dev(fetch_devoluciones(empresa), mapa)
+        if dev:
+            marca_dev = datetime.now(timezone.utc).isoformat()
+            push_to_supabase(client, dev, marca_dev,
+                             tabla=TABLA_DEV, llave=LLAVE_DEV)
+            barrer_obsoletos(client, empresa, marca_dev, tabla=TABLA_DEV)
+        else:
+            log.info(f"[{empresa}] Sin devoluciones en la ventana.")
+
         dur = time.time() - inicio
         actualizar_estado(client, empresa, len(filas), dur, "OK")
-        log.info(f"[{empresa}] Listo: {len(filas):,} filas en {dur:.1f}s.")
+        log.info(f"[{empresa}] Listo: {len(filas):,} filas de venta y "
+                 f"{len(dev):,} de devoluciones en {dur:.1f}s.")
         return 0
 
     except Exception as e:
