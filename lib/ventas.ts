@@ -469,6 +469,40 @@ export function serieMensual(
 // ------------------------------------------------------------------
 
 /**
+ * Dias transcurridos desde una fecha del ETL hasta hoy, en hora de Mexico.
+ *
+ * Reemplaza el patron new Date(cadena) + setHours(0,0,0,0), que estaba en
+ * tres lugares y fallaba dos veces:
+ *
+ * 1. new Date('2026-08-15') se interpreta como UTC. En el servidor de
+ *    Vercel eso es el 15; en un navegador de Mexico son las 18:00 del 14,
+ *    y el setHours posterior lo baja al 14. Un dia de diferencia, siempre.
+ * 2. new Date() toma la zona del entorno. El servidor corre en UTC y el
+ *    navegador en America/Mexico_City, asi que ni siquiera coincidian en
+ *    que dia es hoy.
+ *
+ * El resultado eran textos distintos entre servidor y cliente —"321 dias"
+ * contra "322 dias"— y React tiraba el error 425 de hidratacion, con el
+ * 422 detras al caerse el arbol.
+ *
+ * Aqui todo se calcula desde el mismo instante absoluto: se le resta el
+ * desfase de Mexico a Date.now() y se leen los componentes en UTC. Eso da
+ * el mismo numero en los dos lados sin depender de la zona del entorno.
+ *
+ * Mexico no cambia de horario desde 2022, asi que el desfase es fijo.
+ */
+const DESFASE_MX_MS = 6 * 60 * 60 * 1000
+
+export function diasDesde(fechaISO: string): number {
+  const [a, m, d] = fechaISO.slice(0, 10).split('-').map(Number)
+  if (!a || !m || !d) return 0
+  const fecha = Date.UTC(a, m - 1, d)
+  const ahoraMx = new Date(Date.now() - DESFASE_MX_MS)
+  const hoy = Date.UTC(ahoraMx.getUTCFullYear(), ahoraMx.getUTCMonth(), ahoraMx.getUTCDate())
+  return Math.floor((hoy - fecha) / 86_400_000)
+}
+
+/**
  * Tasa de devolucion sobre el facturado bruto.
  *
  * El denominador lleva impDevuelto sumado porque impFacturado ya viene

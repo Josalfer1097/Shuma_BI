@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FilaRanking, Dimension, formatMoneda, formatMonedaCorta, formatPct, formatEntero, cotizacionesSumables, ETIQUETA_SIN_SEGUIMIENTO } from '@/lib/ventas'
+import { FilaRanking, Dimension, formatMoneda, formatMonedaCorta, formatPct, formatEntero, cotizacionesSumables, diasDesde, ETIQUETA_SIN_SEGUIMIENTO } from '@/lib/ventas'
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { Tooltip } from '../ui/Tooltip'
 import { TooltipDato } from '../ui/TooltipDato'
@@ -71,11 +71,7 @@ export function RankingTable({
 
   const formatDiasUltimaCompra = (ultimaFactura: string | null) => {
     if (!ultimaFactura) return { texto: 'Nunca', colorClase: 'text-text-muted' }
-    const hoy = new Date()
-    hoy.setHours(0, 0, 0, 0)
-    const d = new Date(ultimaFactura)
-    d.setHours(0, 0, 0, 0)
-    const diffDays = Math.floor((hoy.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
+    const diffDays = diasDesde(ultimaFactura)
     
     let colorClase = 'text-success' // verde < 90
     if (diffDays >= 180) colorClase = 'text-danger'

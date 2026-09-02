@@ -18,6 +18,7 @@ import {
   formatMonedaCorta,
   enriquecerConUltimaFactura,
   esVendedor,
+  diasDesde,
   excluirMostradorDeCliente
 } from '@/lib/ventas'
 import { construirHallazgos } from '@/lib/hallazgosVentas'
@@ -235,9 +236,6 @@ export function Dashboard({
   const dormidosDetalle: { nombre: string, monto: number, dias: number }[] = []
   
   if (ranking) {
-    const ahora = new Date()
-    ahora.setHours(0, 0, 0, 0)
-    
     const candidatos = ranking.filter(r => 
       r.dimension === 'cliente' &&
       r.canal === 'externo' &&
@@ -246,11 +244,7 @@ export function Dashboard({
     )
 
     candidatos.forEach(r => {
-      const fechaFac = new Date(r.ultima_factura as string)
-      fechaFac.setHours(0, 0, 0, 0)
-      
-      const diffTime = ahora.getTime() - fechaFac.getTime()
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      const diffDays = diasDesde(r.ultima_factura as string)
       
       if (diffDays >= 90) {
         if (diffDays > 180) {

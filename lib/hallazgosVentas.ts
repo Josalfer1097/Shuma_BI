@@ -12,6 +12,7 @@ import {
   formatPct,
   formatEntero,
   esVendedor,
+  diasDesde,
   ETIQUETA_SIN_SEGUIMIENTO,
 } from './ventas'
 
@@ -227,9 +228,6 @@ function hallazgoAbandonado(ranking0: FilaRankingVista[]): Hallazgo | null {
  * Si no hay perdidos pero hay en riesgo (90-180), muestra el total y el mayor.
  */
 function hallazgoDormidos(ranking: FilaRankingVista[]): Hallazgo | null {
-  const ahora = new Date()
-  ahora.setHours(0, 0, 0, 0)
-  
   const candidatos = ranking.filter(r => 
     r.dimension === 'cliente' &&
     r.canal === 'externo' &&
@@ -243,11 +241,7 @@ function hallazgoDormidos(ranking: FilaRankingVista[]): Hallazgo | null {
   let mayorRiesgo: FilaRankingVista | null = null
 
   for (const r of candidatos) {
-    const fechaFac = new Date(r.ultima_factura as string)
-    fechaFac.setHours(0, 0, 0, 0)
-    
-    const diffTime = ahora.getTime() - fechaFac.getTime()
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    const diffDays = diasDesde(r.ultima_factura as string)
     
     if (diffDays > 180) {
       perdidos++
