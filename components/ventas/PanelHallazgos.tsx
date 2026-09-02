@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Lightbulb, X, TrendingDown, TrendingUp, AlertTriangle, Info } from 'lucide-react'
-import type { Hallazgo, Tono } from '@/lib/hallazgosVentas'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Lightbulb, X, TrendingDown, TrendingUp, AlertTriangle, Info, ArrowRight } from 'lucide-react'
+import type { AccionHallazgo, Hallazgo, Tono } from '@/lib/hallazgosVentas'
 import { Tooltip } from '../ui/Tooltip'
 
 /**
@@ -37,8 +38,29 @@ function IconoHallazgo({ hallazgo }: { hallazgo: Hallazgo }) {
 export function PanelHallazgos({ hallazgos }: { hallazgos: Hallazgo[] }) {
   const [abierto, setAbierto] = useState(false)
   const [montado, setMontado] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   useEffect(() => setMontado(true), [])
+
+  /**
+   * Aplica los filtros del hallazgo sobre los que ya estan puestos y
+   * cierra el panel.
+   *
+   * Parte de los parametros actuales en vez de empezar en blanco: si el
+   * usuario ya venia mirando un anio, un hallazgo que solo cambia la
+   * dimension no tiene por que devolverlo al historico completo.
+   */
+  function aplicarAccion(accion: AccionHallazgo) {
+    const params = new URLSearchParams(searchParams.toString())
+    for (const [clave, valor] of Object.entries(accion.params)) {
+      if (valor === null) params.delete(clave)
+      else params.set(clave, valor)
+    }
+    setAbierto(false)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
 
   useEffect(() => {
     if (!abierto) return
@@ -128,6 +150,22 @@ export function PanelHallazgos({ hallazgos }: { hallazgos: Hallazgo[] }) {
                             <p className="mt-2 pl-[1.625rem] text-scale-xs leading-relaxed text-text-muted">
                               {h.detalle}
                             </p>
+                            {/*
+                              La tarjeta entera NO es el boton. Un bloque de
+                              texto largo que ademas es clickable se pulsa sin
+                              querer al intentar seleccionar una cifra para
+                              copiarla, y aqui las cifras se copian mucho.
+                            */}
+                            {h.accion && (
+                              <button
+                                type="button"
+                                onClick={() => aplicarAccion(h.accion!)}
+                                className="mt-3 ml-[1.625rem] inline-flex min-h-[36px] items-center gap-1.5 rounded-md border border-border px-3 text-scale-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                              >
+                                {h.accion.etiqueta}
+                                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                            )}
                           </li>
                         ))}
                       </ul>

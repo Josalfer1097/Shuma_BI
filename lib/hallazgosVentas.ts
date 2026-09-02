@@ -31,11 +31,33 @@ import {
 export type TipoHallazgo = 'cambio' | 'atipico' | 'dato'
 export type Tono = 'bueno' | 'malo' | 'neutro'
 
+/**
+ * A donde lleva un hallazgo cuando se pulsa.
+ *
+ * Un hallazgo sin salida obliga a reconstruir el filtro a mano: leer
+ * "ISIS concentra el 44.1% del abandono", cerrar el panel, cambiar la
+ * dimension, buscarla en el selector y reordenar. Cuatro pasos, y para
+ * entonces la cifra ya se olvido.
+ *
+ * params se aplica sobre los que ya estan en la URL: null borra el
+ * parametro, una cadena lo fija. Lo que no se menciona se respeta.
+ */
+export interface AccionHallazgo {
+  etiqueta: string
+  params: Record<string, string | null>
+}
+
 export interface Hallazgo {
   tipo: TipoHallazgo
   tono: Tono
   titulo: string
   detalle: string
+  /**
+   * Opcional a proposito. Hay hallazgos que no tienen a donde llevar:
+   * "sin seguimiento va de 1.1% a 45.4%" es un rango entre personas, no
+   * un lugar. Si todas las tarjetas fueran boton, ninguna destacaria.
+   */
+  accion?: AccionHallazgo
 }
 
 function mesAnterior(anioMes: string): string {
@@ -85,6 +107,10 @@ function hallazgoBrechaConversion(rows: FilaMensual[]): Hallazgo | null {
       `solo ${formatPct(k.convImportePct)} del importe. El producto que sí se ` +
       `factura promedia ${formatMoneda(ticketSi)}; el que no, ` +
       `${formatMoneda(ticketNo)}. Son ${veces.toFixed(1)} veces más grande.`,
+    accion: {
+      etiqueta: 'Ver productos',
+      params: { dimension: 'producto', entidad: null },
+    },
   }
 }
 
@@ -140,6 +166,10 @@ function hallazgoSinSeguimiento(ranking0: FilaRankingVista[]): Hallazgo | null {
       `${formatEntero(peor.cotizaciones)} cotizaciones. ${mejor.nombre}, ` +
       `${formatPct(mejor.sinSeguimientoPct)} de ${formatEntero(mejor.cotizaciones)}. ` +
       `No es una cifra del área: es el rango entre personas.`,
+    accion: {
+      etiqueta: 'Ver vendedores',
+      params: { dimension: 'vendedor', entidad: null },
+    },
   }
 }
 
@@ -169,6 +199,10 @@ function hallazgoAbandonado(ranking0: FilaRankingVista[]): Hallazgo | null {
       tono: 'malo',
       titulo: `${v1.nombre} concentra el ${formatPct(p1 * 100)} del abandono`,
       detalle: `De los ${formatMonedaCorta(total)} sin seguimiento en el canal externo, ${formatMonedaCorta(v1.impSinSeguimiento ?? 0)} son de un solo vendedor.`,
+      accion: {
+        etiqueta: 'Ver a esta persona',
+        params: { dimension: 'vendedor', entidad: v1.dimensionId, canal: 'externo' },
+      },
     }
   } else if (p1 + p2 > 0.4) {
     return {
@@ -176,6 +210,10 @@ function hallazgoAbandonado(ranking0: FilaRankingVista[]): Hallazgo | null {
       tono: 'malo',
       titulo: `Dos vendedores concentran el ${formatPct((p1 + p2) * 100)} del abandono`,
       detalle: `${v1.nombre} (${formatMonedaCorta(v1.impSinSeguimiento ?? 0)}) y ${v2.nombre} (${formatMonedaCorta(v2.impSinSeguimiento ?? 0)}) suman la mayor parte de los ${formatMonedaCorta(total)} sin seguimiento.`,
+      accion: {
+        etiqueta: 'Ver vendedores',
+        params: { dimension: 'vendedor', entidad: null, canal: 'externo' },
+      },
     }
   }
 
@@ -225,7 +263,14 @@ function hallazgoDormidos(ranking: FilaRankingVista[]): Hallazgo | null {
       tipo: 'atipico',
       tono: 'malo',
       titulo: `${perdidos} cliente${perdidos > 1 ? 's' : ''} grande${perdidos > 1 ? 's' : ''} sin comprar`,
-      detalle: `Llevan más de 180 días sin facturar. El mayor es ${mayorPerdido.dimension_nombre} (${formatMonedaCorta(mayorPerdido.imp_facturado)} facturados históricamente). Antes de tratarlo como venta perdida, revisa en el SGE si tiene el crédito suspendido: hay casos en esta lista que dejaron de comprar por cobranza, no por falta de interés.`
+      detalle: `Llevan más de 180 días sin facturar. El mayor es ${mayorPerdido.dimension_nombre} (${formatMonedaCorta(mayorPerdido.imp_facturado)} facturados históricamente). Antes de tratarlo como venta perdida, revisa en el SGE si tiene el crédito suspendido: hay casos en esta lista que dejaron de comprar por cobranza, no por falta de interés.`,
+      accion: {
+        etiqueta: 'Ver clientes',
+        // anio y mes en Todos: un cliente dormido se mide contra la
+        // historia. Con un mes suelto, todo el que no compro ese mes
+        // saldria dormido y el hallazgo dejaria de significar algo.
+        params: { dimension: 'cliente', entidad: null, anio: 'Todos', mes: 'Todos' },
+      },
     }
   }
 
@@ -234,7 +279,11 @@ function hallazgoDormidos(ranking: FilaRankingVista[]): Hallazgo | null {
       tipo: 'atipico',
       tono: 'malo',
       titulo: `${riesgo} cliente${riesgo > 1 ? 's' : ''} grande${riesgo > 1 ? 's' : ''} en riesgo`,
-      detalle: `Llevan entre 90 y 180 días sin facturar. El mayor es ${mayorRiesgo.dimension_nombre} (${formatMonedaCorta(mayorRiesgo.imp_facturado)} facturados históricamente). Revisa en el SGE si el crédito está suspendido antes de asumir que se fueron.`
+      detalle: `Llevan entre 90 y 180 días sin facturar. El mayor es ${mayorRiesgo.dimension_nombre} (${formatMonedaCorta(mayorRiesgo.imp_facturado)} facturados históricamente). Revisa en el SGE si el crédito está suspendido antes de asumir que se fueron.`,
+      accion: {
+        etiqueta: 'Ver clientes',
+        params: { dimension: 'cliente', entidad: null, anio: 'Todos', mes: 'Todos' },
+      }
     }
   }
 
@@ -280,6 +329,10 @@ function hallazgoRenglonAtipico(ranking: FilaRankingVista[]): Hallazgo | null {
       `${mayor.dimension_nombre} (${mayor.dimension_codigo}) por ` +
       `${formatMoneda(mayor.imp_reng_max)} en ${formatEntero(mayor.cant_reng_max)} ` +
       `unidades. Verificar antes de leer la tendencia.`,
+    accion: {
+      etiqueta: 'Ver este producto',
+      params: { dimension: 'producto', entidad: mayor.dimension_id },
+    },
   }
 }
 
@@ -314,6 +367,10 @@ function hallazgoCanales(rows: FilaMensual[]): Hallazgo | null {
         ? `, y convierte al ${formatPct(kInter.convImportePct)} porque la venta ` +
         `entre empresas del grupo casi siempre se factura. Por eso no suma al consolidado.`
         : '.'),
+    accion: {
+      etiqueta: 'Ver mostrador',
+      params: { canal: 'mostrador', dimension: 'cliente', entidad: null },
+    },
   }
 }
 
@@ -342,6 +399,10 @@ function hallazgoConcentracion(
     detalle:
       `Encabeza ${ranking[0].nombre} con ${formatMonedaCorta(ranking[0].impFacturado)} ` +
       `de ${formatEntero(ranking.length)} clientes con movimiento en el periodo.`,
+    accion: {
+      etiqueta: 'Ver ranking',
+      params: { dimension: 'cliente', entidad: null },
+    },
   }
 }
 
